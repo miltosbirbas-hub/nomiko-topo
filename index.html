@@ -61,6 +61,18 @@ button{font-family:inherit;font-weight:600;cursor:pointer;border:none;border-rad
 .banner-warn{background:#fff4e5;border:1px solid #e0a458;color:#8a5a12;padding:12px 14px;border-radius:3px;margin-bottom:12px;font-size:13.5px;line-height:1.5}
 .banner-warn.hidden{display:none}
 .banner-warn b{color:#7a4d0a}
+.guide-card{background:#f3f6fb;border:1px solid #d4ddea}
+.guide-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.guide-arrow{font-size:20px;color:var(--navy);transition:transform .2s}
+.guide-arrow.open{transform:rotate(180deg)}
+.guide-body{display:none;margin-top:14px}
+.guide-body.open{display:block}
+.guide-intro{color:#4a5568;font-size:14px;margin:0 0 16px}
+.guide-step{display:flex;gap:12px;margin-bottom:14px;font-size:14px;line-height:1.55}
+.guide-step .gn{flex:none;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.guide-step b{color:var(--navy)}
+.gtip{display:block;margin-top:4px;color:#6b6657;font-size:13px}
+.guide-foot{margin-top:14px;padding-top:12px;border-top:1px solid #d4ddea;color:#4a5568;font-size:13.5px}
 .status.show{display:block}
 .status.info{background:#e8eef5;color:var(--navy)}
 .status.err{background:#fbe9e6;color:var(--accent)}
@@ -150,6 +162,70 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     <div class="tab" id="tabDiag" onclick="switchMode('diag')">
       <h3>🔀 Διάγραμμα Γεωμετρικών Μεταβολών</h3>
       <p>Ανάρτηση ΔΓΜ → περιγραφή ορίων + πίνακες μεταβολών (ποιο τμήμα από ΚΑΕΚ σε ΚΑΕΚ)</p>
+    </div>
+  </div>
+
+  <!-- ΟΔΗΓΟΣ ΧΡΗΣΗΣ -->
+  <div class="card guide-card">
+    <div class="guide-head" onclick="toggleGuide()">
+      <h2 style="margin:0">📖 Οδηγός Χρήσης — Βήμα προς Βήμα</h2>
+      <span id="guideToggle" class="guide-arrow">▾</span>
+    </div>
+    <div id="guideBody" class="guide-body">
+      <p class="guide-intro">Η εφαρμογή διαβάζει ένα τοπογραφικό διάγραμμα (ή Διάγραμμα Γεωμετρικών Μεταβολών) και συντάσσει αυτόματα την περιγραφή ορίων για το συμβόλαιο. Ακολουθήστε τα βήματα με τη σειρά.</p>
+
+      <div class="guide-step"><span class="gn">1</span><div>
+        <b>Διαλέξτε τύπο σχεδίου (πάνω-πάνω).</b><br>
+        Πατήστε <b>«Τοπογραφικό Διάγραμμα»</b> για απλό τοπογραφικό, ή <b>«Διάγραμμα Γεωμετρικών Μεταβολών»</b> αν πρόκειται για ΔΓΜ διόρθωσης ορίων (Κτηματολόγιο).
+      </div></div>
+
+      <div class="guide-step"><span class="gn">2</span><div>
+        <b>Ανεβάστε το σχέδιο.</b><br>
+        Στην ενότητα «1. Ανάρτηση Σχεδίου», σύρετε το αρχείο μέσα στο πλαίσιο ή πατήστε επάνω του για να το επιλέξετε. Δέχεται <b>PDF, JPG ή PNG</b>.<br>
+        <span class="gtip">💡 Καλύτερο αποτέλεσμα: δώστε το <b>πρωτότυπο PDF</b> (όχι φωτογραφία/σκαναρισμένο), γιατί διαβάζεται με ακρίβεια.</span>
+      </div></div>
+
+      <div class="guide-step"><span class="gn">3</span><div>
+        <b>Δείτε την ένδειξη ποιότητας.</b><br>
+        Κάτω από το κουμπί «Ανάλυση» θα εμφανιστεί μία ένδειξη: <b>«καθαρό κείμενο»</b> (άριστο), <b>«το κείμενο είναι αλλοιωμένο»</b> ή <b>«σκαναρισμένο»</b> (θα γίνει ανάγνωση από εικόνα, με μικρότερη ακρίβεια).
+      </div></div>
+
+      <div class="guide-step"><span class="gn">4</span><div>
+        <b>Πατήστε «🔍 Ανάλυση Σχεδίου».</b><br>
+        Περιμένετε λίγα δευτερόλεπτα. Η εφαρμογή θα συμπληρώσει μόνη της τα στοιχεία (θέση, ΚΑΕΚ, ιδιοκτήτη), τις πλευρές με τα μήκη τους, τους όμορους και (στα ΔΓΜ) τους πίνακες μεταβολών.
+      </div></div>
+
+      <div class="guide-step"><span class="gn">5</span><div>
+        <b>ΕΛΕΓΞΤΕ τα αποτελέσματα — αυτό είναι το πιο σημαντικό βήμα.</b><br>
+        Συγκρίνετε με το σχέδιο: στοιχεία ιδιοκτησίας, μήκη πλευρών, όμορους.<br>
+        • Αν εμφανιστεί <b>πορτοκαλί προειδοποίηση</b> (π.χ. «X πλευρές χωρίς όμορο»), συμπληρώστε χειροκίνητα στη στήλη <b>«Συνορεύει με»</b>.<br>
+        • Όλα τα πεδία είναι <b>επεξεργάσιμα</b> — διορθώστε ό,τι χρειάζεται κάνοντας κλικ.<br>
+        <span class="gtip">⚠ Η εφαρμογή βοηθάει, αλλά την ευθύνη της ορθότητας την έχει ο μηχανικός/συντάκτης. Πάντα ελέγχετε πριν την εξαγωγή.</span>
+      </div></div>
+
+      <div class="guide-step"><span class="gn">6</span><div>
+        <b>Συμπληρώστε τις Δηλώσεις Μηχανικού (αν υπάρχουν).</b><br>
+        Στην ενότητα «5γ.», ελέγξτε ότι διαβάστηκαν σωστά η δήλωση Ν.651/77 και η δασική. Αν λείπουν, επικολλήστε τις χειροκίνητα.
+      </div></div>
+
+      <div class="guide-step"><span class="gn">7</span><div>
+        <b>Διαλέξτε γραμματοσειρά &amp; μέγεθος.</b><br>
+        Στην ενότητα «7. Εξαγωγή», επιλέξτε γραμματοσειρά και μέγεθος που ταιριάζουν με το συμβόλαιό σας.
+      </div></div>
+
+      <div class="guide-step"><span class="gn">8</span><div>
+        <b>Κατεβάστε το έγγραφο.</b><br>
+        Πατήστε <b>«📄 Περιγραφή για Συμβόλαιο»</b> για να κατεβεί το αρχείο Word (.docx).<br>
+        Στα ΔΓΜ υπάρχει επιπλέον <b>«⚖️ Τεχνική Έκθεση για Δικαστήριο/Κτηματολόγιο»</b>.<br>
+        Ανοίξτε το με το Word και ενσωματώστε το στο συμβόλαιο.
+      </div></div>
+
+      <div class="guide-step"><span class="gn">9</span><div>
+        <b>Για νέο σχέδιο.</b><br>
+        Πατήστε <b>«🆕 Νέο Διάγραμμα»</b> (πάνω δεξιά) για να καθαρίσουν όλα και να ξεκινήσετε από την αρχή.
+      </div></div>
+
+      <p class="guide-foot">Χρειάζεστε βοήθεια; Όλα τα πεδία διορθώνονται χειροκίνητα — αν κάτι δεν διαβάστηκε σωστά, απλά γράψτε το σωστό μόνοι σας πριν την εξαγωγή.</p>
     </div>
   </div>
 
@@ -794,6 +870,14 @@ function checkUnknownNeighbors(){
 }
 function addBndRow(){DATA.boundaries.push({side:'',direction:'ΑΝΑΤΟΛΙΚΑ',length:'',neighbor:''});renderBnd();}
 
+// Οδηγός χρήσης — άνοιγμα/κλείσιμο
+function toggleGuide(){
+  const b=document.getElementById('guideBody');
+  const a=document.getElementById('guideToggle');
+  const open=b.classList.toggle('open');
+  a.classList.toggle('open',open);
+}
+
 // Καθαρισμός όλων για νέο διάγραμμα
 function newDiagram(){
   if(!confirm('Νέο διάγραμμα; Θα διαγραφούν όλες οι τρέχουσες καταχωρήσεις (στοιχεία, όρια, μεταβολές, δηλώσεις).')) return;
@@ -1243,6 +1327,8 @@ async function checkSession(){
 // init
 initSupabase();
 switchMode('topo');
+// άνοιξε τον οδηγό την πρώτη φορά
+toggleGuide();
 checkSession();
 
 // PWA: εγγραφή service worker
