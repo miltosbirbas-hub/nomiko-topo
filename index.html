@@ -261,7 +261,32 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     <div class="card">
       <h2>7. Εξαγωγή</h2>
       <p class="muted">Παράγεται αρχείο .docx έτοιμο για ενσωμάτωση στο σώμα του συμβολαίου.</p>
-      <div class="row" style="margin-top:12px">
+      <div class="grid" style="margin-top:8px">
+        <div class="field">
+          <label>Γραμματοσειρά</label>
+          <select id="docFont">
+            <option value="Arial">Arial</option>
+            <option value="Calibri">Calibri</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Verdana">Verdana</option>
+            <option value="Tahoma">Tahoma</option>
+            <option value="Cambria">Cambria</option>
+            <option value="Liberation Serif">Liberation Serif</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Μέγεθος κειμένου (pt)</label>
+          <select id="docSize">
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12" selected>12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:4px">
         <button class="btn-nav" id="btnDocx" onclick="exportDocx()">📄 Περιγραφή για Συμβόλαιο (DOCX)</button>
         <button class="btn-nav hidden" id="btnReport" onclick="exportReport()" style="background:var(--olive)">⚖️ Τεχνική Έκθεση για Δικαστήριο/Κτηματολόγιο (DOCX)</button>
       </div>
@@ -517,6 +542,9 @@ function azimuthDir(dx,dy){
 function numGr(v){ return (Math.round(v*100)/100).toFixed(2).replace('.',','); }
 function cleanEmv(s){ return (s||'').replace(/\s*τ\.?μ\.?\s*/gi,'').trim(); }
 function safeName(s){ return (s||'').replace(/[\/\\:*?"<>|]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,''); }
+// Επιλεγμένη γραμματοσειρά/μέγεθος για το DOCX
+function docFont(){ const e=document.getElementById('docFont'); return e?e.value:'Arial'; }
+function docBase(){ const e=document.getElementById('docSize'); const pt=e?parseInt(e.value,10):12; return pt*2; } // half-points
 
 // Ελληνικά ολογράφως (0-9999) για μέτρα/εκατοστά
 function grWords(n){
@@ -722,8 +750,10 @@ async function exportDocx(){
   const title= MODE==='topo'?'ΠΕΡΙΓΡΑΦΗ ΑΚΙΝΗΤΟΥ (βάσει τοπογραφικού διαγράμματος)':'ΠΕΡΙΓΡΑΦΗ ΑΚΙΝΗΤΟΥ & ΓΕΩΜΕΤΡΙΚΩΝ ΜΕΤΑΒΟΛΩΝ (βάσει Δ.Γ.Μ.)';
 
   const children=[];
+  const F=docFont(), BASE=docBase(), SC=BASE/24; // κλιμάκωση σχετικών μεγεθών
+  const sz=(s)=>Math.round(s*SC);
   const P=(opts)=>new D.Paragraph(opts);
-  const T=(t,o={})=>new D.TextRun(Object.assign({text:t,font:'Arial',size:24},o));
+  const T=(t,o={})=>{ const oo=Object.assign({text:t,font:F,size:BASE},o); if(o.size) oo.size=sz(o.size); return new D.TextRun(oo); };
 
   children.push(P({heading:D.HeadingLevel.HEADING_1,children:[T(title,{bold:true,size:28})]}));
 
@@ -808,10 +838,10 @@ async function exportDocx(){
   pushDeclarations(D,children);
 
   const doc=new D.Document({
-    styles:{default:{document:{run:{font:'Arial',size:24}}},
+    styles:{default:{document:{run:{font:F,size:BASE}}},
       paragraphStyles:[
-        {id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:28,bold:true,font:'Arial',color:'1E3A5A'},paragraph:{spacing:{before:120,after:200},outlineLevel:0}},
-        {id:'Heading2',name:'Heading 2',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:26,bold:true,font:'Arial',color:'4A6040'},paragraph:{spacing:{before:160,after:120},outlineLevel:1}}
+        {id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:sz(28),bold:true,font:F,color:'1E3A5A'},paragraph:{spacing:{before:120,after:200},outlineLevel:0}},
+        {id:'Heading2',name:'Heading 2',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:sz(26),bold:true,font:F,color:'4A6040'},paragraph:{spacing:{before:160,after:120},outlineLevel:1}}
       ]},
     numbering:{config:[{reference:'bl',levels:[{level:0,format:D.LevelFormat.BULLET,text:'–',alignment:D.AlignmentType.LEFT,style:{paragraph:{indent:{left:480,hanging:280}}}}]}]},
     sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1440,right:1440,bottom:1440,left:1440}}},children}]
@@ -830,7 +860,7 @@ function cell(D,text,w,head){
     margins:{top:80,bottom:80,left:120,right:120},
     shading: head?{fill:'1E3A5A',type:D.ShadingType.CLEAR}:undefined,
     borders:{top:bd(D),bottom:bd(D),left:bd(D),right:bd(D)},
-    children:[new D.Paragraph({children:[new D.TextRun({text:text||'',font:'Arial',size:22,bold:!!head,color:head?'FFFFFF':'23211C'})]})]
+    children:[new D.Paragraph({children:[new D.TextRun({text:text||'',font:docFont(),size:Math.round(22*docBase()/24),bold:!!head,color:head?'FFFFFF':'23211C'})]})]
   });
 }
 function bd(D){return{style:D.BorderStyle.SINGLE,size:1,color:'CCCCCC'};}
@@ -865,8 +895,9 @@ async function exportReport(){
   const D=docx;
   const dimos=val('fDimos'),thesi=val('fThesi'),kaek=val('fKaek'),emv=cleanEmv(val('fEmvado')),owner=val('fOwner'),crs=val('fCrs')||"ΕΓΣΑ '87";
   const khd=window._khd||'';
-  const F='Arial';
-  const T=(t,o={})=>new D.TextRun(Object.assign({text:t,font:F,size:24},o));
+  const F=docFont(), BASE=docBase(), SC=BASE/24;
+  const sz=(s)=>Math.round(s*SC);
+  const T=(t,o={})=>{ const oo=Object.assign({text:t,font:F,size:BASE},o); if(o.size) oo.size=sz(o.size); return new D.TextRun(oo); };
   const P=(runs,o={})=>new D.Paragraph(Object.assign({children:Array.isArray(runs)?runs:[runs]},o));
   const H1=(t)=>new D.Paragraph({heading:D.HeadingLevel.HEADING_1,spacing:{before:240,after:120},children:[T(t,{bold:true,size:26,color:'1E3A5A'})]});
   const just={alignment:D.AlignmentType.JUSTIFIED,spacing:{after:120}};
@@ -982,8 +1013,8 @@ async function exportReport(){
   pushDeclarations(D,ch);
 
   const doc=new D.Document({
-    styles:{default:{document:{run:{font:F,size:24}}},
-      paragraphStyles:[{id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:26,bold:true,font:F,color:'1E3A5A'},paragraph:{spacing:{before:240,after:120},outlineLevel:0}}]},
+    styles:{default:{document:{run:{font:F,size:BASE}}},
+      paragraphStyles:[{id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:sz(26),bold:true,font:F,color:'1E3A5A'},paragraph:{spacing:{before:240,after:120},outlineLevel:0}}]},
     numbering:{config:[{reference:'bl',levels:[{level:0,format:D.LevelFormat.BULLET,text:'•',alignment:D.AlignmentType.LEFT,style:{paragraph:{indent:{left:480,hanging:280}}}}]}]},
     sections:[{
       properties:{page:{size:{width:11906,height:16838},margin:{top:1440,right:1440,bottom:1440,left:1440}}},
