@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       .map((c: any) => c.text)
       .join("\n");
 
-    return new Response(JSON.stringify({ text }), {
+    return new Response(JSON.stringify({ text, stop_reason: data.stop_reason || null }), {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
 

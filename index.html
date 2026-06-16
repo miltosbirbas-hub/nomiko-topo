@@ -420,10 +420,53 @@ function extractJSON(s){
   if(i>=0 && j>i){
     let cand=t.slice(i,j+1);
     try{ return JSON.parse(cand); }catch(e){}
-    // τρίτη: καθάρισε τυχόν trailing commas
     try{ return JSON.parse(cand.replace(/,\s*([}\]])/g,'$1')); }catch(e){}
   }
+  // τρίτη: ΕΠΙΔΙΟΡΘΩΣΗ ΚΟΜΜΕΝΟΥ JSON (όταν κόπηκε η απάντηση λόγω ορίου tokens)
+  if(i>=0){
+    let cand=t.slice(i); // από το πρώτο { ως το τέλος
+    const repaired=repairTruncatedJSON(cand);
+    if(repaired){ try{ return JSON.parse(repaired); }catch(e){} }
+  }
   return null;
+}
+// Κλείνει ανοιχτά strings/arrays/objects σε κομμένο JSON, κόβοντας το ημιτελές τελευταίο στοιχείο
+function repairTruncatedJSON(s){
+  let inStr=false, esc=false;
+  const stack=[]; let lastSafe=-1;
+  for(let k=0;k<s.length;k++){
+    const c=s[k];
+    if(inStr){
+      if(esc){esc=false;}
+      else if(c==='\\'){esc=true;}
+      else if(c==='"'){inStr=false; lastSafe=k;}
+      continue;
+    }
+    if(c==='"'){inStr=true;}
+    else if(c==='{'||c==='['){stack.push(c==='{'?'}':']');}
+    else if(c==='}'||c===']'){ if(stack.length) stack.pop(); lastSafe=k; }
+    else if(c===','||/[0-9eE.\-]/.test(c)){ lastSafe=k; }
+    else if(/[a-zA-Z]/.test(c)){ lastSafe=k; } // true/false/null/keys
+  }
+  // κράτα μέχρι το τελευταίο «ασφαλές» σημείο, κόψε ημιτελές
+  let out=s.slice(0, lastSafe+1);
+  // αν τελειώνει σε κόμμα ή ανοιχτό, καθάρισε
+  out=out.replace(/,\s*$/,'');
+  // αν είμαστε ακόμα μέσα σε string που δεν έκλεισε, κόψε ως το τελευταίο "
+  // κλείσε όσα brackets έμειναν ανοιχτά
+  if(inStr){ // ανοιχτό string: κόψε το ημιτελές string
+    const lq=out.lastIndexOf('"');
+    if(lq>0){ out=out.slice(0,lq); out=out.replace(/[,\s]*"[^"]*$/,''); out=out.replace(/,\s*$/,''); }
+  }
+  // ξαναμέτρα stack για το τελικό out
+  let st=[], is=false, es=false;
+  for(let k=0;k<out.length;k++){ const c=out[k];
+    if(is){ if(es)es=false; else if(c==='\\')es=true; else if(c==='"')is=false; continue; }
+    if(c==='"')is=true; else if(c==='{')st.push('}'); else if(c==='[')st.push(']');
+    else if(c==='}'||c===']') st.pop();
+  }
+  while(st.length) out+=st.pop();
+  return out;
 }
 
 async function analyze(){
@@ -470,16 +513,20 @@ async function analyze(){
     const j=await res.json();
     if(!res.ok){throw new Error(j.error||('HTTP '+res.status));}
     let raw=(j.text||'').trim();
+    const truncated=(j.stop_reason==='max_tokens');
     const parsed=extractJSON(raw);
     if(!parsed) throw new Error('Το μοντέλο δεν επέστρεψε έγκυρα δεδομένα. Δοκιμάστε ξανά ή συμπληρώστε χειροκίνητα.');
     applyResult(parsed);
     // Αυστηρός αυτοέλεγχος
     const nV=(parsed.vertices||[]).length;
     const problems=validateVertices(parsed.vertices);
+    const truncNote = truncated ? '<br><b>⚠ Η απάντηση ήταν μεγάλη και ίσως κόπηκε</b> — ανακτήθηκε ό,τι διαβάστηκε· ελέγξτε μήπως λείπουν κορυφές/πίνακες στο τέλος.' : '';
     if(parsed.readError || nV===0){
       setStatus('⚠ '+(parsed.readError||'Δεν διαβάστηκαν οι κορυφές του σχεδίου.')+'<br><span class="muted">Το PDF δεν έχει αναγνώσιμο κείμενο (σχεδιασμένο ως γραμμές/SHX). Δώστε PDF με TrueType κείμενο ή συμπληρώστε χειροκίνητα τις κορυφές/πλευρές.</span>','err');
     } else if(problems.length){
-      setStatus('⚠ Η ανάλυση ολοκληρώθηκε αλλά ο έλεγχος εντόπισε πιθανά προβλήματα:<br>• '+problems.join('<br>• ')+'<br><span class="muted">Ελέγξτε προσεκτικά με το σχέδιο και διορθώστε χειροκίνητα όπου χρειάζεται. Για σίγουρο αποτέλεσμα, δώστε PDF με επιλέξιμο κείμενο.</span>','err');
+      setStatus('⚠ Η ανάλυση ολοκληρώθηκε αλλά ο έλεγχος εντόπισε πιθανά προβλήματα:<br>• '+problems.join('<br>• ')+truncNote+'<br><span class="muted">Ελέγξτε προσεκτικά με το σχέδιο και διορθώστε χειροκίνητα όπου χρειάζεται.</span>','err');
+    } else if(truncated){
+      setStatus('✓ Διαβάστηκαν '+nV+' κορυφές.'+truncNote,'err');
     } else {
       setStatus('✓ Η ανάλυση πέρασε τους ελέγχους ('+nV+' κορυφές). Ελέγξτε & διορθώστε τα στοιχεία παρακάτω.','ok');
     }
@@ -557,6 +604,22 @@ function azimuthDir(dx,dy){
   ];
   for(const [lim,name] of sectors){ if(a<lim) return name; }
   return 'ΒΟΡΕΙΑ';
+}
+// Προσημασμένο εμβαδόν (shoelace): >0 αριστερόστροφο (CCW), <0 δεξιόστροφο (CW)
+function polygonSignedArea(verts){
+  let s=0;
+  for(let i=0;i<verts.length;i++){
+    const a=verts[i], b=verts[(i+1)%verts.length];
+    s += (+String(a.x).replace(',','.'))*(+String(b.y).replace(',','.')) - (+String(b.x).replace(',','.'))*(+String(a.y).replace(',','.'));
+  }
+  return s/2;
+}
+// Κατεύθυνση ΟΜΟΡΟΥ: κάθετη προς τα ΕΞΩ από την πλευρά (όχι η φορά της γραμμής)
+function neighborDir(dx,dy,ccw){
+  // εξωτερική κάθετος: για CCW πολύγωνο = (dy,-dx)· για CW = (-dy,dx)
+  const nx = ccw ? dy : -dy;
+  const ny = ccw ? -dx : dx;
+  return azimuthDir(nx,ny);
 }
 function numGr(v){ return (Math.round(v*100)/100).toFixed(2).replace('.',','); }
 function cleanEmv(s){ return (s||'').replace(/\s*τ\.?μ\.?\s*/gi,'').trim(); }
@@ -642,11 +705,13 @@ function buildBoundariesFromVertices(vertices,edges){
   if(!vertices||vertices.length<3) return [];
   // fallback: παλιά μορφή edges {from,to,neighbor}
   const edgeNb={}; (edges||[]).forEach(e=>edgeNb[String(e.from)+'>'+String(e.to)]=e.neighbor||'');
+  const ccw = polygonSignedArea(vertices) > 0; // φορά πολυγώνου
   const out=[];
+  const num=(v)=>+String(v).replace(',','.');
   for(let i=0;i<vertices.length;i++){
     const a=vertices[i], b=vertices[(i+1)%vertices.length];
     if(!a||!b) continue;
-    const dx=(+b.x)-(+a.x), dy=(+b.y)-(+a.y);
+    const dx=num(b.x)-num(a.x), dy=num(b.y)-num(a.y);
     const len=Math.sqrt(dx*dx+dy*dy);
     if(len<0.01) continue;
     // προτεραιότητα: nb πάνω στην κορυφή· μετά edges· αλλιώς άγνωστος
@@ -659,7 +724,7 @@ function buildBoundariesFromVertices(vertices,edges){
     else { nb = ''; }
     out.push({
       side:String(a.n)+'-'+String(b.n),
-      direction:azimuthDir(dx,dy),
+      direction:neighborDir(dx,dy,ccw), // κατεύθυνση ΟΜΟΡΟΥ (κάθετα προς τα έξω)
       length:numGr(len),
       neighbor:nb||'ΙΔΙΟΚΤΗΣΙΑ ΑΓΝΩΣΤΟΥ'
     });
