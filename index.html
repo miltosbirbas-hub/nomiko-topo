@@ -155,7 +155,10 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 
   <!-- UPLOAD -->
   <div class="card">
-    <h2>1. Ανάρτηση Σχεδίου <span class="pill" id="modePill">Τοπογραφικό</span></h2>
+    <h2 style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <span>1. Ανάρτηση Σχεδίου <span class="pill" id="modePill">Τοπογραφικό</span></span>
+      <button class="btn-ghost" id="btnNew" onclick="newDiagram()" style="font-size:13px;white-space:nowrap">🆕 Νέο Διάγραμμα</button>
+    </h2>
     <div class="drop" id="drop">
       <div class="ic">⬆️</div>
       <p><b>Σύρετε εδώ</b> ή κάντε κλικ για επιλογή αρχείου PDF / εικόνας</p>
@@ -725,6 +728,36 @@ function checkUnknownNeighbors(){
   }
 }
 function addBndRow(){DATA.boundaries.push({side:'',direction:'ΑΝΑΤΟΛΙΚΑ',length:'',neighbor:''});renderBnd();}
+
+// Καθαρισμός όλων για νέο διάγραμμα
+function newDiagram(){
+  if(!confirm('Νέο διάγραμμα; Θα διαγραφούν όλες οι τρέχουσες καταχωρήσεις (στοιχεία, όρια, μεταβολές, δηλώσεις).')) return;
+  // αρχείο & preview
+  FILE=FILE_B64=FILE_MEDIA=FILE_KIND=null;
+  const fi=document.getElementById('fileInput'); if(fi) fi.value='';
+  document.getElementById('fileList').innerHTML='';
+  const pv=document.getElementById('previewImg'); if(pv){pv.classList.add('hidden');pv.src='';}
+  document.getElementById('analyzeHint').textContent='';
+  // μεταβλητές ανάγνωσης
+  window._pdfText=''; window._pdfPng=null; window._pdfPngMedia=null; window._textOK=false;
+  window._vertices=[]; window._tables=[]; window._khd='';
+  window._dilosi651=''; window._dilosiDasiki='';
+  // πεδία φόρμας
+  ['fDimos','fThesi','fKaek','fEmvado','fOwner'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
+  const cr=document.getElementById('fCrs'); if(cr) cr.value="ΕΓΣΑ '87 (EPSG:2100)";
+  const d1=document.getElementById('fDilosi651'); if(d1) d1.value='';
+  const d2=document.getElementById('fDilosiDasiki'); if(d2) d2.value='';
+  // δεδομένα
+  DATA.boundaries=[]; DATA.changes=[]; DATA.areaChanges=[];
+  // banner & status
+  const ub=document.getElementById('unknownBanner'); if(ub){ub.classList.add('hidden');ub.innerHTML='';}
+  const st=document.getElementById('status'); if(st){st.className='status';st.innerHTML='';}
+  // κρύψε αποτελέσματα
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('descOut').textContent='—';
+  // scroll πάνω
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
 // ---- changes table ----
 function renderChg(){
