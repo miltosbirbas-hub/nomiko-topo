@@ -338,18 +338,36 @@ async function renderPdfPreview(dataUrl){
     }catch(e){window._pdfText='';}
     // rasterize at high resolution for spatial reading (which side is N/S/E/W)
     const vp=page.getViewport({scale:1});
-    const scale=Math.min(2200/vp.width,3);
+    const scale=Math.min(2400/vp.width,3.2);
     const sv=page.getViewport({scale});
     const c=document.createElement('canvas');c.width=sv.width;c.height=sv.height;
     await page.render({canvasContext:c.getContext('2d'),viewport:sv}).promise;
     const img=document.getElementById('previewImg');
-    // downscale preview for display, keep full-res for API
     img.src=c.toDataURL('image/jpeg',0.7);img.classList.remove('hidden');
-    window._pdfPng=c.toDataURL('image/jpeg',0.85).split(',')[1];
+    window._pdfPng=c.toDataURL('image/jpeg',0.9).split(',')[1];
     window._pdfPngMedia='image/jpeg';
-    const hint=window._pdfText.length>200?` · εντοπίστηκε ενσωματωμένο κείμενο (${window._pdfText.length} χαρ.) — υψηλή ακρίβεια πινάκων`:' · σκαναρισμένο (μόνο εικόνα)';
+    // ΕΛΕΓΧΟΣ ΠΟΙΟΤΗΤΑΣ: είναι το κείμενο πραγματικό ελληνικό ή σπασμένο/encoding;
+    window._textOK=isTextUsable(window._pdfText);
+    const hint = window._textOK
+      ? ` · καθαρό κείμενο (${window._pdfText.length} χαρ.) — υψηλή ακρίβεια`
+      : (window._pdfText.length>200
+          ? ' · το κείμενο του PDF είναι αλλοιωμένο — θα γίνει οπτική ανάγνωση από την εικόνα'
+          : ' · σκαναρισμένο — οπτική ανάγνωση από εικόνα');
     document.getElementById('analyzeHint').textContent=hint;
   }catch(e){console.warn('preview failed',e);}
+}
+
+// Ελέγχει αν το εξαγόμενο κείμενο είναι αξιοποιήσιμο (όχι σπασμένο encoding)
+function isTextUsable(t){
+  if(!t || t.length<300) return false;
+  const greek=(t.match(/[Α-Ωα-ωΆ-Ώά-ώ]/g)||[]).length;
+  const digits=(t.match(/[0-9]/g)||[]).length;
+  const greekRatio=greek/t.length;
+  // αναμενόμενες λέξεις τοπογραφικού/ΔΓΜ
+  const kw=['ΚΑΕΚ','ΕΓΣΑ','ΕΜΒΑΔ','ΣΗΜΕΙ','ΚΟΡΥΦ','ΙΔΙΟΚΤΗ','ΔΗΜΟ','ΘΕΣΗ','ΠΙΝΑΚΑΣ','ΣΥΝΤΕΤΑΓΜΕΝ'];
+  const hits=kw.filter(k=>t.toUpperCase().includes(k)).length;
+  // χρειάζεται αρκετά ελληνικά + ψηφία + τουλάχιστον μερικές λέξεις-κλειδιά
+  return greekRatio>0.15 && digits>50 && hits>=3;
 }
 
 function setStatus(msg,kind){
@@ -391,13 +409,15 @@ async function analyze(){
   const sys = MODE==='topo' ? PROMPT_TOPO : PROMPT_DIAG;
   const hints = collectHints();
 
-  // ΑΚΡΙΒΕΙΑ: αν υπάρχει καθαρό ενσωματωμένο κείμενο, ΜΟΝΟ κείμενο (όχι εικόνα → χωρίς λάθη οπτικής ανάγνωσης).
-  // Εικόνα μόνο για σκαναρισμένα PDF / εικόνες.
+  // ΑΚΡΙΒΕΙΑ: αν το ενσωματωμένο κείμενο είναι ΚΑΘΑΡΟ, στέλνουμε ΜΟΝΟ κείμενο (χωρίς λάθη οπτικής ανάγνωσης).
+  // Αν είναι σπασμένο/encoding ή σκαναρισμένο → στέλνουμε ΕΙΚΟΝΑ.
   let content=[];
-  const hasCleanText = window._pdfText && window._pdfText.length>500;
-  if(FILE_KIND==='image'){
+  const hasCleanText = window._textOK===true;
+  if(hasCleanText){
+    // μόνο κείμενο
+  } else if(FILE_KIND==='image'){
     content.push({type:'image',source:{type:'base64',media_type:FILE_MEDIA,data:FILE_B64}});
-  } else if(FILE_KIND==='pdf' && !hasCleanText && window._pdfPng){
+  } else if(window._pdfPng){
     content.push({type:'image',source:{type:'base64',media_type:window._pdfPngMedia||'image/jpeg',data:window._pdfPng}});
   }
   let txtBlock='Γνωστά στοιχεία από τον χρήστη (συμπλήρωσέ τα ΜΟΝΟ αν λείπουν, ΜΗΝ τα αλλάζεις): '+JSON.stringify(hints);
