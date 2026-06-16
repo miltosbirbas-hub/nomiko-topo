@@ -1182,7 +1182,27 @@ checkSession();
 
 // PWA: εγγραφή service worker
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then((reg)=>{
+      // έλεγχος για νέα έκδοση κάθε φορά
+      reg.update();
+      reg.addEventListener('updatefound',()=>{
+        const sw=reg.installing;
+        if(!sw) return;
+        sw.addEventListener('statechange',()=>{
+          if(sw.state==='installed' && navigator.serviceWorker.controller){
+            // βρέθηκε νέα έκδοση — φόρτωσέ την
+            location.reload();
+          }
+        });
+      });
+    }).catch(()=>{});
+    // αν αλλάξει ο controller (νέος SW ανέλαβε), ανανέωσε μία φορά
+    let refreshed=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(refreshed) return; refreshed=true; location.reload();
+    });
+  });
 }
 </script>
 </body>
