@@ -1,0 +1,16 @@
+{
+  "name": "ΝΟΜΙΚΟ ΤΟΠΟ",
+  "short_name": "ΝΟΜΙΚΟ ΤΟΠΟ",
+  "description": "Περιγραφές ιδιοκτησίας & πίνακες μεταβολών για συμβόλαια — από τοπογραφικά & ΔΓΜ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1E3A5A",
+  "theme_color": "#1E3A5A",
+  "lang": "el",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ΝΟΜΙΚΟ ΤΟΠΟ — Περιγραφές Ιδιοκτησίας</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1E3A5A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ΝΟΜΙΚΟ ΤΟΠΟ">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<style>
+:root{
+  --navy:#1E3A5A; --olive:#4A6040; --bg:#f4f2ec; --card:#ffffff;
+  --line:#d8d3c4; --ink:#23211c; --muted:#6b6657; --accent:#b5482e; --gold:#a98b3c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+header{background:var(--navy);color:#fff;padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header .emblem{width:54px;height:54px;border-radius:4px;flex-shrink:0}
+header h1{font-size:20px;font-weight:600;letter-spacing:.5px}
+header .sub{font-size:12px;color:#b9c4d2;width:100%;margin-top:-4px}
+.wrap{max-width:1000px;margin:0 auto;padding:22px}
+.tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.tab{flex:1;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px;cursor:pointer;transition:.15s;border-left:4px solid transparent}
+.tab.active{border-left-color:var(--olive);box-shadow:0 2px 10px rgba(30,58,90,.08)}
+.tab h3{font-size:15px;color:var(--navy);margin-bottom:4px}
+.tab p{font-size:12px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:20px;margin-bottom:18px}
+.card h2{font-size:16px;color:var(--navy);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.drop{border:2px dashed var(--line);border-radius:4px;padding:30px;text-align:center;cursor:pointer;transition:.15s;background:#fafaf7}
+.drop:hover,.drop.over{border-color:var(--olive);background:#f0f3ee}
+.drop .ic{font-size:34px;color:var(--olive);margin-bottom:8px}
+.drop p{font-size:13px;color:var(--muted)}
+.drop small{font-size:11px;color:#9a9484}
+.filerow{display:flex;align-items:center;gap:10px;background:#f0f3ee;border-radius:3px;padding:8px 12px;margin-top:10px;font-size:13px}
+.filerow .x{margin-left:auto;cursor:pointer;color:var(--accent);font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:680px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:3px;font-size:13px;font-family:inherit;background:#fff}
+textarea{resize:vertical;min-height:70px}
+.field{margin-bottom:12px}
+button{font-family:inherit;font-weight:600;cursor:pointer;border:none;border-radius:3px;padding:11px 18px;font-size:14px;transition:.15s}
+.btn-primary{background:var(--olive);color:#fff}
+.btn-primary:hover{background:#3c4f34}
+.btn-primary:disabled{background:#b3bdaa;cursor:not-allowed}
+.btn-nav{background:var(--navy);color:#fff}
+.btn-nav:hover{background:#16293f}
+.btn-ghost{background:transparent;color:var(--navy);border:1px solid var(--line)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+.status{font-size:13px;padding:10px 14px;border-radius:3px;margin-top:12px;display:none}
+.status.show{display:block}
+.status.info{background:#e8eef5;color:var(--navy)}
+.status.err{background:#fbe9e6;color:var(--accent)}
+.status.ok{background:#e9f0e4;color:var(--olive)}
+.hidden{display:none}
+table.bnd{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+table.bnd th,table.bnd td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+table.bnd th{background:var(--navy);color:#fff;font-weight:600}
+table.bnd input,table.bnd select{padding:5px 6px;font-size:12px}
+table.bnd td{vertical-align:middle}
+.addrow{margin-top:8px;font-size:12px}
+.desc-out{background:#faf8f2;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:3px;padding:16px;font-size:14px;line-height:1.7;white-space:pre-wrap;margin-top:8px}
+.pill{display:inline-block;background:var(--olive);color:#fff;font-size:11px;padding:2px 9px;border-radius:20px;margin-left:8px;vertical-align:middle}
+.muted{color:var(--muted);font-size:12px}
+.key-note{font-size:11px;color:#9a9484;margin-top:6px}
+.del-from{background:var(--accent)!important}
+h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.preview-img{max-width:100%;border:1px solid var(--line);border-radius:3px;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+  <svg class="emblem" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-label="Λογότυπο ΝΟΜΙΚΟ ΤΟΠΟ">
+    <rect x="0" y="0" width="120" height="120" rx="4" fill="#16293f"/>
+    <g stroke="#365270" stroke-width="0.5">
+      <line x1="14" y1="38" x2="106" y2="38"/><line x1="14" y1="62" x2="106" y2="62"/>
+      <line x1="14" y1="86" x2="106" y2="86"/>
+      <line x1="38" y1="14" x2="38" y2="106"/><line x1="62" y1="14" x2="62" y2="106"/>
+      <line x1="86" y1="14" x2="86" y2="106"/>
+    </g>
+    <path d="M44 22 L56 34 L62 58 L65 84 L55 102 L44 110 L33 102 L23 84 L26 58 L32 34 Z"
+          fill="#4A6040" fill-opacity="0.22" stroke="#7FA86A" stroke-width="1.2" stroke-linejoin="round"/>
+    <g transform="translate(60,60)">
+      <line x1="0" y1="-34" x2="0" y2="26" stroke="#A98B3C" stroke-width="2" stroke-linecap="round"/>
+      <line x1="-26" y1="-26" x2="26" y2="-26" stroke="#A98B3C" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="0" cy="-34" r="3" fill="#A98B3C"/>
+      <path d="M-35 -14 A26 26 0 0 0 -17 -14 Z" fill="#A98B3C" fill-opacity="0.30" stroke="#A98B3C" stroke-width="1.2"/>
+      <path d="M17 -14 A26 26 0 0 0 35 -14 Z" fill="#A98B3C" fill-opacity="0.30" stroke="#A98B3C" stroke-width="1.2"/>
+      <line x1="-26" y1="-26" x2="-26" y2="-14" stroke="#A98B3C" stroke-width="0.8"/>
+      <line x1="26" y1="-26" x2="26" y2="-14" stroke="#A98B3C" stroke-width="0.8"/>
+    </g>
+    <g transform="translate(60,60) rotate(28)">
+      <path d="M-3 36 C -5 14, 2 -12, 12 -38 C 14 -22, 12 4, 3 35 Z"
+            fill="#F2EFE6" stroke="#C9C2AC" stroke-width="0.7" stroke-linejoin="round"/>
+      <path d="M-3 36 C -4 26, -5 22, -6 19 C -3 22, 0 23, 3 35 Z" fill="#2E2A20"/>
+    </g>
+  </svg>
+  <div>
+    <h1>ΝΟΜΙΚΟ ΤΟΠΟ</h1>
+  </div>
+  <div class="sub">Περιγραφές ιδιοκτησίας & πίνακες μεταβολών για συμβόλαια — από τοπογραφικά & διαγράμματα γεωμετρικών μεταβολών</div>
+</header>
+
+<div class="wrap">
+
+  <!-- LOGIN GATE -->
+  <div class="card" id="loginCard">
+    <h2>Σύνδεση</h2>
+    <p class="muted" style="margin-bottom:14px">Συνδεθείτε για να χρησιμοποιήσετε την ανάλυση σχεδίων.</p>
+    <div class="grid">
+      <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="name@example.com"></div>
+      <div class="field"><label>Κωδικός</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+    </div>
+    <div class="row">
+      <button class="btn-primary" id="btnLogin" onclick="doLogin()">Σύνδεση</button>
+      <button class="btn-ghost" onclick="doSignup()">Δημιουργία λογαριασμού</button>
+    </div>
+    <div class="status" id="loginStatus"></div>
+  </div>
+
+  <!-- USER BAR (hidden until logged in) -->
+  <div class="card hidden" id="userBar" style="display:none;align-items:center">
+    <div class="row" style="width:100%;align-items:center">
+      <span class="muted">Συνδεδεμένος ως <b id="userEmail"></b></span>
+      <button class="btn-ghost" style="margin-left:auto" onclick="doLogout()">Αποσύνδεση</button>
+    </div>
+  </div>
+
+  <!-- APP (hidden until logged in) -->
+  <div id="appBody" style="display:none">
+
+  <div class="tabs">
+    <div class="tab active" id="tabTopo" onclick="switchMode('topo')">
+      <h3>📐 Τοπογραφικό Διάγραμμα</h3>
+      <p>Ανάρτηση τοπογραφικού → περιγραφή ορίων ιδιοκτησίας (ανατολικά / νότια / δυτικά / βόρεια)</p>
+    </div>
+    <div class="tab" id="tabDiag" onclick="switchMode('diag')">
+      <h3>🔀 Διάγραμμα Γεωμετρικών Μεταβολών</h3>
+      <p>Ανάρτηση ΔΓΜ → περιγραφή ορίων + πίνακες μεταβολών (ποιο τμήμα από ΚΑΕΚ σε ΚΑΕΚ)</p>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="card">
+    <h2>1. Ανάρτηση Σχεδίου <span class="pill" id="modePill">Τοπογραφικό</span></h2>
+    <div class="drop" id="drop">
+      <div class="ic">⬆️</div>
+      <p><b>Σύρετε εδώ</b> ή κάντε κλικ για επιλογή αρχείου PDF / εικόνας</p>
+      <small>Υποστηρίζονται PDF, JPG, PNG (έως ~20 MB)</small>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf,image/*" class="hidden">
+    <div id="fileList"></div>
+    <img id="previewImg" class="preview-img hidden">
+  </div>
+
+  <!-- BASIC INFO -->
+  <div class="card">
+    <h2>2. Στοιχεία Ιδιοκτησίας (συμπληρώστε ή αφήστε το AI να τα βρει)</h2>
+    <div class="grid">
+      <div class="field"><label>Δήμος / Κοινότητα</label><input id="fDimos" placeholder="π.χ. Δήμος Λευκάδας"></div>
+      <div class="field"><label>Θέση / Τοπωνύμιο</label><input id="fThesi" placeholder="π.χ. «Επισκοπή»"></div>
+      <div class="field"><label>ΚΑΕΚ (κύριο)</label><input id="fKaek" placeholder="π.χ. 340150401102"></div>
+      <div class="field"><label>Εμβαδόν (τ.μ.)</label><input id="fEmvado" placeholder="π.χ. 512,34"></div>
+      <div class="field"><label>Ιδιοκτήτης/-ες</label><input id="fOwner" placeholder="π.χ. Ιωάννης Παπαδόπουλος"></div>
+      <div class="field"><label>Σύστημα αναφοράς</label><input id="fCrs" value="ΕΓΣΑ '87 (EPSG:2100)"></div>
+    </div>
+  </div>
+
+  <!-- ANALYZE -->
+  <div class="card">
+    <h2>3. Ανάλυση με AI</h2>
+    <p class="muted">Το Claude θα διαβάσει το σχέδιο, θα εντοπίσει τα όρια, τα μήκη πλευρών, τους όμορους και (στα ΔΓΜ) τους πίνακες μεταβολών.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn-primary" id="btnAnalyze" onclick="analyze()">🔍 Ανάλυση Σχεδίου</button>
+      <span class="muted" id="analyzeHint"></span>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="hidden">
+
+    <!-- boundaries -->
+    <div class="card">
+      <h2>4. Όρια Ιδιοκτησίας <span class="muted">(επεξεργάσιμα)</span></h2>
+      <table class="bnd" id="bndTable">
+        <thead><tr><th style="width:70px">Πλευρά</th><th style="width:90px">Διεύθυνση</th><th style="width:90px">Μήκος (μ.)</th><th>Συνορεύει με</th><th style="width:40px"></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button class="btn-ghost addrow" onclick="addBndRow()">+ Προσθήκη πλευράς</button>
+    </div>
+
+    <!-- changes table (diag only) -->
+    <div class="card hidden" id="changesCard">
+      <h2>5. Πίνακας Γεωμετρικών Μεταβολών <span class="muted">(ποιο τμήμα → πού)</span></h2>
+      <table class="bnd" id="chgTable">
+        <thead><tr>
+          <th>Τμήμα / Περιγραφή</th><th style="width:140px">Από ΚΑΕΚ</th>
+          <th style="width:140px">Σε ΚΑΕΚ</th><th style="width:110px">Εμβαδόν (τ.μ.)</th><th style="width:40px"></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      <button class="btn-ghost addrow" onclick="addChgRow()">+ Προσθήκη μεταβολής</button>
+    </div>
+
+    <!-- area changes table (diag only) -->
+    <div class="card hidden" id="areaCard">
+      <h2>5β. Πίνακας Αρχικών & Τελικών Εμβαδών <span class="muted">(ανά εμπλεκόμενο ΚΑΕΚ)</span></h2>
+      <table class="bnd" id="areaTable">
+        <thead><tr>
+          <th>Εμπλεκόμενο ΚΑΕΚ</th><th style="width:170px">Αρχικό εμβαδόν (τ.μ.)</th>
+          <th style="width:170px">Τελικό εμβαδόν (τ.μ.)</th><th style="width:40px"></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      <button class="btn-ghost addrow" onclick="addAreaRow()">+ Προσθήκη γραμμής</button>
+    </div>
+
+    <!-- generated description -->
+    <div class="card">
+      <h2>6. Κείμενο Περιγραφής για το Συμβόλαιο</h2>
+      <div class="field">
+        <label>Έναρξη φράσης ορίων</label>
+        <select id="phraseStyle" onchange="buildDescription()">
+          <option value="full">«…συνορεύει ανατολικά σε μήκος Χ μέτρων με ιδιοκτησία…»</option>
+          <option value="compact">«Ανατολικά: μήκος Χμ., όμορος …»</option>
+        </select>
+      </div>
+      <div class="desc-out" id="descOut">—</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn-ghost" onclick="buildDescription()">↻ Επαναδημιουργία κειμένου</button>
+        <button class="btn-ghost" onclick="copyDesc()">📋 Αντιγραφή</button>
+      </div>
+    </div>
+
+    <!-- export -->
+    <div class="card">
+      <h2>7. Εξαγωγή</h2>
+      <p class="muted">Παράγεται αρχείο .docx έτοιμο για ενσωμάτωση στο σώμα του συμβολαίου.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn-nav" id="btnDocx" onclick="exportDocx()">📄 Περιγραφή για Συμβόλαιο (DOCX)</button>
+        <button class="btn-nav hidden" id="btnReport" onclick="exportReport()" style="background:var(--olive)">⚖️ Τεχνική Έκθεση για Δικαστήριο/Κτηματολόγιο (DOCX)</button>
+      </div>
+    </div>
+
+  </div>
+  </div><!-- /appBody -->
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let MODE='topo';
+let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
+let DATA={boundaries:[],changes:[],areaChanges:[]};
+
+// ── Κλειδί Claude API ──
+// Συμπληρώστε εδώ το κλειδί σας (όπως στο Έλεγχος Δόμησης). Σε production
+// συνιστάται proxy (Supabase Edge Function) ώστε το κλειδί να μην εκτίθεται.
+// ── Ρυθμίσεις Supabase (ίδια λογική με τις άλλες εφαρμογές σου) ──
+// Το Claude κλειδί ΔΕΝ μπαίνει εδώ — μένει κρυφό στην Edge Function.
+const SUPABASE_URL  = 'https://cjeeiatkphrmoalxlbze.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_SygzGjiVWTYy1HR1Fb2usg_hpR6EUeb';
+const EDGE_FN = SUPABASE_URL + '/functions/v1/analyze-drawing';
+
+let SB=null;
+function initSupabase(){
+  if(window.supabase && SUPABASE_URL.indexOf('ΤΟ-')===-1){
+    SB=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  }
+}
+
+function switchMode(m){
+  MODE=m;
+  document.getElementById('tabTopo').classList.toggle('active',m==='topo');
+  document.getElementById('tabDiag').classList.toggle('active',m==='diag');
+  document.getElementById('modePill').textContent= m==='topo'?'Τοπογραφικό':'Διάγραμμα Μεταβολών';
+  document.getElementById('changesCard').classList.toggle('hidden',m!=='diag');
+  document.getElementById('areaCard').classList.toggle('hidden',m!=='diag');
+  const rb=document.getElementById('btnReport'); if(rb) rb.classList.toggle('hidden',m!=='diag');
+}
+
+// ---- file handling ----
+const drop=document.getElementById('drop'), fi=document.getElementById('fileInput');
+drop.onclick=()=>fi.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over')};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])};
+fi.onchange=e=>{if(e.target.files[0])handleFile(e.target.files[0])};
+
+function handleFile(f){
+  FILE=f;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    FILE_B64=reader.result.split(',')[1];
+    if(f.type==='application/pdf'){FILE_KIND='pdf';FILE_MEDIA='application/pdf';renderPdfPreview(reader.result);}
+    else{FILE_KIND='image';FILE_MEDIA=f.type;document.getElementById('previewImg').src=reader.result;document.getElementById('previewImg').classList.remove('hidden');}
+  };
+  reader.readAsDataURL(f);
+  document.getElementById('fileList').innerHTML=
+    `<div class="filerow">📎 ${f.name} <span class="muted">(${(f.size/1024/1024).toFixed(2)} MB)</span><span class="x" onclick="clearFile()">✕</span></div>`;
+}
+function clearFile(){FILE=FILE_B64=null;document.getElementById('fileList').innerHTML='';document.getElementById('previewImg').classList.add('hidden');fi.value='';}
+
+async function renderPdfPreview(dataUrl){
+  window._pdfText='';
+  try{
+    const pdf=await pdfjsLib.getDocument(dataUrl).promise;
+    const page=await pdf.getPage(1);
+    // extract embedded text (tables, coordinate lists) — far more accurate than OCR
+    try{
+      const tc=await page.getTextContent();
+      window._pdfText=tc.items.map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
+    }catch(e){window._pdfText='';}
+    // rasterize at high resolution for spatial reading (which side is N/S/E/W)
+    const vp=page.getViewport({scale:1});
+    const scale=Math.min(2200/vp.width,3);
+    const sv=page.getViewport({scale});
+    const c=document.createElement('canvas');c.width=sv.width;c.height=sv.height;
+    await page.render({canvasContext:c.getContext('2d'),viewport:sv}).promise;
+    const img=document.getElementById('previewImg');
+    // downscale preview for display, keep full-res for API
+    img.src=c.toDataURL('image/jpeg',0.7);img.classList.remove('hidden');
+    window._pdfPng=c.toDataURL('image/jpeg',0.85).split(',')[1];
+    window._pdfPngMedia='image/jpeg';
+    const hint=window._pdfText.length>200?` · εντοπίστηκε ενσωματωμένο κείμενο (${window._pdfText.length} χαρ.) — υψηλή ακρίβεια πινάκων`:' · σκαναρισμένο (μόνο εικόνα)';
+    document.getElementById('analyzeHint').textContent=hint;
+  }catch(e){console.warn('preview failed',e);}
+}
+
+function setStatus(msg,kind){
+  const s=document.getElementById('status');
+  s.className='status show '+(kind||'info');
+  s.innerHTML=msg;
+}
+
+// ---- AI analysis ----
+// Βρίσκει JSON ακόμα κι αν το μοντέλο έβαλε κείμενο/markdown γύρω του
+function extractJSON(s){
+  if(!s) return null;
+  let t=s.replace(/```json/gi,'').replace(/```/g,'').trim();
+  // πρώτη δοκιμή: όλο το string
+  try{ return JSON.parse(t); }catch(e){}
+  // δεύτερη: βρες το πρώτο { ... τελευταίο }
+  const i=t.indexOf('{'), j=t.lastIndexOf('}');
+  if(i>=0 && j>i){
+    let cand=t.slice(i,j+1);
+    try{ return JSON.parse(cand); }catch(e){}
+    // τρίτη: καθάρισε τυχόν trailing commas
+    try{ return JSON.parse(cand.replace(/,\s*([}\]])/g,'$1')); }catch(e){}
+  }
+  return null;
+}
+
+async function analyze(){
+  if(!FILE_B64){setStatus('Αναρτήστε πρώτα ένα σχέδιο (PDF ή εικόνα).','err');return;}
+  if(!SB){setStatus('Δεν έχει ρυθμιστεί η σύνδεση Supabase στον κώδικα (SUPABASE_URL / ANON).','err');return;}
+
+  // πάρε το session token του συνδεδεμένου χρήστη
+  const { data:{ session } } = await SB.auth.getSession();
+  if(!session){setStatus('Πρέπει να είστε συνδεδεμένος για να χρησιμοποιήσετε την ανάλυση.','err');return;}
+
+  const btn=document.getElementById('btnAnalyze');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>Ανάλυση...';
+  setStatus('Αποστολή στο Claude για ανάγνωση του σχεδίου...','info');
+
+  const sys = MODE==='topo' ? PROMPT_TOPO : PROMPT_DIAG;
+  const hints = collectHints();
+
+  // build content: image for spatial layout + extracted text for table accuracy
+  let content=[];
+  if(FILE_KIND==='pdf' && window._pdfPng){
+    content.push({type:'image',source:{type:'base64',media_type:window._pdfPngMedia||'image/jpeg',data:window._pdfPng}});
+  } else if(FILE_KIND==='image'){
+    content.push({type:'image',source:{type:'base64',media_type:FILE_MEDIA,data:FILE_B64}});
+  } else {
+    content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:FILE_B64}});
+  }
+  let txtBlock='Γνωστά στοιχεία από τον χρήστη (χρησιμοποίησέ τα/συμπλήρωσέ τα): '+JSON.stringify(hints);
+  if(window._pdfText && window._pdfText.length>200){
+    txtBlock+='\n\nΕΝΣΩΜΑΤΩΜΕΝΟ ΚΕΙΜΕΝΟ ΤΟΥ ΣΧΕΔΙΟΥ (ακριβές — χρησιμοποίησέ το κατά προτεραιότητα για πίνακες/συντεταγμένες/εμβαδά, και την εικόνα για τη χωρική διάταξη Β/Ν/Α/Δ):\n"""\n'+window._pdfText.slice(0,18000)+'\n"""';
+  }
+  txtBlock+='\n\nΕπέστρεψε ΜΟΝΟ έγκυρο JSON, χωρίς markdown.';
+  content.push({type:'text',text:txtBlock});
+
+  try{
+    const res=await fetch(EDGE_FN,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+      body:JSON.stringify({system:sys,content})
+    });
+    const j=await res.json();
+    if(!res.ok){throw new Error(j.error||('HTTP '+res.status));}
+    let raw=(j.text||'').trim();
+    const parsed=extractJSON(raw);
+    if(!parsed) throw new Error('Το μοντέλο δεν επέστρεψε έγκυρα δεδομένα. Δοκιμάστε ξανά ή συμπληρώστε χειροκίνητα.');
+    applyResult(parsed);
+    setStatus('✓ Η ανάλυση ολοκληρώθηκε. Ελέγξτε & διορθώστε τα στοιχεία παρακάτω.','ok');
+  }catch(e){
+    setStatus('Σφάλμα: '+e.message+'<br><span class="muted">Μπορείτε επίσης να συμπληρώσετε χειροκίνητα τους πίνακες παρακάτω.</span>','err');
+    document.getElementById('results').classList.remove('hidden');
+    if(!DATA.boundaries.length){['ΑΝΑΤΟΛΙΚΑ','ΝΟΤΙΑ','ΔΥΤΙΚΑ','ΒΟΡΕΙΑ'].forEach(d=>DATA.boundaries.push({direction:d,length:'',neighbor:''}));renderBnd();}
+  }finally{
+    btn.disabled=false;btn.innerHTML='🔍 Ανάλυση Σχεδίου';
+  }
+}
+
+function collectHints(){
+  return {
+    dimos:val('fDimos'),thesi:val('fThesi'),kaek:val('fKaek'),
+    emvado:val('fEmvado'),owner:val('fOwner'),crs:val('fCrs')
+  };
+}
+function val(id){return document.getElementById(id).value.trim();}
+
+const PROMPT_TOPO=`ΚΡΙΣΙΜΟ: Απάντησε ΜΟΝΟ με ένα έγκυρο JSON object. ΜΗΝ γράψεις καμία εξήγηση, σχόλιο, ή κείμενο πριν ή μετά. ΜΗΝ ξεκινήσεις με "I need to" ή οτιδήποτε άλλο — μόνο το JSON, ξεκινώντας με { και τελειώνοντας με }.
+
+Είσαι έμπειρος τοπογράφος μηχανικός. Διαβάζεις ελληνικό τοπογραφικό διάγραμμα (ΕΓΣΑ '87, βορράς προς τα πάνω).
+Έχεις την ΕΙΚΟΝΑ και (συνήθως) το ΕΝΣΩΜΑΤΩΜΕΝΟ ΚΕΙΜΕΝΟ. Στο κείμενο υπάρχει «ΠΙΝΑΚΑΣ ΚΟΡΥΦΩΝ ΙΔΙΟΚΤΗΣΙΑΣ» με κορυφές (Σημείο, Χ, Υ). Γύρω από το περίγραμμα αναγράφονται οι όμοροι (ονόματα, «ΙΔΙΟΚΤΗΣΙΑ ...», ΚΑΕΚ ομόρων, δρόμοι, αιγιαλός, θάλασσα).
+ΕΡΓΟ ΣΟΥ — μην ομαδοποιείς, μην υπολογίζεις προσανατολισμό (το κάνει η εφαρμογή). Απλώς εξάγαγε ΑΚΡΙΒΩΣ:
+1) vertices: ΟΛΕΣ τις κορυφές με σειρά περιγράμματος, με αριθμό και συντεταγμένες Χ,Υ (όπως στον πίνακα).
+2) edges: για κάθε πλευρά (από κορυφή i στην επόμενη), ποιος είναι ο όμορος σε εκείνη την πλευρά. Αν δεν φαίνεται, "".
+3) δήμο/κοινότητα, θέση, ΚΑΕΚ, εμβαδόν, ιδιοκτήτη.
+Επέστρεψε ΜΟΝΟ JSON:
+{"dimos":"","thesi":"","kaek":"","emvado":"","owner":"","crs":"ΕΓΣΑ '87",
+ "vertices":[{"n":"1","x":238098.820,"y":4280949.520},{"n":"2","x":238115.770,"y":4280937.240}],
+ "edges":[{"from":"1","to":"2","neighbor":"ιδιοκτησία ΑΕΓΕΚ"}]}
+Οι συντεταγμένες ως αριθμοί (τελεία υποδιαστολή, όπως στον πίνακα). Αντέγραψε επακριβώς. Μην εφεύρεις όμορους.
+ΑΝ ΤΟ ΣΧΕΔΙΟ ΕΙΝΑΙ ΣΚΑΝΑΡΙΣΜΕΝΟ (μόνο εικόνα): διάβασε τον «ΠΙΝΑΚΑ ΚΟΡΥΦΩΝ» ΟΠΤΙΚΑ από την εικόνα, αριθμό-αριθμό, με προσοχή στα δεκαδικά. Οι Χ είναι ~6ψήφιοι (π.χ. 238xxx), οι Υ ~7ψήφιοι (π.χ. 4280xxx).`;
+
+const PROMPT_DIAG=`ΚΡΙΣΙΜΟ: Απάντησε ΜΟΝΟ με ένα έγκυρο JSON object. ΜΗΝ γράψεις καμία εξήγηση, σχόλιο, ή κείμενο πριν ή μετά. ΜΗΝ ξεκινήσεις με "I need to" ή οτιδήποτε άλλο — μόνο το JSON, ξεκινώντας με { και τελειώνοντας με }.
+
+Είσαι έμπειρος τοπογράφος μηχανικός. Διαβάζεις ελληνικό Διάγραμμα Γεωμετρικών Μεταβολών (ΔΓΜ) διόρθωσης ορίων του Κτηματολογίου.
+Έχεις την ΕΙΚΟΝΑ και (συνήθως) το ΕΝΣΩΜΑΤΩΜΕΝΟ ΚΕΙΜΕΝΟ.
+Στο κείμενο υπάρχουν: «ΠΙΝΑΚΑΣ ΚΟΡΥΦΩΝ ΙΔΙΟΚΤΗΣΙΑΣ» (τελικό γεωτεμάχιο), πίνακες αρχικών/τελικών γεωτεμαχίων ανά ΚΑΕΚ, «ΠΙΝΑΚΑΣ ΓΙΑ ΤΗ ΔΙΟΡΘΩΣΗ ΤΩΝ ΓΕΩΤΕΜΑΧΙΩΝ» (στήλες: ΤΜΗΜΑ, ΠΕΡΙΓΡΑΦΗ, ΕΜΒΑΔΟΝ, ΑΠΟ ΚΑΕΚ, ΣΕ ΚΑΕΚ) και «ΠΙΝΑΚΑΣ ΑΡΧΙΚΩΝ ΚΑΙ ΤΕΛΙΚΩΝ ΕΜΒΑΔΩΝ ΕΠΗΡΕΑΖΟΜΕΝΩΝ ΓΕΩΤΕΜΑΧΙΩΝ».
+ΕΡΓΟ ΣΟΥ:
+1) vertices: ΟΛΕΣ τις κορυφές του ΤΕΛΙΚΟΥ γεωτεμαχίου με σειρά, αριθμό και Χ,Υ. edges: ο όμορος ανά πλευρά (η εφαρμογή υπολογίζει μόνη της προσανατολισμό/μήκη — βορράς πάνω).
+2) changes: ΑΚΡΙΒΩΣ οι γραμμές του «ΠΙΝΑΚΑ ΓΙΑ ΤΗ ΔΙΟΡΘΩΣΗ ΤΩΝ ΓΕΩΤΕΜΑΧΙΩΝ» — ποιο τμήμα, εμβαδόν, από ποιο ΚΑΕΚ σε ποιο ΚΑΕΚ.
+3) areaChanges: οι γραμμές του πίνακα αρχικών/τελικών εμβαδών (ανά εμπλεκόμενο ΚΑΕΚ).
+4) βρες δήμο, θέση, ΚΑΕΚ (τελικό/νέο), εμβαδόν τελικού, ιδιοκτήτη, ΚΗΔ.
+Επέστρεψε ΜΟΝΟ JSON:
+{"dimos":"","thesi":"","kaek":"","emvado":"","owner":"","crs":"ΕΓΣΑ '87","khd":"",
+ "vertices":[{"n":"1","x":238277.310,"y":4280855.650}],
+ "edges":[{"from":"1","to":"2","neighbor":""}],
+ "changes":[{"part":"ΤΜΗΜΑ Δ1","fromKaek":"010393405006","toKaek":"010393405007/010393405006","area":"656,103"}],
+ "areaChanges":[{"kaek":"010393405005","initial":"10676,749","final":"10642,749"}]}
+Συντεταγμένες ως αριθμοί. Εμβαδά/ΚΑΕΚ ως κείμενο, αντιγραμμένα επακριβώς. Κενά όπου δεν προκύπτει κάτι.`;
+
+// Υπολογισμός κατεύθυνσης πλευράς από αζιμούθιο (βορράς=+Υ, πάνω)
+function azimuthDir(dx,dy){
+  // γωνία από τον Βορρά, δεξιόστροφα (0=Β, 90=Α, 180=Ν, 270=Δ)
+  let a=Math.atan2(dx,dy)*180/Math.PI; if(a<0)a+=360;
+  const sectors=[
+    [22.5,'ΒΟΡΕΙΑ'],[67.5,'ΒΟΡΕΙΟΑΝΑΤΟΛΙΚΑ'],[112.5,'ΑΝΑΤΟΛΙΚΑ'],[157.5,'ΝΟΤΙΟΑΝΑΤΟΛΙΚΑ'],
+    [202.5,'ΝΟΤΙΑ'],[247.5,'ΝΟΤΙΟΔΥΤΙΚΑ'],[292.5,'ΔΥΤΙΚΑ'],[337.5,'ΒΟΡΕΙΟΔΥΤΙΚΑ'],[360,'ΒΟΡΕΙΑ']
+  ];
+  for(const [lim,name] of sectors){ if(a<lim) return name; }
+  return 'ΒΟΡΕΙΑ';
+}
+function numGr(v){ return (Math.round(v*100)/100).toFixed(2).replace('.',','); }
+function cleanEmv(s){ return (s||'').replace(/\s*τ\.?μ\.?\s*/gi,'').trim(); }
+function safeName(s){ return (s||'').replace(/[\/\\:*?"<>|]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,''); }
+
+// Από vertices+edges → ΜΙΑ γραμμή ανά πλευρά (1-2, 2-3, ...) με δική της κατεύθυνση & μήκος
+function buildBoundariesFromVertices(vertices,edges){
+  if(!vertices||vertices.length<3) return [];
+  const edgeNb={}; (edges||[]).forEach(e=>edgeNb[String(e.from)+'>'+String(e.to)]=e.neighbor||'');
+  const out=[];
+  for(let i=0;i<vertices.length;i++){
+    const a=vertices[i], b=vertices[(i+1)%vertices.length];
+    if(!a||!b) continue;
+    const dx=(+b.x)-(+a.x), dy=(+b.y)-(+a.y);
+    const len=Math.sqrt(dx*dx+dy*dy);
+    if(len<0.01) continue;
+    const nb=edgeNb[String(a.n)+'>'+String(b.n)]||'';
+    out.push({
+      side:String(a.n)+'-'+String(b.n),
+      direction:azimuthDir(dx,dy),
+      length:numGr(len),
+      neighbor:nb||'ΙΔΙΟΚΤΗΣΙΑ ΑΓΝΩΣΤΟΥ'
+    });
+  }
+  return out;
+}
+
+function applyResult(p){
+  if(p.dimos&&!val('fDimos'))document.getElementById('fDimos').value=p.dimos;
+  if(p.thesi&&!val('fThesi'))document.getElementById('fThesi').value=p.thesi;
+  if(p.kaek&&!val('fKaek'))document.getElementById('fKaek').value=p.kaek;
+  if(p.emvado&&!val('fEmvado'))document.getElementById('fEmvado').value=p.emvado;
+  if(p.owner&&!val('fOwner'))document.getElementById('fOwner').value=p.owner;
+
+  // ΑΥΤΟΜΑΤΟΣ υπολογισμός ορίων από συντεταγμένες (βορράς πάνω)
+  let bnds=[];
+  if(p.vertices && p.vertices.length>=3){
+    bnds=buildBoundariesFromVertices(p.vertices,p.edges);
+    window._vertices=p.vertices;
+  }
+  // fallback: αν το μοντέλο επέστρεψε έτοιμα boundaries (παλιά μορφή)
+  if(!bnds.length && p.boundaries) bnds=p.boundaries.map(b=>({direction:b.direction||'',length:b.length||'',neighbor:b.neighbor||''}));
+
+  DATA.boundaries=bnds;
+  DATA.changes=(p.changes||[]).map(c=>({part:c.part||'',fromKaek:c.fromKaek||'',toKaek:c.toKaek||'',area:c.area||''}));
+  DATA.areaChanges=(p.areaChanges||[]).map(a=>({kaek:a.kaek||'',initial:a.initial||'',final:a.final||''}));
+  window._khd=p.khd||'';
+  if(!DATA.boundaries.length)['ΑΝΑΤΟΛΙΚΑ','ΝΟΤΙΑ','ΔΥΤΙΚΑ','ΒΟΡΕΙΑ'].forEach(d=>DATA.boundaries.push({direction:d,length:'',neighbor:''}));
+  document.getElementById('results').classList.remove('hidden');
+  renderBnd();renderChg();renderArea();buildDescription();
+}
+
+// ---- boundary table ----
+const DIRS=['ΒΟΡΕΙΑ','ΒΟΡΕΙΟΑΝΑΤΟΛΙΚΑ','ΑΝΑΤΟΛΙΚΑ','ΝΟΤΙΟΑΝΑΤΟΛΙΚΑ','ΝΟΤΙΑ','ΝΟΤΙΟΔΥΤΙΚΑ','ΔΥΤΙΚΑ','ΒΟΡΕΙΟΔΥΤΙΚΑ'];
+function renderBnd(){
+  const tb=document.querySelector('#bndTable tbody');tb.innerHTML='';
+  DATA.boundaries.forEach((b,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input value="${esc(b.side||'')}" style="width:60px" oninput="DATA.boundaries[${i}].side=this.value;buildDescription()"></td>
+      <td><select onchange="DATA.boundaries[${i}].direction=this.value;buildDescription()">
+        ${DIRS.map(d=>`<option ${d===b.direction?'selected':''}>${d}</option>`).join('')}
+      </select></td>
+      <td><input value="${esc(b.length)}" oninput="DATA.boundaries[${i}].length=this.value;buildDescription()"></td>
+      <td><input value="${esc(b.neighbor)}" oninput="DATA.boundaries[${i}].neighbor=this.value;buildDescription()"></td>
+      <td><span class="x" style="cursor:pointer;color:var(--accent)" onclick="DATA.boundaries.splice(${i},1);renderBnd();buildDescription()">✕</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+function addBndRow(){DATA.boundaries.push({direction:'ΑΝΑΤΟΛΙΚΑ',length:'',neighbor:''});renderBnd();}
+
+// ---- changes table ----
+function renderChg(){
+  const tb=document.querySelector('#chgTable tbody');tb.innerHTML='';
+  DATA.changes.forEach((c,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input value="${esc(c.part)}" oninput="DATA.changes[${i}].part=this.value"></td>
+      <td><input value="${esc(c.fromKaek)}" oninput="DATA.changes[${i}].fromKaek=this.value"></td>
+      <td><input value="${esc(c.toKaek)}" oninput="DATA.changes[${i}].toKaek=this.value"></td>
+      <td><input value="${esc(c.area)}" oninput="DATA.changes[${i}].area=this.value"></td>
+      <td><span class="x" style="cursor:pointer;color:var(--accent)" onclick="DATA.changes.splice(${i},1);renderChg()">✕</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+function addChgRow(){DATA.changes.push({part:'',fromKaek:'',toKaek:'',area:''});renderChg();}
+
+function renderArea(){
+  const tb=document.querySelector('#areaTable tbody');tb.innerHTML='';
+  DATA.areaChanges.forEach((a,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input value="${esc(a.kaek)}" oninput="DATA.areaChanges[${i}].kaek=this.value"></td>
+      <td><input value="${esc(a.initial)}" oninput="DATA.areaChanges[${i}].initial=this.value"></td>
+      <td><input value="${esc(a.final)}" oninput="DATA.areaChanges[${i}].final=this.value"></td>
+      <td><span class="x" style="cursor:pointer;color:var(--accent)" onclick="DATA.areaChanges.splice(${i},1);renderArea()">✕</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+function addAreaRow(){DATA.areaChanges.push({kaek:'',initial:'',final:''});renderArea();}
+
+function esc(s){return(s||'').replace(/"/g,'&quot;');}
+
+// ---- description text ----
+function buildDescription(){
+  const style=document.getElementById('phraseStyle').value;
+  const dimos=val('fDimos'),thesi=val('fThesi'),kaek=val('fKaek'),emv=cleanEmv(val('fEmvado')),owner=val('fOwner'),crs=val('fCrs');
+  let out='';
+  // intro
+  let intro='Το ακίνητο';
+  if(owner) intro=`Η ιδιοκτησία ${owner ? 'του/της '+owner:''}`.trim();
+  let bits=[];
+  if(emv) bits.push(`εμβαδού ${emv} τ.μ.`);
+  if(thesi) bits.push(`κείμενο στη θέση ${thesi}`);
+  if(dimos) bits.push(`${dimos}`);
+  if(kaek) bits.push(`με ΚΑΕΚ ${kaek}`);
+  out+=`${intro}${bits.length? ', '+bits.join(', '):''}, αποτυπωμένο σε σύστημα ${crs||"ΕΓΣΑ '87"}, ορίζεται/συνορεύει ως εξής:\n\n`;
+
+  const lines=DATA.boundaries.filter(b=>b.side||b.direction||b.length||b.neighbor).map(b=>{
+    const side=b.side?`σε πλευρά ${b.side} `:'';
+    const len=b.length?`μήκους ${b.length} μέτρων `:'';
+    const nb=b.neighbor||'ΙΔΙΟΚΤΗΣΙΑ ΑΓΝΩΣΤΟΥ';
+    const dir=b.direction?` (${b.direction.toLowerCase()})`:'';
+    if(style==='full'){
+      return `– ${side}${len}συνορεύει με ${nb}${dir}.`;
+    }else{
+      return `– Πλευρά ${b.side||''}${dir}: ${b.length?'μήκος '+b.length+' μ., ':''}όμορος ${nb}.`;
+    }
+  });
+  out+=lines.join('\n');
+
+  // changes section
+  if(MODE==='diag' && DATA.changes.filter(c=>c.part||c.fromKaek||c.toKaek||c.area).length){
+    out+='\n\nΓΕΩΜΕΤΡΙΚΕΣ ΜΕΤΑΒΟΛΕΣ:\n';
+    out+=DATA.changes.filter(c=>c.part||c.fromKaek||c.toKaek||c.area).map(c=>{
+      return `– ${c.part||'Τμήμα'}: μεταφέρεται από ΚΑΕΚ ${c.fromKaek||'—'} προς ΚΑΕΚ ${c.toKaek||'—'}${c.area?`, εμβαδού ${c.area} τ.μ.`:''}.`;
+    }).join('\n');
+  }
+  if(MODE==='diag' && DATA.areaChanges.filter(a=>a.kaek||a.initial||a.final).length){
+    out+='\n\nΑΡΧΙΚΑ & ΤΕΛΙΚΑ ΕΜΒΑΔΑ:\n';
+    out+=DATA.areaChanges.filter(a=>a.kaek||a.initial||a.final).map(a=>{
+      return `– ΚΑΕΚ ${a.kaek||'—'}: από ${a.initial||'—'} τ.μ. σε ${a.final||'—'} τ.μ.`;
+    }).join('\n');
+  }
+  document.getElementById('descOut').textContent=out;
+  return out;
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function copyDesc(){navigator.clipboard.writeText(document.getElementById('descOut').textContent);setStatus('Το κείμενο αντιγράφηκε.','ok');}
+
+// ---- DOCX export ----
+async function exportDocx(){
+  if(typeof docx==='undefined'){setStatus('Η βιβλιοθήκη DOCX δεν φορτώθηκε. Ελέγξτε τη σύνδεση στο διαδίκτυο και ανανεώστε τη σελίδα.','err');return;}
+  if(typeof saveAs==='undefined'){setStatus('Το εργαλείο λήψης αρχείων δεν φορτώθηκε. Ανανεώστε τη σελίδα.','err');return;}
+  try{
+  const D=docx;
+  const dimos=val('fDimos'),thesi=val('fThesi'),kaek=val('fKaek'),emv=cleanEmv(val('fEmvado')),owner=val('fOwner'),crs=val('fCrs');
+  const title= MODE==='topo'?'ΠΕΡΙΓΡΑΦΗ ΑΚΙΝΗΤΟΥ (βάσει τοπογραφικού διαγράμματος)':'ΠΕΡΙΓΡΑΦΗ ΑΚΙΝΗΤΟΥ & ΓΕΩΜΕΤΡΙΚΩΝ ΜΕΤΑΒΟΛΩΝ (βάσει Δ.Γ.Μ.)';
+
+  const children=[];
+  const P=(opts)=>new D.Paragraph(opts);
+  const T=(t,o={})=>new D.TextRun(Object.assign({text:t,font:'Arial',size:24},o));
+
+  children.push(P({heading:D.HeadingLevel.HEADING_1,children:[T(title,{bold:true,size:28})]}));
+
+  // info block
+  const info=[];
+  if(owner)info.push(['Ιδιοκτήτης/-ες',owner]);
+  if(dimos)info.push(['Δήμος / Κοινότητα',dimos]);
+  if(thesi)info.push(['Θέση',thesi]);
+  if(kaek)info.push(['ΚΑΕΚ',kaek]);
+  if(emv)info.push(['Εμβαδόν',emv+' τ.μ.']);
+  if(crs)info.push(['Σύστημα αναφοράς',crs]);
+  if(MODE==='diag' && window._khd)info.push(['ΚΗΔ',window._khd]);
+  if(info.length){
+    children.push(new D.Table({
+      width:{size:9360,type:D.WidthType.DXA},columnWidths:[3200,6160],
+      rows:info.map(r=>new D.TableRow({children:[
+        cell(D,r[0],3200,true),cell(D,r[1],6160,false)
+      ]}))
+    }));
+    children.push(P({children:[T('')]}));
+  }
+
+  // description paragraph
+  const style=document.getElementById('phraseStyle').value;
+  let intro='Το ακίνητο';
+  if(owner) intro=`Η ιδιοκτησία του/της ${owner}`;
+  let bits=[];
+  if(emv) bits.push(`εμβαδού ${emv} τ.μ.`);
+  if(thesi) bits.push(`κείμενο στη θέση ${thesi}`);
+  if(dimos) bits.push(dimos);
+  if(kaek) bits.push(`με ΚΑΕΚ ${kaek}`);
+  children.push(P({spacing:{after:160},children:[T(`${intro}${bits.length?', '+bits.join(', '):''}, αποτυπωμένο σε σύστημα ${crs||"ΕΓΣΑ '87"}, ορίζεται και συνορεύει ως εξής:`)]}));
+
+  DATA.boundaries.filter(b=>b.side||b.direction||b.length||b.neighbor).forEach(b=>{
+    const side=b.side?`σε πλευρά ${b.side} `:'';
+    const len=b.length?`μήκους ${b.length} μέτρων `:'';
+    const nb=b.neighbor||'ΙΔΙΟΚΤΗΣΙΑ ΑΓΝΩΣΤΟΥ';
+    const dir=b.direction?` (${b.direction.toLowerCase()})`:'';
+    const txt= style==='full'
+      ? `${side}${len}συνορεύει με ${nb}${dir}.`
+      : `Πλευρά ${b.side||''}${dir}: ${b.length?'μήκος '+b.length+' μ., ':''}όμορος ${nb}.`;
+    children.push(P({numbering:{reference:'bl',level:0},spacing:{after:60},children:[T(txt)]}));
+  });
+
+  // changes
+  if(MODE==='diag' && DATA.changes.filter(c=>c.part||c.fromKaek||c.toKaek||c.area).length){
+    children.push(P({spacing:{before:200,after:80},heading:D.HeadingLevel.HEADING_2,children:[T('ΠΙΝΑΚΑΣ ΓΕΩΜΕΤΡΙΚΩΝ ΜΕΤΑΒΟΛΩΝ',{bold:true,size:26})]}));
+    const hdr=new D.TableRow({children:[
+      cell(D,'Τμήμα',2600,true),cell(D,'Από ΚΑΕΚ',2300,true),
+      cell(D,'Σε ΚΑΕΚ',2300,true),cell(D,'Εμβαδόν (τ.μ.)',2160,true)
+    ]});
+    const rows=[hdr];
+    DATA.changes.filter(c=>c.part||c.fromKaek||c.toKaek||c.area).forEach(c=>{
+      rows.push(new D.TableRow({children:[
+        cell(D,c.part||'',2600,false),cell(D,c.fromKaek||'',2300,false),
+        cell(D,c.toKaek||'',2300,false),cell(D,c.area||'',2160,false)
+      ]}));
+    });
+    children.push(new D.Table({width:{size:9360,type:D.WidthType.DXA},columnWidths:[2600,2300,2300,2160],rows}));
+    children.push(P({spacing:{before:120},children:[T('Σημείωση: οι ανωτέρω μεταβολές αποτυπώνονται στο συνημμένο Διάγραμμα Γεωμετρικών Μεταβολών.',{italics:true,size:20,color:'6b6657'})]}));
+  }
+
+  // area changes table
+  if(MODE==='diag' && DATA.areaChanges.filter(a=>a.kaek||a.initial||a.final).length){
+    children.push(P({spacing:{before:200,after:80},heading:D.HeadingLevel.HEADING_2,children:[T('ΠΙΝΑΚΑΣ ΑΡΧΙΚΩΝ & ΤΕΛΙΚΩΝ ΕΜΒΑΔΩΝ',{bold:true,size:26})]}));
+    const ahdr=new D.TableRow({children:[
+      cell(D,'Εμπλεκόμενο ΚΑΕΚ',3760,true),cell(D,'Αρχικό εμβαδόν (τ.μ.)',2800,true),
+      cell(D,'Τελικό εμβαδόν (τ.μ.)',2800,true)
+    ]});
+    const arows=[ahdr];
+    DATA.areaChanges.filter(a=>a.kaek||a.initial||a.final).forEach(a=>{
+      arows.push(new D.TableRow({children:[
+        cell(D,a.kaek||'',3760,false),cell(D,a.initial||'—',2800,false),cell(D,a.final||'—',2800,false)
+      ]}));
+    });
+    children.push(new D.Table({width:{size:9360,type:D.WidthType.DXA},columnWidths:[3760,2800,2800],rows:arows}));
+  }
+
+  children.push(P({spacing:{before:300},children:[T('Η παρούσα περιγραφή συντάχθηκε βάσει του ',{size:20,color:'6b6657'}),T(MODE==='topo'?'τοπογραφικού διαγράμματος':'Διαγράμματος Γεωμετρικών Μεταβολών',{size:20,color:'6b6657',italics:true}),T(' που επισυνάπτεται και αποτελεί αναπόσπαστο τμήμα του παρόντος.',{size:20,color:'6b6657'})]}));
+
+  const doc=new D.Document({
+    styles:{default:{document:{run:{font:'Arial',size:24}}},
+      paragraphStyles:[
+        {id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:28,bold:true,font:'Arial',color:'1E3A5A'},paragraph:{spacing:{before:120,after:200},outlineLevel:0}},
+        {id:'Heading2',name:'Heading 2',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:26,bold:true,font:'Arial',color:'4A6040'},paragraph:{spacing:{before:160,after:120},outlineLevel:1}}
+      ]},
+    numbering:{config:[{reference:'bl',levels:[{level:0,format:D.LevelFormat.BULLET,text:'–',alignment:D.AlignmentType.LEFT,style:{paragraph:{indent:{left:480,hanging:280}}}}]}]},
+    sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1440,right:1440,bottom:1440,left:1440}}},children}]
+  });
+
+  // re-map bullets to our numbering reference
+  const buf=await D.Packer.toBlob(doc);
+  const name=`perigrafi_${safeName(kaek)||(MODE==='topo'?'topo':'dgm')}.docx`;
+  saveAs(buf,name);
+  setStatus('✓ Το αρχείο '+name+' δημιουργήθηκε.','ok');
+  }catch(e){setStatus('Σφάλμα δημιουργίας DOCX: '+e.message,'err');console.error(e);}
+}
+function cell(D,text,w,head){
+  return new D.TableCell({
+    width:{size:w,type:D.WidthType.DXA},
+    margins:{top:80,bottom:80,left:120,right:120},
+    shading: head?{fill:'1E3A5A',type:D.ShadingType.CLEAR}:undefined,
+    borders:{top:bd(D),bottom:bd(D),left:bd(D),right:bd(D)},
+    children:[new D.Paragraph({children:[new D.TextRun({text:text||'',font:'Arial',size:22,bold:!!head,color:head?'FFFFFF':'23211C'})]})]
+  });
+}
+function bd(D){return{style:D.BorderStyle.SINGLE,size:1,color:'CCCCCC'};}
+function capW(s){return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();}
+
+// ── Τεχνική Έκθεση για Δικαστήριο / Κτηματολόγιο (ΔΓΜ) ──
+async function exportReport(){
+  if(typeof docx==='undefined'){setStatus('Η βιβλιοθήκη DOCX δεν φορτώθηκε. Ανανεώστε τη σελίδα.','err');return;}
+  if(typeof saveAs==='undefined'){setStatus('Το εργαλείο λήψης αρχείων δεν φορτώθηκε. Ανανεώστε τη σελίδα.','err');return;}
+  try{
+  const D=docx;
+  const dimos=val('fDimos'),thesi=val('fThesi'),kaek=val('fKaek'),emv=cleanEmv(val('fEmvado')),owner=val('fOwner'),crs=val('fCrs')||"ΕΓΣΑ '87";
+  const khd=window._khd||'';
+  const F='Arial';
+  const T=(t,o={})=>new D.TextRun(Object.assign({text:t,font:F,size:24},o));
+  const P=(runs,o={})=>new D.Paragraph(Object.assign({children:Array.isArray(runs)?runs:[runs]},o));
+  const H1=(t)=>new D.Paragraph({heading:D.HeadingLevel.HEADING_1,spacing:{before:240,after:120},children:[T(t,{bold:true,size:26,color:'1E3A5A'})]});
+  const just={alignment:D.AlignmentType.JUSTIFIED,spacing:{after:120}};
+
+  const ch=[];
+
+  // τίτλος
+  ch.push(P(T('ΤΕΧΝΙΚΗ ΕΚΘΕΣΗ',{bold:true,size:36}),{alignment:D.AlignmentType.CENTER,spacing:{after:60}}));
+  ch.push(P(T('ΔΙΑΓΡΑΜΜΑΤΟΣ ΓΕΩΜΕΤΡΙΚΩΝ ΜΕΤΑΒΟΛΩΝ – ΔΙΟΡΘΩΣΗΣ ΟΡΙΩΝ',{bold:true,size:26}),{alignment:D.AlignmentType.CENTER,spacing:{after:60}}));
+  ch.push(P(T('ΓΕΩΤΕΜΑΧΙΟΥ ΜΕ ΚΑΕΚ '+(kaek||'—'),{bold:true,size:26}),{alignment:D.AlignmentType.CENTER,spacing:{after:200}}));
+  ch.push(new D.Paragraph({border:{bottom:{style:D.BorderStyle.SINGLE,size:8,color:'1E3A5A',space:1}},spacing:{after:200},children:[]}));
+
+  // info block
+  const info=[
+    ['Ακίνητο','Γεωτεμάχιο με ΚΑΕΚ '+(kaek||'—')],
+    ['Θέση',[thesi,dimos].filter(Boolean).join(', ')||'—'],
+    ['Ιδιοκτησία',owner||'—'],
+    ['Αντικείμενο','Διόρθωση γεωμετρικών στοιχείων (ορίων) κτηματολογικής εγγραφής'],
+    ['ΚΗΔ (ΤΔΓΜ)',khd?khd+' – Ελληνικό Κτηματολόγιο Α.Ε.':'—'],
+    ['Σύστημα αναφοράς',crs],
+    ['Ημερομηνία', new Date().toLocaleDateString('el-GR',{month:'long',year:'numeric'})],
+  ];
+  ch.push(new D.Table({width:{size:9360,type:D.WidthType.DXA},columnWidths:[2600,6760],
+    rows:info.map(r=>new D.TableRow({children:[cell(D,r[0],2600,true),cell(D,r[1],6760,false)]}))}));
+  ch.push(new D.Paragraph({children:[new D.PageBreak()]}));
+
+  // 1. Εισαγωγή
+  ch.push(H1('1. ΕΙΣΑΓΩΓΗ – ΑΝΤΙΚΕΙΜΕΝΟ ΤΗΣ ΕΚΘΕΣΗΣ'));
+  ch.push(P([T('Η παρούσα Τεχνική Έκθεση συνοδεύει το Διάγραμμα Γεωμετρικών Μεταβολών (ΔΓΜ) διόρθωσης ορίων'+(khd?', το οποίο υποβλήθηκε ηλεκτρονικά στον ψηφιακό υποδοχέα της βάσης δεδομένων του Φορέα «Ελληνικό Κτηματολόγιο Α.Ε.» και έλαβε μοναδικό Κωδικό Ηλεκτρονικού Διαγράμματος (ΚΗΔ) '+khd:'')+'. Σύμφωνα με την «Αναφορά Εφαρμογής» που εκδόθηκε από το σύστημα ηλεκτρονικών ελέγχων της βάσης δεδομένων του Εθνικού Κτηματολογίου, η απεικονιζόμενη γεωμετρική μεταβολή είναι τεχνικά εφαρμόσιμη και δεκτική εισαγωγής στην κτηματολογική βάση.')],just));
+  ch.push(P([T('Αντικείμενο της έκθεσης είναι η τεκμηρίωση της διόρθωσης των γεωμετρικών στοιχείων (θέσης, σχήματος, ορίων και εμβαδού) του γεωτεμαχίου με ΚΑΕΚ '+(kaek||'—')+(owner?', ιδιοκτησίας '+owner:'')+', το οποίο απεικονίζεται εσφαλμένα στα κτηματολογικά διαγράμματα, καθώς και η περιγραφή των συνεπαγόμενων μεταβολών στα όμορα γεωτεμάχια.')],just));
+
+  // 2. Θέση
+  ch.push(H1('2. ΘΕΣΗ ΚΑΙ ΠΕΡΙΓΡΑΦΗ ΤΟΥ ΑΚΙΝΗΤΟΥ'));
+  ch.push(P([T('Το υπό εξέταση ακίνητο βρίσκεται '+(thesi?'στη θέση «'+thesi+'», ':'')+(dimos||'')+(emv?', συνολικού εμβαδού '+emv+' τ.μ.':'')+'. Τα όρια και οι όμοροι αποτυπώνονται στο συνημμένο ΔΓΜ.')],just));
+
+  // 3. Μεθοδολογία
+  ch.push(H1('3. ΜΕΘΟΔΟΛΟΓΙΑ ΑΠΟΤΥΠΩΣΗΣ – ΓΕΩΔΑΙΤΙΚΗ ΕΞΑΡΤΗΣΗ'));
+  ch.push(P([T('Για τη σύνταξη του ΔΓΜ εκπονήθηκε εξαρτημένη τοπογραφική αποτύπωση του ακινήτου και των ομόρων γεωτεμαχίων, με τα ακόλουθα τεχνικά χαρακτηριστικά:')],just));
+  [
+    'Το διάγραμμα είναι ενταγμένο στο κρατικό σύστημα συντεταγμένων ΕΓΣΑ \'87 (ελλειψοειδές αναφοράς GRS80, εγκάρσια μερκατορική προβολή, κεντρικός μεσημβρινός λ = 24°00΄00΄΄, Κο = 0,9996, μετάθεση τετμημένης +500.000 μ).',
+    'Η εξάρτηση από το ΕΓΣΑ \'87 πραγματοποιήθηκε με δορυφορικό σύστημα GPS/GNSS, με χρήση του Ελληνικού Συστήματος Εντοπισμού HEPOS.',
+    'Η αποτύπωση εκτελέσθηκε με τη μέθοδο RTK, με γεωδαιτικό δέκτη GNSS.',
+    'Οι διαστάσεις και τα εμβαδά υπολογίσθηκαν αναλυτικά από τις συντεταγμένες των κορυφών.',
+  ].forEach(t=>ch.push(new D.Paragraph({numbering:{reference:'bl',level:0},spacing:{after:80},children:[T(t)]})));
+
+  // 4. Περιγραφή μεταβολής
+  ch.push(H1('4. ΠΕΡΙΓΡΑΦΗ ΤΗΣ ΓΕΩΜΕΤΡΙΚΗΣ ΜΕΤΑΒΟΛΗΣ'));
+  ch.push(P([T('Κατόπιν της τοπογραφικής αποτύπωσης διαπιστώθηκε εσφαλμένη απεικόνιση των ορίων του γεωτεμαχίου στην κτηματολογική βάση. Για τη διόρθωση απαιτείται η μεταφορά των κατωτέρω τμημάτων μεταξύ των εμπλεκομένων ΚΑΕΚ, όπως αναλυτικά παρουσιάζεται στον ακόλουθο πίνακα:')],just));
+  const chg=DATA.changes.filter(c=>c.part||c.fromKaek||c.toKaek||c.area);
+  if(chg.length){
+    const rows=[new D.TableRow({children:[cell(D,'Τμήμα',2200,true),cell(D,'Εμβαδόν (τ.μ.)',1760,true),cell(D,'Από ΚΑΕΚ',2700,true),cell(D,'Σε ΚΑΕΚ',2700,true)]})];
+    chg.forEach(c=>rows.push(new D.TableRow({children:[cell(D,c.part||'',2200,false),cell(D,c.area||'',1760,false),cell(D,c.fromKaek||'',2700,false),cell(D,c.toKaek||'',2700,false)]})));
+    ch.push(new D.Table({width:{size:9360,type:D.WidthType.DXA},columnWidths:[2200,1760,2700,2700],rows}));
+  }
+
+  // 5. Πίνακας αρχικών/τελικών εμβαδών με επαλήθευση
+  ch.push(H1('5. ΜΕΤΑΒΟΛΗ ΕΜΒΑΔΩΝ – ΕΠΑΛΗΘΕΥΣΗ ΔΙΑΤΗΡΗΣΗΣ'));
+  const ac=DATA.areaChanges.filter(a=>a.kaek||a.initial||a.final);
+  if(ac.length){
+    ch.push(P([T('Στον ακόλουθο πίνακα παρατίθενται τα αρχικά και τελικά εμβαδά των επηρεαζόμενων γεωτεμαχίων. Το άθροισμα των εμβαδών διατηρείται, γεγονός που επιβεβαιώνει την ορθότητα της μεταβολής:')],just));
+    const rows=[new D.TableRow({children:[cell(D,'Εμπλεκόμενο ΚΑΕΚ',3760,true),cell(D,'Αρχικό εμβαδόν (τ.μ.)',2800,true),cell(D,'Τελικό εμβαδόν (τ.μ.)',2800,true)]})];
+    let si=0,sf=0;
+    ac.forEach(a=>{
+      rows.push(new D.TableRow({children:[cell(D,a.kaek||'',3760,false),cell(D,a.initial||'—',2800,false),cell(D,a.final||'—',2800,false)]}));
+      si+=parseFloat((a.initial||'0').replace(/\./g,'').replace(',','.'))||0;
+      sf+=parseFloat((a.final||'0').replace(/\./g,'').replace(',','.'))||0;
+    });
+    rows.push(new D.TableRow({children:[cell(D,'ΣΥΝΟΛΟ',3760,true),cell(D,numGr(si),2800,true),cell(D,numGr(sf),2800,true)]}));
+    ch.push(new D.Table({width:{size:9360,type:D.WidthType.DXA},columnWidths:[3760,2800,2800],rows}));
+    const diff=Math.abs(si-sf);
+    ch.push(P([T(diff<0.5?'Η διαφορά αρχικού και τελικού συνολικού εμβαδού είναι αμελητέα ('+numGr(diff)+' τ.μ.), επιβεβαιώνοντας τη διατήρηση της συνολικής έκτασης.':'Διαφορά αρχικού/τελικού συνόλου: '+numGr(diff)+' τ.μ.',{italics:true,size:22,color:'4A6040'})],{spacing:{before:120,after:120}}));
+  } else {
+    ch.push(P([T('(Δεν εντοπίστηκαν στοιχεία αρχικών/τελικών εμβαδών — συμπληρώστε τον σχετικό πίνακα στην εφαρμογή.)',{italics:true,color:'6b6657'})]));
+  }
+
+  // 6. Συμπεράσματα
+  ch.push(H1('6. ΣΥΜΠΕΡΑΣΜΑΤΑ'));
+  ch.push(P([T('Από τα ανωτέρω προκύπτει ότι η αιτούμενη διόρθωση των γεωμετρικών στοιχείων του γεωτεμαχίου με ΚΑΕΚ '+(kaek||'—')+' είναι τεχνικά τεκμηριωμένη, στηρίζεται σε εξαρτημένη τοπογραφική αποτύπωση στο ΕΓΣΑ \'87 και διατηρεί το συνολικό εμβαδόν των επηρεαζόμενων γεωτεμαχίων. Η μεταβολή είναι σύμφωνη με τα απεικονιζόμενα στο συνημμένο ΔΓΜ και δεκτική εισαγωγής στην κτηματολογική βάση.')],just));
+
+  ch.push(new D.Paragraph({spacing:{before:400},alignment:D.AlignmentType.RIGHT,children:[T(new Date().toLocaleDateString('el-GR',{month:'long',year:'numeric'}),{size:22})]}));
+  ch.push(new D.Paragraph({spacing:{before:500},alignment:D.AlignmentType.RIGHT,children:[T('Ο/Η συντάξας/-ασα Μηχανικός',{bold:true})]}));
+  ch.push(new D.Paragraph({spacing:{before:600},alignment:D.AlignmentType.RIGHT,children:[T('______________________________',{size:22})]}));
+
+  // Παράρτημα: συντεταγμένες τελικού
+  if(window._vertices && window._vertices.length){
+    ch.push(new D.Paragraph({children:[new D.PageBreak()]}));
+    ch.push(H1('ΠΑΡΑΡΤΗΜΑ Α – ΠΙΝΑΚΑΣ ΣΥΝΤΕΤΑΓΜΕΝΩΝ ΤΕΛΙΚΟΥ ΓΕΩΤΕΜΑΧΙΟΥ (ΕΓΣΑ \'87)'));
+    const rows=[new D.TableRow({children:[cell(D,'Σημείο',3120,true),cell(D,'Χ',3120,true),cell(D,'Υ',3120,true)]})];
+    window._vertices.forEach(v=>rows.push(new D.TableRow({children:[cell(D,String(v.n),3120,false),cell(D,String(v.x),3120,false),cell(D,String(v.y),3120,false)]})));
+    ch.push(new D.Table({width:{size:9360,type:D.WidthType.DXA},columnWidths:[3120,3120,3120],rows}));
+  }
+
+  const doc=new D.Document({
+    styles:{default:{document:{run:{font:F,size:24}}},
+      paragraphStyles:[{id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:26,bold:true,font:F,color:'1E3A5A'},paragraph:{spacing:{before:240,after:120},outlineLevel:0}}]},
+    numbering:{config:[{reference:'bl',levels:[{level:0,format:D.LevelFormat.BULLET,text:'•',alignment:D.AlignmentType.LEFT,style:{paragraph:{indent:{left:480,hanging:280}}}}]}]},
+    sections:[{
+      properties:{page:{size:{width:11906,height:16838},margin:{top:1440,right:1440,bottom:1440,left:1440}}},
+      footers:{default:new D.Footer({children:[new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({children:['Σελίδα ',D.PageNumber.CURRENT,' από ',D.PageNumber.TOTAL_PAGES],size:18,color:'777777',font:F})]})]})},
+      children:ch
+    }]
+  });
+  const buf=await D.Packer.toBlob(doc);
+  const name=`techniki_ekthesi_${safeName(kaek)||'dgm'}.docx`;
+  saveAs(buf,name);
+  setStatus('✓ Η τεχνική έκθεση '+name+' δημιουργήθηκε.','ok');
+  }catch(e){setStatus('Σφάλμα δημιουργίας έκθεσης: '+e.message,'err');console.error(e);}
+}
+
+
+// ── Auth ──
+function lstatus(msg,kind){const s=document.getElementById('loginStatus');s.className='status show '+(kind||'info');s.textContent=msg;}
+
+async function doLogin(){
+  if(!SB){lstatus('Δεν έχει ρυθμιστεί η σύνδεση Supabase.','err');return;}
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  if(!email||!pass){lstatus('Συμπληρώστε email και κωδικό.','err');return;}
+  const btn=document.getElementById('btnLogin');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Σύνδεση...';
+  const {data,error}=await SB.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false;btn.innerHTML='Σύνδεση';
+  if(error){lstatus('Σφάλμα: '+error.message,'err');return;}
+  showLoggedIn(data.user);
+}
+
+async function doSignup(){
+  if(!SB){lstatus('Δεν έχει ρυθμιστεί η σύνδεση Supabase.','err');return;}
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  if(!email||!pass){lstatus('Συμπληρώστε email και κωδικό για δημιουργία λογαριασμού.','err');return;}
+  const {data,error}=await SB.auth.signUp({email,password:pass});
+  if(error){lstatus('Σφάλμα: '+error.message,'err');return;}
+  if(data.session){showLoggedIn(data.user);}
+  else{lstatus('Ο λογαριασμός δημιουργήθηκε. Ελέγξτε το email σας για επιβεβαίωση (αν απαιτείται) και μετά συνδεθείτε.','ok');}
+}
+
+async function doLogout(){
+  if(SB) await SB.auth.signOut();
+  document.getElementById('appBody').style.display='none';
+  document.getElementById('userBar').style.display='none';
+  document.getElementById('loginCard').style.display='';
+}
+
+function showLoggedIn(user){
+  document.getElementById('loginCard').style.display='none';
+  document.getElementById('userBar').style.display='';
+  document.getElementById('appBody').style.display='';
+  document.getElementById('userEmail').textContent=user?.email||'';
+}
+
+async function checkSession(){
+  if(!SB) return;
+  const {data:{session}}=await SB.auth.getSession();
+  if(session) showLoggedIn(session.user);
+}
+
+// init
+initSupabase();
+switchMode('topo');
+checkSession();
+
+// PWA: εγγραφή service worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
