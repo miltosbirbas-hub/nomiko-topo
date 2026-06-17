@@ -156,9 +156,10 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="name@example.com"></div>
       <div class="field"><label>Κωδικός</label><input type="password" id="loginPass" placeholder="••••••••"></div>
     </div>
+    <div class="field" id="nameField" style="display:none"><label>Όνομα <span class="muted">(για τον χαιρετισμό)</span></label><input type="text" id="loginName" placeholder="π.χ. Μιλτιάδης"></div>
     <div class="row">
       <button class="btn-primary" id="btnLogin" onclick="doLogin()">Σύνδεση</button>
-      <button class="btn-ghost" onclick="doSignup()">Δημιουργία λογαριασμού</button>
+      <button class="btn-ghost" onclick="startSignup()">Δημιουργία λογαριασμού</button>
     </div>
     <div class="status" id="loginStatus"></div>
   </div>
@@ -166,7 +167,10 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
   <!-- USER BAR (hidden until logged in) -->
   <div class="card hidden" id="userBar" style="display:none;align-items:center">
     <div class="row" style="width:100%;align-items:center">
-      <span class="muted">Συνδεδεμένος ως <b id="userEmail"></b></span>
+      <div>
+        <div id="greeting" style="font-weight:600;color:var(--navy);font-size:16px"></div>
+        <span class="muted" style="font-size:13px">Συνδεδεμένος ως <b id="userEmail"></b></span>
+      </div>
       <button class="btn-ghost" style="margin-left:auto" onclick="doLogout()">Αποσύνδεση</button>
     </div>
   </div>
@@ -1514,12 +1518,26 @@ async function doLogin(){
   showLoggedIn(data.user);
 }
 
+// Πρώτο πάτημα «Δημιουργία»: δείξε το πεδίο ονόματος. Δεύτερο: κάνε εγγραφή.
+function startSignup(){
+  const nf=document.getElementById('nameField');
+  if(nf && nf.style.display==='none'){
+    nf.style.display='';
+    document.getElementById('loginName')?.focus();
+    lstatus('Συμπληρώστε το όνομά σας (προαιρετικό) και πατήστε ξανά «Δημιουργία λογαριασμού».','ok');
+    return;
+  }
+  doSignup();
+}
+
 async function doSignup(){
   if(!SB){lstatus('Δεν έχει ρυθμιστεί η σύνδεση Supabase.','err');return;}
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
+  const name=(document.getElementById('loginName')?.value||'').trim();
   if(!email||!pass){lstatus('Συμπληρώστε email και κωδικό για δημιουργία λογαριασμού.','err');return;}
-  const {data,error}=await SB.auth.signUp({email,password:pass});
+  const opts = name ? { data:{ full_name:name } } : {};
+  const {data,error}=await SB.auth.signUp({email,password:pass,options:opts});
   if(error){lstatus('Σφάλμα: '+error.message,'err');return;}
   if(data.session){showLoggedIn(data.user);}
   else{lstatus('Ο λογαριασμός δημιουργήθηκε. Ελέγξτε το email σας για επιβεβαίωση (αν απαιτείται) και μετά συνδεθείτε.','ok');}
@@ -1532,11 +1550,27 @@ async function doLogout(){
   document.getElementById('loginCard').style.display='';
 }
 
+// Βγάζει φιλικό όνομα: από metadata (full_name) ή από το email
+function friendlyName(user){
+  if(!user) return '';
+  const fn = user.user_metadata && user.user_metadata.full_name;
+  if(fn && fn.trim()) return fn.trim();
+  // αλλιώς από το email: πάρε το πρώτο κομμάτι πριν το @ και καθάρισέ το
+  const local = (user.email||'').split('@')[0].split(/[._-]/)[0];
+  if(!local) return '';
+  return local.charAt(0).toUpperCase()+local.slice(1);
+}
+
 function showLoggedIn(user){
   document.getElementById('loginCard').style.display='none';
   document.getElementById('userBar').style.display='';
   document.getElementById('appBody').style.display='';
-  document.getElementById('userEmail').textContent=user?.email||'';
+  const name=friendlyName(user);
+  const bar=document.getElementById('userEmail');
+  if(bar) bar.textContent=user?.email||'';
+  // χαιρετισμός
+  const g=document.getElementById('greeting');
+  if(g) g.textContent = name ? ('Καλωσήρθες, '+name+'!') : 'Καλωσήρθες!';
   refreshTokens();
 }
 

@@ -1,5 +1,5 @@
 // ΝΟΜΙΚΟ ΤΟΠΟ — service worker (network-first)
-const CACHE = 'nomiko-topo-v8';
+const CACHE = 'nomiko-topo-v9';
 const ASSETS = [
   './',
   './index.html',
