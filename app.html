@@ -1563,7 +1563,9 @@ function friendlyName(user){
 
 function showLoggedIn(user){
   document.getElementById('loginCard').style.display='none';
-  document.getElementById('userBar').style.display='';
+  const ub=document.getElementById('userBar');
+  ub.classList.remove('hidden');
+  ub.style.display='';
   document.getElementById('appBody').style.display='';
   const name=friendlyName(user);
   const bar=document.getElementById('userEmail');
