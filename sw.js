@@ -1,11 +1,12 @@
 // ΝΟΜΙΚΟ ΤΟΠΟ — service worker (network-first)
-const CACHE = 'nomiko-topo-v3';
+const CACHE = 'nomiko-topo-v5';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './emblem-header.png'
 ];
 
 self.addEventListener('install', (e) => {
