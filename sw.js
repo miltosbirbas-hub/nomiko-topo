@@ -1,8 +1,11 @@
 // ΝΟΜΙΚΟ ΤΟΠΟ — service worker (network-first)
-const CACHE = 'nomiko-topo-v6';
+const CACHE = 'nomiko-topo-v8';
 const ASSETS = [
   './',
   './index.html',
+  './app.html',
+  './landing.html',
+  './emblem-navy.png',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',

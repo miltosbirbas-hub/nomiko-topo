@@ -2,7 +2,7 @@
   "name": "ΝΟΜΙΚΟ ΤΟΠΟ",
   "short_name": "ΝΟΜΙΚΟ ΤΟΠΟ",
   "description": "Περιγραφές ιδιοκτησίας & πίνακες μεταβολών για συμβόλαια — από τοπογραφικά & ΔΓΜ",
-  "start_url": "./index.html",
+  "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
