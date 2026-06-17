@@ -22,7 +22,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
-header{background:var(--navy);color:#fff;padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header{background:var(--navy);color:#fff;padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative}
 header .emblem{width:54px;height:54px;border-radius:4px;flex-shrink:0;object-fit:contain}
 header h1{font-size:20px;font-weight:600;letter-spacing:.5px}
 header .sub{font-size:12px;color:#b9c4d2;width:100%;margin-top:-4px}
@@ -70,6 +70,14 @@ button{font-family:inherit;font-weight:600;cursor:pointer;border:none;border-rad
 .guide-intro{color:#4a5568;font-size:14px;margin:0 0 16px}
 .guide-step{display:flex;gap:12px;margin-bottom:14px;font-size:14px;line-height:1.55}
 .guide-step .gn{flex:none;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.help-btn{position:absolute;top:16px;right:18px;width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.12);color:#fff;font-size:18px;font-weight:700;cursor:pointer;line-height:1}
+.help-btn:hover{background:rgba(255,255,255,.25)}
+.help-sep{border:none;border-top:1px solid #d4ddea;margin:18px 0}
+.price-table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+.price-table th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-size:12.5px}
+.price-table td{border:1px solid #e0ddd3;padding:8px 10px}
+.contact-box{background:#f3f6fb;border:1px solid #d4ddea;border-radius:6px;padding:14px;font-size:14px;line-height:1.9}
+.contact-box a{color:var(--navy);text-decoration:none}
 .guide-step b{color:var(--navy)}
 .gtip{display:block;margin-top:4px;color:#6b6657;font-size:13px}
 .guide-foot{margin-top:14px;padding-top:12px;border-top:1px solid #d4ddea;color:#4a5568;font-size:13.5px}
@@ -130,6 +138,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     <div id="tokenBadge" class="token-badge hidden" onclick="showBuyTokens()" title="Υπόλοιπο αναλύσεων — κλικ για αγορά">🎫 <span id="tokenCount">—</span> αναλύσεις</div>
   </div>
   <div class="sub">Περιγραφές ιδιοκτησίας & πίνακες μεταβολών για συμβόλαια — από τοπογραφικά & διαγράμματα γεωμετρικών μεταβολών</div>
+  <button class="help-btn" onclick="showHelp()" title="Οδηγίες & Χρεώσεις" aria-label="Βοήθεια">?</button>
 </header>
 
 <div class="wrap">
@@ -171,13 +180,12 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     </div>
   </div>
 
-  <!-- ΟΔΗΓΟΣ ΧΡΗΣΗΣ -->
-  <div class="card guide-card">
-    <div class="guide-head" onclick="toggleGuide()">
-      <h2 style="margin:0">📖 Οδηγός Χρήσης — Βήμα προς Βήμα</h2>
-      <span id="guideToggle" class="guide-arrow">▾</span>
-    </div>
-    <div id="guideBody" class="guide-body">
+  <!-- MODAL ΒΟΗΘΕΙΑΣ -->
+  <div id="helpModal" class="modal-overlay hidden" onclick="if(event.target===this)closeHelp()">
+   <div class="modal-box">
+    <button class="modal-x" onclick="closeHelp()">✕</button>
+    <div class="guide-body open">
+      <h2 style="margin:0 0 8px">📖 Οδηγός Χρήσης — Βήμα προς Βήμα</h2>
       <p class="guide-intro">Η εφαρμογή διαβάζει ένα τοπογραφικό διάγραμμα (ή Διάγραμμα Γεωμετρικών Μεταβολών) και συντάσσει αυτόματα την περιγραφή ορίων για το συμβόλαιο. Ακολουθήστε τα βήματα με τη σειρά.</p>
 
       <div class="guide-step"><span class="gn">1</span><div>
@@ -231,8 +239,26 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
         Πατήστε <b>«🆕 Νέο Διάγραμμα»</b> (πάνω δεξιά) για να καθαρίσουν όλα και να ξεκινήσετε από την αρχή.
       </div></div>
 
-      <p class="guide-foot">Χρειάζεστε βοήθεια; Όλα τα πεδία διορθώνονται χειροκίνητα — αν κάτι δεν διαβάστηκε σωστά, απλά γράψτε το σωστό μόνοι σας πριν την εξαγωγή.</p>
+      <hr class="help-sep">
+      <h2 style="margin:0 0 8px">💳 Χρεώσεις</h2>
+      <p class="guide-intro">Κάθε <b>ανάλυση σχεδίου</b> χρησιμοποιεί 1 token. Οι εξαγωγές DOCX (όσες θέλετε από κάθε ανάλυση) είναι <b>δωρεάν</b>. Οι νέοι χρήστες ξεκινούν με <b>5 δωρεάν δοκιμαστικές</b> αναλύσεις.</p>
+      <table class="price-table">
+        <tr><th>Πακέτο</th><th>Αναλύσεις</th><th>Τιμή (+ΦΠΑ 24%)</th></tr>
+        <tr><td>Εξάμηνη συνδρομή</td><td>120 διαγράμματα</td><td>210€ <span class="muted">(260,40€)</span></td></tr>
+        <tr><td>Ετήσια συνδρομή</td><td>250 διαγράμματα</td><td>380€ <span class="muted">(471,20€)</span></td></tr>
+        <tr><td>Επιπλέον δεκάδα <span class="muted">(μόνο συνδρομητές)</span></td><td>+10 αναλύσεις</td><td>50€ <span class="muted">(62,00€)</span></td></tr>
+      </table>
+      <p class="gtip" style="margin-top:8px">Για αγορά, πατήστε το badge «🎫 αναλύσεις» πάνω αριστερά και στείλτε αίτημα. Θα λάβετε φόρμα παραγγελίας και στοιχεία πληρωμής.</p>
+
+      <hr class="help-sep">
+      <h2 style="margin:0 0 8px">📞 Επικοινωνία</h2>
+      <div class="contact-box">
+        <div>✉️ Email: <a href="mailto:brb.develop@gmail.com"><b>brb.develop@gmail.com</b></a></div>
+        <div>📱 Κινητό: <a href="tel:+306933226314"><b>6933 226314</b></a></div>
+        <div class="muted" style="margin-top:6px">BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ — Λευκάδα</div>
+      </div>
     </div>
+   </div>
   </div>
 
   <!-- UPLOAD -->
@@ -964,13 +990,9 @@ function checkUnknownNeighbors(){
 }
 function addBndRow(){DATA.boundaries.push({side:'',direction:'ΑΝΑΤΟΛΙΚΑ',length:'',neighbor:''});renderBnd();}
 
-// Οδηγός χρήσης — άνοιγμα/κλείσιμο
-function toggleGuide(){
-  const b=document.getElementById('guideBody');
-  const a=document.getElementById('guideToggle');
-  const open=b.classList.toggle('open');
-  a.classList.toggle('open',open);
-}
+// Modal βοήθειας (οδηγίες + χρεώσεις + επικοινωνία)
+function showHelp(){ document.getElementById('helpModal').classList.remove('hidden'); }
+function closeHelp(){ document.getElementById('helpModal').classList.add('hidden'); }
 
 // ====== ΣΥΣΤΗΜΑ TOKENS ======
 // ⚙ Email παραλαβής αιτημάτων αγοράς
@@ -1519,8 +1541,6 @@ async function checkSession(){
 // init
 initSupabase();
 switchMode('topo');
-// άνοιξε τον οδηγό την πρώτη φορά
-toggleGuide();
 checkSession();
 
 // PWA: εγγραφή service worker
