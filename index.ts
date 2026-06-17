@@ -41,11 +41,14 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
+      },      body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 8000,
-        system,
+        max_tokens: 16000,
+        // Prompt caching: το system prompt (ίδιο κάθε φορά) αποθηκεύεται και
+        // χρεώνεται ~90% φθηνότερα στις επόμενες κλήσεις εντός του παραθύρου cache.
+        system: [
+          { type: "text", text: system, cache_control: { type: "ephemeral" } }
+        ],
         messages: [{ role: "user", content }],
       }),
     });
@@ -64,7 +67,11 @@ Deno.serve(async (req) => {
       .map((c: any) => c.text)
       .join("\n");
 
-    return new Response(JSON.stringify({ text, stop_reason: data.stop_reason || null }), {
+    return new Response(JSON.stringify({
+      text,
+      stop_reason: data.stop_reason || null,
+      usage: data.usage || null  // περιλαμβάνει cache_creation_input_tokens & cache_read_input_tokens
+    }), {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
 
