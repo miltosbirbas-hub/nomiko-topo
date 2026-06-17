@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ΝΟΜΙΚΟ ΤΟΠΟ — Από το τοπογραφικό στο συμβόλαιο</title>
+<meta name="description" content="Εργαλείο για συμβολαιογράφους & δικηγόρους: μετατρέπει τοπογραφικά διαγράμματα και ΔΓΜ σε έτοιμη περιγραφή ιδιοκτησίας για το συμβόλαιο.">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1E3A5A;
+    --navy-deep:#15293f;
+    --cream:#F4F1EA;
+    --cream-warm:#EDE8DC;
+    --gold:#A98B3C;
+    --olive:#4A6040;
+    --ink:#23211C;
+    --muted:#6b6657;
+    --line:#d9d2c2;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:var(--cream);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:600;line-height:1.1;color:var(--navy)}
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* ===== NAV ===== */
+  nav{position:sticky;top:0;z-index:50;background:rgba(244,241,234,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--navy);letter-spacing:.5px}
+  .brand img{width:38px;height:38px;object-fit:contain}
+  .nav-cta{font-family:'Inter';font-size:14px;font-weight:600;padding:9px 18px;background:var(--navy);color:#fff;border-radius:4px;text-decoration:none;transition:background .2s}
+  .nav-cta:hover{background:var(--navy-deep)}
+
+  /* ===== HERO ===== */
+  .hero{position:relative;padding:84px 0 72px;overflow:hidden;
+    background:
+      repeating-linear-gradient(45deg, rgba(30,58,90,.035) 0 1px, transparent 1px 38px),
+      repeating-linear-gradient(-45deg, rgba(30,58,90,.035) 0 1px, transparent 1px 38px),
+      var(--cream);
+    border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:'JetBrains Mono';font-size:12.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
+  .hero h1{font-size:clamp(40px,6vw,72px);font-weight:700;letter-spacing:-.5px;margin-bottom:22px}
+  .hero h1 em{font-style:italic;color:var(--gold)}
+  .hero-sub{font-size:19px;color:var(--muted);max-width:560px;margin-bottom:36px}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{font-family:'Inter';font-size:15px;font-weight:600;padding:14px 28px;border-radius:5px;text-decoration:none;display:inline-flex;align-items:center;gap:9px;transition:all .2s;cursor:pointer;border:none}
+  .btn-primary{background:var(--navy);color:#fff}
+  .btn-primary:hover{background:var(--navy-deep);transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn-ghost:hover{background:var(--navy);color:#fff}
+
+  /* ===== TRANSFORM (signature) ===== */
+  .transform{margin-top:64px;display:grid;grid-template-columns:1fr auto 1fr;gap:28px;align-items:center}
+  .t-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:24px;box-shadow:0 8px 30px rgba(30,58,90,.06)}
+  .t-label{font-family:'JetBrains Mono';font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .t-before .coord{font-family:'JetBrains Mono';font-size:12.5px;color:var(--navy);line-height:1.9}
+  .t-before .coord span{color:var(--gold)}
+  .t-after p{font-size:14px;color:var(--ink);line-height:1.7}
+  .t-after .hl{background:rgba(169,139,60,.18);padding:0 3px;border-radius:2px}
+  .t-arrow{font-size:30px;color:var(--gold)}
+  .t-arrow .mono{font-size:11px;display:block;color:var(--muted);letter-spacing:1px;margin-top:4px}
+
+  /* ===== SECTIONS ===== */
+  section{padding:80px 0}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 54px}
+  .sec-head .eyebrow{margin-bottom:14px}
+  .sec-head h2{font-size:clamp(32px,4.5vw,46px);margin-bottom:16px}
+  .sec-head p{font-size:17px;color:var(--muted)}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+  .step{position:relative}
+  .step-n{font-family:'Cormorant Garamond',serif;font-size:54px;font-weight:700;color:var(--cream-warm);line-height:1;position:absolute;top:-18px;left:-6px;z-index:0}
+  .step-body{position:relative;z-index:1;padding-top:24px}
+  .step h3{font-size:23px;margin-bottom:10px}
+  .step p{font-size:15px;color:var(--muted)}
+  .step-media{margin-top:18px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--cream-warm);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+  .step-media img{width:100%;height:100%;object-fit:cover;display:block}
+  .step-img{width:100%;height:100%;object-fit:cover;display:block}
+  .ph{text-align:center;color:var(--muted);font-size:13px;padding:18px}
+  .ph .mono{display:block;font-size:11px;margin-top:6px;color:#a8a08c}
+
+  /* video band */
+  .video-band{background:var(--navy);color:var(--cream);
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 1px, transparent 1px 38px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,.04) 0 1px, transparent 1px 38px);}
+  .video-band .sec-head h2{color:#fff}
+  .video-band .sec-head p{color:rgba(244,241,234,.7)}
+  .video-band .eyebrow{color:var(--gold)}
+  .video-frame{max-width:880px;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.15);background:var(--navy-deep);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative}
+  .video-frame video{width:100%;height:100%;object-fit:cover;display:block}
+  .video-ph{text-align:center;color:rgba(244,241,234,.6)}
+  .play{width:74px;height:74px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 30px rgba(169,139,60,.4)}
+  .play::after{content:'';border-style:solid;border-width:14px 0 14px 22px;border-color:transparent transparent transparent #fff;margin-left:5px}
+
+  /* outputs */
+  .outputs{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .out-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:30px;transition:transform .2s,box-shadow .2s}
+  .out-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(30,58,90,.08)}
+  .out-icon{font-size:30px;margin-bottom:14px}
+  .out-card h3{font-size:24px;margin-bottom:10px}
+  .out-card p{font-size:15px;color:var(--muted)}
+  .out-card ul{list-style:none;margin-top:14px}
+  .out-card li{font-size:14px;color:var(--ink);padding:6px 0 6px 24px;position:relative}
+  .out-card li::before{content:'✓';position:absolute;left:0;color:var(--olive);font-weight:700}
+
+  /* features strip */
+  .feat{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:10px}
+  .feat-item{text-align:center;padding:20px}
+  .feat-item .fi{font-size:26px;margin-bottom:10px}
+  .feat-item h4{font-family:'Inter';font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px}
+  .feat-item p{font-size:13.5px;color:var(--muted)}
+
+  /* pricing */
+  .pricing{background:var(--cream-warm)}
+  .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:920px;margin:0 auto}
+  .price-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:32px 26px;text-align:center;position:relative}
+  .price-card.best{border:2px solid var(--gold);transform:scale(1.03)}
+  .price-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--gold);color:#fff;font-size:11px;font-weight:600;letter-spacing:.5px;padding:4px 14px;border-radius:12px;font-family:'Inter'}
+  .price-name{font-family:'Inter';font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px}
+  .price-amt{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:700;color:var(--navy);line-height:1}
+  .price-amt small{font-size:18px;color:var(--muted)}
+  .price-vat{font-size:12.5px;color:var(--muted);margin:6px 0 16px}
+  .price-feat{font-size:14px;color:var(--ink);margin-bottom:6px}
+  .price-unit{font-size:12.5px;color:var(--gold);font-family:'JetBrains Mono'}
+  .price-note{text-align:center;font-size:13.5px;color:var(--muted);margin-top:26px}
+
+  /* CTA final */
+  .cta-final{background:var(--navy);color:var(--cream);text-align:center;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 1px, transparent 1px 38px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,.04) 0 1px, transparent 1px 38px);}
+  .cta-final h2{color:#fff;font-size:clamp(32px,4.5vw,48px);margin-bottom:18px}
+  .cta-final p{font-size:18px;color:rgba(244,241,234,.78);max-width:520px;margin:0 auto 32px}
+  .cta-final .btn-primary{background:var(--gold)}
+  .cta-final .btn-primary:hover{background:#937836}
+  .contact-row{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;margin-top:34px;font-size:15px}
+  .contact-row a{color:var(--cream);text-decoration:none;display:inline-flex;align-items:center;gap:8px;opacity:.85}
+  .contact-row a:hover{opacity:1;color:#fff}
+
+  /* footer */
+  footer{background:var(--navy-deep);color:rgba(244,241,234,.6);text-align:center;padding:30px 0;font-size:13px}
+  footer b{color:var(--cream)}
+  footer .mono{font-size:11px;margin-top:6px;display:block;opacity:.7}
+
+  /* reveal animation */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+  /* responsive */
+  @media(max-width:860px){
+    .transform{grid-template-columns:1fr;gap:18px}
+    .t-arrow{transform:rotate(90deg);margin:0 auto}
+    .steps{grid-template-columns:1fr;gap:40px}
+    .outputs{grid-template-columns:1fr}
+    .feat{grid-template-columns:1fr 1fr}
+    .price-grid{grid-template-columns:1fr;max-width:380px}
+    .price-card.best{transform:none}
+  }
+  @media(max-width:480px){
+    .feat{grid-template-columns:1fr}
+    .nav-cta{padding:8px 14px;font-size:13px}
+    .brand{font-size:18px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <div class="brand"><img src="emblem-navy.png" alt="ΝΟΜΙΚΟ ΤΟΠΟ">ΝΟΜΙΚΟ ΤΟΠΟ</div>
+    <a href="index.html" class="nav-cta">Είσοδος στην εφαρμογή</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow reveal">Για συμβολαιογράφους & δικηγόρους</div>
+    <h1 class="reveal">Από το τοπογραφικό<br>στο <em>συμβόλαιο</em>.</h1>
+    <p class="hero-sub reveal">Ανεβάζετε το τοπογραφικό διάγραμμα ή το Δ.Γ.Μ. Η εφαρμογή διαβάζει όρια, μήκη, όμορους και συντεταγμένες, και συντάσσει έτοιμη την περιγραφή ιδιοκτησίας για το σώμα του συμβολαίου — σε δευτερόλεπτα.</p>
+    <div class="hero-cta reveal">
+      <a href="index.html" class="btn btn-primary">Δοκιμάστε δωρεάν →</a>
+      <a href="#diadikasia" class="btn btn-ghost">Δείτε πώς δουλεύει</a>
+    </div>
+
+    <!-- SIGNATURE: μετασχηματισμός -->
+    <div class="transform reveal">
+      <div class="t-card t-before">
+        <div class="t-label">Τοπογραφικό · ΕΓΣΑ '87</div>
+        <div class="coord">
+          Α1 &nbsp; <span>238.277,310</span> &nbsp; <span>4.280.855,650</span><br>
+          Α2 &nbsp; <span>238.263,040</span> &nbsp; <span>4.280.868,520</span><br>
+          Α3 &nbsp; <span>238.215,390</span> &nbsp; <span>4.280.815,680</span><br>
+          Α4 &nbsp; <span>238.190,110</span> &nbsp; <span>4.280.905,230</span>
+        </div>
+      </div>
+      <div class="t-arrow">→<span class="mono">ΑΝΑΛΥΣΗ</span></div>
+      <div class="t-card t-after">
+        <div class="t-label">Περιγραφή για συμβόλαιο</div>
+        <p>«…ορίζεται/συνορεύει: σε πλευρά <span class="hl">Α1-Α2</span> μήκους <span class="hl">δεκαεννέα μέτρων και δώδεκα εκατοστών (19,12μ.)</span> με ΚΑΕΚ 010393405005, ιδιοκτησία <span class="hl">Παπαδοπούλου Μαρία</span> (ανατολικά)…»</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ΔΙΑΔΙΚΑΣΙΑ -->
+<section id="diadikasia">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Η διαδικασία</div>
+      <h2>Τρία βήματα. Καμία πληκτρολόγηση.</h2>
+      <p>Το ίδιο αποτέλεσμα κάθε φορά — γρήγορα, με συνέπεια, χωρίς αντιγραφή συντεταγμένων στο χέρι.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-n">01</div>
+        <div class="step-body">
+          <h3>Ανέβασμα σχεδίου</h3>
+          <p>Σύρετε το τοπογραφικό ή το Δ.Γ.Μ. σε PDF ή εικόνα. Η εφαρμογή ελέγχει αυτόματα την ποιότητα του αρχείου.</p>
+          <div class="step-media">
+            <img src="step-1.png" alt="Ανέβασμα σχεδίου" class="step-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="ph" style="display:none">📤 Screenshot: ανέβασμα σχεδίου<span class="mono">step-1.png</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-n">02</div>
+        <div class="step-body">
+          <h3>Αυτόματη ανάγνωση</h3>
+          <p>Εντοπίζονται όρια, μήκη πλευρών, όμοροι, προσανατολισμοί και — στα Δ.Γ.Μ. — όλοι οι πίνακες μεταβολών.</p>
+          <div class="step-media">
+            <img src="step-2.png" alt="Αποτελέσματα ανάλυσης" class="step-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="ph" style="display:none">🔍 Screenshot: αποτελέσματα ανάλυσης<span class="mono">step-2.png</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-n">03</div>
+        <div class="step-body">
+          <h3>Εξαγωγή σε Word</h3>
+          <p>Κατεβάζετε έτοιμη την περιγραφή ή την τεχνική έκθεση (.docx). Ελέγχετε, ενσωματώνετε στο συμβόλαιο.</p>
+          <div class="step-media">
+            <img src="step-3.png" alt="Έγγραφο Word" class="step-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="ph" style="display:none">📄 Screenshot: έγγραφο Word<span class="mono">step-3.png</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ΒΙΝΤΕΟ -->
+<section class="video-band">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Δείτε το σε χρήση</div>
+      <h2>Μία ολόκληρη καταχώρηση σε ένα λεπτό.</h2>
+      <p>Από το ανέβασμα του σχεδίου ως το έτοιμο κείμενο του συμβολαίου.</p>
+    </div>
+    <div class="video-frame reveal">
+      <video id="demoVideo" controls preload="metadata" poster="video-poster.png" style="width:100%;height:100%;object-fit:cover;display:none">
+        <source src="demo.mp4" type="video/mp4">
+      </video>
+      <div class="video-ph" id="videoPh">
+        <div class="play"></div>
+        Βίντεο επίδειξης<br><span class="mono">ανεβάστε demo.mp4</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ΤΙ ΠΑΡΑΓΕΙ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Δύο έγγραφα</div>
+      <h2>Ό,τι χρειάζεται το συμβόλαιο — και το δικαστήριο.</h2>
+    </div>
+    <div class="outputs">
+      <div class="out-card reveal">
+        <div class="out-icon">📄</div>
+        <h3>Περιγραφή Ιδιοκτησίας</h3>
+        <p>Έτοιμο κείμενο για ενσωμάτωση στο σώμα του συμβολαίου.</p>
+        <ul>
+          <li>Όρια ανά πλευρά με μήκη ολογράφως</li>
+          <li>Όμοροι με ΚΑΕΚ και όνομα ιδιοκτήτη</li>
+          <li>Προσανατολισμοί (Β/Ν/Α/Δ)</li>
+          <li>Δηλώσεις μηχανικού αυτούσιες</li>
+        </ul>
+      </div>
+      <div class="out-card reveal">
+        <div class="out-icon">⚖️</div>
+        <h3>Τεχνική Έκθεση</h3>
+        <p>Για δικαστήριο και Κτηματολόγιο, με πλήρες παράρτημα.</p>
+        <ul>
+          <li>Αρχικά & τελικά γεωτεμάχια</li>
+          <li>Διεκδικούμενα & διδόμενα τμήματα</li>
+          <li>Πίνακες δασικών τμημάτων</li>
+          <li>Συντεταγμένες & εμβαδά ανά πίνακα</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-item reveal"><div class="fi">📐</div><h4>ΕΓΣΑ '87</h4><p>Ακριβής ανάγνωση συντεταγμένων</p></div>
+      <div class="feat-item reveal"><div class="fi">🔒</div><h4>Έλεγχος ορθότητας</h4><p>Αυστηρός αυτοέλεγχος πριν την εξαγωγή</p></div>
+      <div class="feat-item reveal"><div class="fi">✏️</div><h4>Πλήρως επεξεργάσιμο</h4><p>Διορθώνετε ό,τι θέλετε χειροκίνητα</p></div>
+      <div class="feat-item reveal"><div class="fi">⚡</div><h4>Δευτερόλεπτα</h4><p>Αντί για ώρες πληκτρολόγησης</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ΤΙΜΕΣ -->
+<section class="pricing">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Συνδρομές</div>
+      <h2>Διαφανής χρέωση ανά διάγραμμα.</h2>
+      <p>Οι νέοι χρήστες ξεκινούν με 5 δωρεάν αναλύσεις. Κάθε ανάλυση = 1 διάγραμμα· οι εξαγωγές είναι απεριόριστες.</p>
+    </div>
+    <div class="price-grid">
+      <div class="price-card reveal">
+        <div class="price-name">Εξάμηνη</div>
+        <div class="price-amt">210<small>€</small></div>
+        <div class="price-vat">+ ΦΠΑ 24% · 260,40€</div>
+        <div class="price-feat">120 διαγράμματα</div>
+        <div class="price-unit">1,75€ / διάγραμμα</div>
+      </div>
+      <div class="price-card best reveal">
+        <div class="price-badge">Καλύτερη αξία</div>
+        <div class="price-name">Ετήσια</div>
+        <div class="price-amt">380<small>€</small></div>
+        <div class="price-vat">+ ΦΠΑ 24% · 471,20€</div>
+        <div class="price-feat">250 διαγράμματα</div>
+        <div class="price-unit">1,52€ / διάγραμμα</div>
+      </div>
+      <div class="price-card reveal">
+        <div class="price-name">Δεκάδα</div>
+        <div class="price-amt">50<small>€</small></div>
+        <div class="price-vat">+ ΦΠΑ 24% · 62,00€</div>
+        <div class="price-feat">+10 αναλύσεις</div>
+        <div class="price-unit">για συνδρομητές</div>
+      </div>
+    </div>
+    <p class="price-note">Η εγγραφή και η δοκιμή είναι δωρεάν. Η αγορά γίνεται με απλό αίτημα μέσα από την εφαρμογή.</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-final">
+  <div class="wrap">
+    <h2 class="reveal">Δοκιμάστε το στο επόμενο συμβόλαιο.</h2>
+    <p class="reveal">Εγγραφή σε ένα λεπτό, πέντε αναλύσεις δωρεάν. Δείτε μόνοι σας τη διαφορά στον χρόνο σύνταξης.</p>
+    <a href="index.html" class="btn btn-primary reveal">Ξεκινήστε δωρεάν →</a>
+    <div class="contact-row reveal">
+      <a href="mailto:brb.develop@gmail.com">✉️ brb.develop@gmail.com</a>
+      <a href="tel:+306933226314">📱 6933 226314</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Powered by <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ</b> — Λευκάδα
+    <span class="mono">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ</span>
+  </div>
+</footer>
+
+<script>
+  // Αν υπάρχει το demo.mp4, δείξε το βίντεο· αλλιώς κράτα το placeholder
+  (function(){
+    var v=document.getElementById('demoVideo'), ph=document.getElementById('videoPh');
+    if(!v) return;
+    v.addEventListener('loadeddata',function(){ v.style.display='block'; if(ph) ph.style.display='none'; });
+    v.addEventListener('error',function(){ v.style.display='none'; if(ph) ph.style.display=''; });
+    // δοκίμασε να φορτώσει
+    v.load();
+  })();
+
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{
+    el.style.transitionDelay=(Math.min(i%3,3)*0.08)+'s';
+    io.observe(el);
+  });
+</script>
+</body>
+</html>
