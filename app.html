@@ -88,6 +88,11 @@ button{font-family:inherit;font-weight:600;cursor:pointer;border:none;border-rad
 .guide-foot{margin-top:14px;padding-top:12px;border-top:1px solid #d4ddea;color:#4a5568;font-size:13.5px}
 .brb-footer{text-align:center;padding:24px 16px 32px;color:#6b6657;font-size:13px;border-top:1px solid #e0ddd3;margin-top:24px}
 .brb-footer b{color:var(--navy)}
+.ai-warn{margin-top:14px;padding:12px 14px;background:#fff8e6;border:1px solid #e6cf7a;border-radius:7px;font-size:13px;line-height:1.6;color:#5c4d20}
+.ai-warn a{color:var(--navy);font-weight:600;display:inline-block;margin-top:4px}
+.terms-body{max-height:55vh;overflow:auto;font-size:13.5px;line-height:1.7;color:#333;padding-right:6px}
+.terms-body p{margin-bottom:12px}
+.terms-sign{color:var(--muted);font-size:12.5px;margin-top:16px;border-top:1px solid #e0ddd3;padding-top:12px}
 .brb-meta{display:inline-block;margin-top:4px;font-size:11.5px;color:#9a9384;letter-spacing:.3px}
 .token-badge{display:inline-block;margin-top:6px;background:rgba(169,139,60,.18);color:#A98B3C;border:1px solid #A98B3C;padding:3px 10px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer}
 .token-badge.hidden{display:none}
@@ -239,7 +244,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       <div class="guide-step"><span class="gn">8</span><div>
         <b>Κατεβάστε το έγγραφο.</b><br>
         Πατήστε <b>«📄 Περιγραφή για Συμβόλαιο»</b> για να κατεβεί το αρχείο Word (.docx).<br>
-        Στα ΔΓΜ υπάρχει επιπλέον <b>«⚖️ Τεχνική Έκθεση για Δικαστήριο/Κτηματολόγιο»</b>.<br>
+        Στα ΔΓΜ υπάρχει επιπλέον <b>«⚖️ Τεχνική Έκθεση για Κτηματολόγιο»</b>.<br>
         Ανοίξτε το με το Word και ενσωματώστε το στο συμβόλαιο.
       </div></div>
 
@@ -308,6 +313,11 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       <span class="muted" id="analyzeHint"></span>
     </div>
     <div class="status" id="status"></div>
+    <div class="ai-warn">
+      ⚠️ <b>Προσοχή:</b> Τα αποτελέσματα παράγονται από τεχνητή νοημοσύνη (AI) και ενδέχεται να περιέχουν σφάλματα.
+      <b>Ελέγχετε σε κάθε βήμα</b> όλα τα δεδομένα (μήκη, εμβαδά, όμορους, ΚΑΕΚ, πίνακες) αντιπαραβάλλοντας με το πρωτότυπο σχέδιο, πριν τα χρησιμοποιήσετε σε συμβόλαιο ή έγγραφο.
+      <a href="#" onclick="showTerms();return false">Όροι χρήσης & αποποίηση ευθύνης</a>
+    </div>
   </div>
 
   <!-- RESULTS -->
@@ -412,16 +422,38 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       </div>
       <div class="row" style="margin-top:4px">
         <button class="btn-nav" id="btnDocx" onclick="exportDocx()">📄 Περιγραφή για Συμβόλαιο (DOCX)</button>
-        <button class="btn-nav hidden" id="btnReport" onclick="exportReport()" style="background:var(--olive)">⚖️ Τεχνική Έκθεση για Δικαστήριο/Κτηματολόγιο (DOCX)</button>
+        <button class="btn-nav hidden" id="btnReport" onclick="exportReport()" style="background:var(--olive)">⚖️ Τεχνική Έκθεση για Κτηματολόγιο (DOCX)</button>
       </div>
     </div>
 
   </div>
   </div><!-- /appBody -->
 
+  <!-- MODAL ΟΡΩΝ ΧΡΗΣΗΣ -->
+  <div id="termsModal" class="modal-overlay hidden" onclick="if(event.target===this)closeTerms()">
+   <div class="modal-box">
+    <button class="modal-x" onclick="closeTerms()">✕</button>
+    <h2 style="margin-top:0">Αποποίηση Ευθύνης & Όροι Χρήσης</h2>
+    <div class="terms-body">
+      <p><b>1. Φύση της εφαρμογής.</b> Η εφαρμογή «ΝΟΜΙΚΟ ΤΟΠΟ» αποτελεί βοηθητικό εργαλείο που χρησιμοποιεί τεχνητή νοημοσύνη (AI) για την αυτόματη ανάγνωση τοπογραφικών διαγραμμάτων και Διαγραμμάτων Γεωμετρικών Μεταβολών, καθώς και για τον υπολογισμό και τη σύνταξη περιγραφών ιδιοκτησίας. Η εφαρμογή <b>δεν υποκαθιστά</b> την κρίση, τον έλεγχο και την ευθύνη του αρμόδιου μηχανικού, συμβολαιογράφου, δικηγόρου ή άλλου επαγγελματία.</p>
+
+      <p><b>2. Πιθανότητα σφαλμάτων.</b> Επειδή η ανάγνωση και οι υπολογισμοί πραγματοποιούνται από σύστημα τεχνητής νοημοσύνης, τα παραγόμενα αποτελέσματα ενδέχεται να περιέχουν σφάλματα, παραλείψεις ή ανακρίβειες — ιδίως σε σχέδια χαμηλής ποιότητας, σκαναρισμένα ή με μη τυπική μορφή. Ενδεικτικά, σφάλματα μπορεί να αφορούν: συντεταγμένες, μήκη πλευρών, εμβαδά, προσανατολισμούς, ονόματα όμορων, αριθμούς ΚΑΕΚ, καθώς και τα στοιχεία των πινάκων μεταβολών.</p>
+
+      <p><b>3. Υποχρέωση ελέγχου από τον χρήστη.</b> Ο χρήστης αναλαμβάνει την υποχρέωση να ελέγχει σε <b>κάθε βήμα</b> την ορθότητα όλων των δεδομένων που παράγει η εφαρμογή, αντιπαραβάλλοντάς τα με το πρωτότυπο σχέδιο και τις επίσημες πηγές (Κτηματολόγιο, τοπογραφικά στοιχεία, δηλώσεις μηχανικού). Ο έλεγχος αυτός είναι απαραίτητος <b>πριν</b> από κάθε χρήση των αποτελεσμάτων σε συμβόλαιο, τεχνική έκθεση, δικαστική ή διοικητική πράξη ή οποιοδήποτε άλλο έγγραφο.</p>
+
+      <p><b>4. Αποκλεισμός ευθύνης.</b> Ο πάροχος της εφαρμογής (BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ) δεν φέρει καμία ευθύνη για ζημίες, απώλειες, νομικές συνέπειες ή σφάλματα που τυχόν προκύψουν από τη χρήση των αποτελεσμάτων της εφαρμογής χωρίς τον δέοντα έλεγχο. Η χρήση της εφαρμογής γίνεται με αποκλειστική ευθύνη του χρήστη. Την ευθύνη για την ακρίβεια, την πληρότητα και τη νομική εγκυρότητα του τελικού εγγράφου φέρει αποκλειστικά ο συντάκτης/επαγγελματίας που το υπογράφει ή το χρησιμοποιεί.</p>
+
+      <p><b>5. Αποδοχή όρων.</b> Με τη χρήση της εφαρμογής, ο χρήστης δηλώνει ότι έλαβε γνώση και αποδέχεται πλήρως τους παρόντες όρους και την παρούσα αποποίηση ευθύνης.</p>
+
+      <p class="terms-sign">BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ — Λευκάδα<br>brb.develop@gmail.com · 6933 226314</p>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:8px" onclick="closeTerms()">Κατάλαβα</button>
+   </div>
+  </div>
+
   <footer class="brb-footer">
     Powered by <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ</b> — ΛΕΥΚΑΔΑ<br>
-    <span class="brb-meta">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ <span id="appVer">v1.1</span></span>
+    <span class="brb-meta">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ <span id="appVer">v1.1</span> · <a href="#" onclick="showTerms();return false" style="color:inherit">Όροι χρήσης</a></span>
   </footer>
 </div>
 
@@ -1005,6 +1037,9 @@ function addBndRow(){DATA.boundaries.push({side:'',direction:'ΑΝΑΤΟΛΙΚΑ
 // Modal βοήθειας (οδηγίες + χρεώσεις + επικοινωνία)
 function showHelp(){ document.getElementById('helpModal').classList.remove('hidden'); }
 function closeHelp(){ document.getElementById('helpModal').classList.add('hidden'); }
+// Modal όρων χρήσης / αποποίησης ευθύνης
+function showTerms(){ document.getElementById('termsModal').classList.remove('hidden'); }
+function closeTerms(){ document.getElementById('termsModal').classList.add('hidden'); }
 
 // ====== ΣΥΣΤΗΜΑ TOKENS ======
 // ⚙ Email παραλαβής αιτημάτων αγοράς
