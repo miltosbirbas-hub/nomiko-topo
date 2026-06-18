@@ -155,6 +155,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
   <div>
     <h1>ΝΟΜΙΚΟ ΤΟΠΟ</h1>
     <div id="tokenBadge" class="token-badge hidden" onclick="showBuyTokens()" title="Υπόλοιπο αναλύσεων — κλικ για αγορά">🎫 <span id="tokenCount">—</span> αναλύσεις</div>
+    <div id="floorBadge" class="token-badge hidden" onclick="showBuyFloor()" title="Αναλύσεις κάτοψης (Οριζόντια Ιδιοκτησία) — κλικ για αγορά" style="margin-left:6px;background:rgba(30,58,90,.14);color:#1E3A5A;border-color:#1E3A5A">🏠 <span id="floorCount">—</span> κατόψεις</div>
   </div>
   <div class="sub">Περιγραφές ιδιοκτησίας & πίνακες μεταβολών για συμβόλαια — από τοπογραφικά & διαγράμματα γεωμετρικών μεταβολών</div>
   <button class="help-btn" onclick="showHelp()" title="Οδηγίες & Χρεώσεις" aria-label="Βοήθεια">?</button>
@@ -580,11 +581,57 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
   </div>
 </div>
 
+<!-- MODAL ΑΓΟΡΑΣ ΑΝΑΛΥΣΕΩΝ ΚΑΤΟΨΗΣ (Οριζόντια Ιδιοκτησία) -->
+<div id="buyFloorModal" class="modal-overlay hidden" onclick="if(event.target===this)closeBuyFloor()">
+  <div class="modal-box">
+    <button class="modal-x" onclick="closeBuyFloor()">✕</button>
+    <h2 style="margin-top:0">🏠 Αναλύσεις Κάτοψης — Οριζόντια Ιδιοκτησία</h2>
+    <p class="muted">Η ανάλυση κάτοψης είναι ξεχωριστή δυνατότητα. Κάθε νέο μέλος έχει <b>5 δωρεάν δοκιμαστικές</b> αναλύσεις κάτοψης. Μετά, η δυνατότητα ενεργοποιείται με συνδρομή <b>Premium ή Ultra</b>.</p>
+    <p>Τρέχον υπόλοιπο κατόψεων: <b id="floorModalBalance">—</b> &nbsp;·&nbsp; Συνδρομή: <b id="floorModalTier">—</b></p>
+
+    <div id="floorLockNote" class="banner-warn hidden" style="margin:10px 0">
+      🔒 <b>Εξαντλήθηκαν τα δωρεάν δείγματα.</b> Η ανάλυση κάτοψης ενεργοποιείται με συνδρομή <b>Premium ή Ultra</b>. Επιλέξτε πακέτο παρακάτω.
+    </div>
+
+    <div class="pkg-grid">
+      <div class="pkg pkg-best">
+        <div class="pkg-tag">Πακέτο Κατόψεων</div>
+        <div class="pkg-count">100 αναλύσεις</div>
+        <div class="pkg-price">100€</div>
+        <div class="pkg-vat">+ ΦΠΑ 24% = <b>124,00€</b></div>
+        <div class="pkg-unit">1,00€ / κάτοψη</div>
+      </div>
+      <div class="pkg" id="pkgFloorTopup">
+        <div class="pkg-count">Επανατροφοδότηση</div>
+        <div class="pkg-price">0,90€</div>
+        <div class="pkg-vat">+ ΦΠΑ 24% = <b>1,116€</b></div>
+        <div class="pkg-unit">ανά σχέδιο (top-up)</div>
+      </div>
+    </div>
+    <p class="muted" style="font-size:12.5px;margin-top:-6px">Οι τιμές ισχύουν για συνδρομητές Premium/Ultra. Η επανατροφοδότηση χρεώνεται ανά σχέδιο (0,90€ + ΦΠΑ).</p>
+
+    <div class="pay-box">
+      <h3 style="margin:0 0 8px">📩 Πώς αγοράζετε</h3>
+      <ol class="pay-steps">
+        <li>Πατήστε <b>«Αποστολή αιτήματος»</b> για το πακέτο — θα ανοίξει έτοιμο email προς εμάς.</li>
+        <li>Θα σας στείλουμε <b>φόρμα παραγγελίας</b> και στοιχεία πληρωμής.</li>
+        <li>Μετά την κατάθεση, οι αναλύσεις κάτοψης <b>πιστώνονται</b>.</li>
+      </ol>
+      <div class="req-btns">
+        <button class="btn-req" onclick="requestPurchase('Πακέτο Κατόψεων — 100 αναλύσεις (100€+ΦΠΑ) [Premium/Ultra]')">📩 Αίτημα: Πακέτο 100 κατόψεων</button>
+        <button class="btn-req" onclick="requestPurchase('Επανατροφοδότηση κατόψεων — top-up 0,90€/σχέδιο+ΦΠΑ [Premium/Ultra]')">📩 Αίτημα: Top-up κατόψεων</button>
+      </div>
+      <p class="pay-email-line">Ή στείλτε email απευθείας στο <b><a href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a></b></p>
+    </div>
+    <button class="btn-nav" style="margin-top:14px;width:100%" onclick="refreshFloor();closeBuyFloor()">Ανανέωση υπολοίπου</button>
+  </div>
+</div>
+
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // Έκδοση εφαρμογής — ΑΛΛΑΞΕ ΕΔΩ σε κάθε αναβάθμιση (και στο sw.js το CACHE)
-const APP_VERSION = 'v1.9';
+const APP_VERSION = 'v2.0';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
@@ -971,16 +1018,36 @@ async function analyze(){
   const { data:{ session } } = await SB.auth.getSession();
   if(!session){setStatus('Πρέπει να είστε συνδεδεμένος για να χρησιμοποιήσετε την ανάλυση.','err');return;}
 
-  // ΕΛΕΓΧΟΣ TOKENS — πριν ξοδέψουμε ανάλυση
-  let bal=0;
-  try{
-    const { data:tok, error:terr } = await SB.rpc('my_tokens');
-    if(terr) throw terr;
-    bal = tok||0;
-  }catch(e){ bal = null; } // αν δεν έχει στηθεί ο πίνακας, μην μπλοκάρεις
-  if(bal!==null && bal<=0){
-    showNoTokens();
-    return;
+  // ΕΛΕΓΧΟΣ ΥΠΟΛΟΙΠΟΥ — πριν ξοδέψουμε ανάλυση
+  if(MODE==='oriz'){
+    // floor-plan wallet: 5 demo για όλους· μετά κλείδωμα εκτός Premium/Ultra
+    try{
+      const { data, error } = await SB.rpc('my_floor_status');
+      if(error) throw error;
+      const fb=(data&&typeof data.floor_balance==='number')?data.floor_balance:0;
+      const ft=(data&&data.tier)||'free';
+      FLOOR_BAL=fb; FLOOR_TIER=ft; updateFloorBadge(fb,ft);
+      if(fb<=0){
+        if(ft==='free'){
+          setStatus('🔒 Εξαντλήθηκαν τα 5 δωρεάν δείγματα ανάλυσης κάτοψης. Η δυνατότητα ενεργοποιείται με συνδρομή <b>Premium ή Ultra</b>.','err');
+        }else{
+          setStatus('Εξαντλήθηκαν οι αναλύσεις κάτοψης. Αποκτήστε πακέτο ή επανατροφοδότηση για να συνεχίσετε.','err');
+        }
+        showBuyFloor();
+        return;
+      }
+    }catch(e){ /* αν δεν έχει στηθεί ακόμα το floor wallet, μην μπλοκάρεις */ }
+  } else {
+    let bal=0;
+    try{
+      const { data:tok, error:terr } = await SB.rpc('my_tokens');
+      if(terr) throw terr;
+      bal = tok||0;
+    }catch(e){ bal = null; } // αν δεν έχει στηθεί ο πίνακας, μην μπλοκάρεις
+    if(bal!==null && bal<=0){
+      showNoTokens();
+      return;
+    }
   }
 
   const btn=document.getElementById('btnAnalyze');
@@ -1030,7 +1097,10 @@ async function analyze(){
     // ── ΟΡΙΖΟΝΤΙΑ ΙΔΙΟΚΤΗΣΙΑ ──
     if(MODE==='oriz'){
       applyResultOriz(parsed);
-      try{ const { data:nb } = await SB.rpc('spend_token'); if(typeof nb==='number') updateTokenBadge(nb); }catch(e){}
+      try{
+        const { data:fr } = await SB.rpc('spend_floor_token');
+        if(fr && fr.ok && typeof fr.floor_balance==='number'){ FLOOR_BAL=fr.floor_balance; updateFloorBadge(fr.floor_balance, fr.tier||FLOOR_TIER); }
+      }catch(e){}
       const verts=parsed.vertices||[];
       const truncNoteO = truncated ? '<br><b>⚠ Η απάντηση ίσως κόπηκε</b> — ελέγξτε μήπως λείπουν πλευρές/χώροι.' : '';
       const probs=validateOriz(verts, parsed.emvado||val('fEmvado'));
@@ -1673,6 +1743,36 @@ function showNoTokens(){
   setStatus('Εξαντλήθηκαν οι διαθέσιμες αναλύσεις σας. Αποκτήστε περισσότερες για να συνεχίσετε.','err');
   showBuyTokens();
 }
+
+// ── FLOOR-PLAN WALLET (Οριζόντια Ιδιοκτησία) ──
+let FLOOR_BAL=null, FLOOR_TIER='free';
+function updateFloorBadge(n,tier){
+  const badge=document.getElementById('floorBadge');
+  const cnt=document.getElementById('floorCount');
+  if(cnt) cnt.textContent=(n==null?'—':n);
+  if(badge) badge.classList.remove('hidden');
+  if(n!=null && n<=1) badge && badge.classList.add('low'); else badge && badge.classList.remove('low');
+  const mb=document.getElementById('floorModalBalance'); if(mb) mb.textContent=(n==null?'—':n);
+  const mt=document.getElementById('floorModalTier'); if(mt) mt.textContent=(tier==='premium'?'Premium':(tier==='ultra'?'Ultra':'Free'));
+}
+async function refreshFloor(){
+  if(!SB) return;
+  try{
+    const { data:{session} } = await SB.auth.getSession();
+    if(!session){ document.getElementById('floorBadge').classList.add('hidden'); return; }
+    const { data, error } = await SB.rpc('my_floor_status');
+    if(error) throw error;
+    FLOOR_BAL=(data&&typeof data.floor_balance==='number')?data.floor_balance:0;
+    FLOOR_TIER=(data&&data.tier)||'free';
+    updateFloorBadge(FLOOR_BAL,FLOOR_TIER);
+    // δείξε/κρύψε το note κλειδώματος μέσα στο modal
+    const ln=document.getElementById('floorLockNote');
+    if(ln){ if(FLOOR_BAL<=0 && FLOOR_TIER==='free') ln.classList.remove('hidden'); else ln.classList.add('hidden'); }
+  }catch(e){ document.getElementById('floorBadge').classList.add('hidden'); }
+}
+function showBuyFloor(){ refreshFloor(); document.getElementById('buyFloorModal').classList.remove('hidden'); }
+function closeBuyFloor(){ document.getElementById('buyFloorModal').classList.add('hidden'); }
+
 // Αίτημα αγοράς → ανοίγει έτοιμο email προς εμάς
 async function requestPurchase(pkg){
   let email='(το email σας)';
@@ -2352,6 +2452,8 @@ async function doLogout(){
   document.getElementById('appBody').style.display='none';
   document.getElementById('userBar').style.display='none';
   document.getElementById('loginCard').style.display='';
+  const fb=document.getElementById('floorBadge'); if(fb) fb.classList.add('hidden');
+  const tb=document.getElementById('tokenBadge'); if(tb) tb.classList.add('hidden');
 }
 
 // Βγάζει φιλικό όνομα: από metadata (full_name) ή από το email
@@ -2378,6 +2480,7 @@ function showLoggedIn(user){
   const g=document.getElementById('greeting');
   if(g) g.textContent = name ? ('Καλωσήρθες, '+name+'!') : 'Καλωσήρθες!';
   refreshTokens();
+  refreshFloor();
 }
 
 async function checkSession(){
