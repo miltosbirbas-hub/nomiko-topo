@@ -137,7 +137,15 @@ table.bnd td{vertical-align:middle}
 .key-note{font-size:11px;color:#9a9484;margin-top:6px}
 .del-from{background:var(--accent)!important}
 h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}
-.preview-img{max-width:100%;border:1px solid var(--line);border-radius:3px;margin-top:10px}
+.preview-img{max-width:100%;border:1px solid var(--line);border-radius:3px;margin-top:10px;transition:transform .25s ease}
+.preview-wrap{overflow:hidden;display:flex;justify-content:center}
+.rot-controls{margin-top:12px;padding:10px 12px;background:#eef3ef;border:1px solid #cdddc9;border-radius:7px}
+.rot-controls.hidden{display:none}
+.rot-label{display:block;font-size:12.5px;color:#3f5238;margin-bottom:8px;line-height:1.5}
+.rot-btns{display:flex;align-items:center;gap:8px}
+.rot-btn{background:#fff;border:1px solid var(--olive);color:var(--olive);font-weight:600;font-size:14px;padding:7px 16px;border-radius:5px;cursor:pointer;transition:.15s}
+.rot-btn:hover{background:var(--olive);color:#fff}
+.rot-state{margin-left:auto;font-family:monospace;font-size:14px;font-weight:700;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:4px;padding:4px 10px}
 </style>
 </head>
 <body>
@@ -288,7 +296,17 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     </div>
     <input type="file" id="fileInput" accept="application/pdf,image/*" class="hidden">
     <div id="fileList"></div>
-    <img id="previewImg" class="preview-img hidden">
+    <div id="rotControls" class="rot-controls hidden">
+      <span class="rot-label">🧭 Προσανατολισμός: αν ο Βορράς δεν είναι επάνω, περιστρέψτε το σχέδιο πριν την ανάλυση.</span>
+      <div class="rot-btns">
+        <button type="button" class="rot-btn" onclick="rotateDraw(-90)" title="Περιστροφή αριστερά">↺ Αριστερά</button>
+        <button type="button" class="rot-btn" onclick="rotateDraw(90)" title="Περιστροφή δεξιά">↻ Δεξιά</button>
+        <span class="rot-state" id="rotState">0°</span>
+      </div>
+    </div>
+    <div class="preview-wrap" id="previewWrap">
+      <img id="previewImg" class="preview-img hidden">
+    </div>
   </div>
 
   <!-- BASIC INFO -->
@@ -516,6 +534,7 @@ const APP_VERSION = 'v1.1';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
+let ROT=0; // γωνία περιστροφής εικόνας πριν την ανάλυση (0/90/180/270)
 let DATA={boundaries:[],changes:[],areaChanges:[]};
 
 // ── Κλειδί Claude API ──
@@ -559,12 +578,52 @@ function handleFile(f){
     FILE_B64=reader.result.split(',')[1];
     if(f.type==='application/pdf'){FILE_KIND='pdf';FILE_MEDIA='application/pdf';renderPdfPreview(reader.result);}
     else{FILE_KIND='image';FILE_MEDIA=f.type;document.getElementById('previewImg').src=reader.result;document.getElementById('previewImg').classList.remove('hidden');}
+    showRotControls();
   };
   reader.readAsDataURL(f);
   document.getElementById('fileList').innerHTML=
     `<div class="filerow">📎 ${f.name} <span class="muted">(${(f.size/1024/1024).toFixed(2)} MB)</span><span class="x" onclick="clearFile()">✕</span></div>`;
 }
-function clearFile(){FILE=FILE_B64=null;document.getElementById('fileList').innerHTML='';document.getElementById('previewImg').classList.add('hidden');fi.value='';}
+function clearFile(){FILE=FILE_B64=null;document.getElementById('fileList').innerHTML='';document.getElementById('previewImg').classList.add('hidden');fi.value='';ROT=0;applyRot();document.getElementById('rotControls').classList.add('hidden');}
+
+// Περιστροφή σχεδίου (οπτικά + θα εφαρμοστεί στην εικόνα πριν την ανάλυση)
+function rotateDraw(delta){
+  ROT=(ROT+delta+360)%360;
+  applyRot();
+}
+function applyRot(){
+  const img=document.getElementById('previewImg');
+  const st=document.getElementById('rotState');
+  if(img) img.style.transform = ROT? ('rotate('+ROT+'deg)') : '';
+  if(st) st.textContent = ROT+'°';
+}
+function showRotControls(){
+  document.getElementById('rotControls').classList.remove('hidden');
+  ROT=0; applyRot();
+}
+
+// Περιστρέφει μια base64 εικόνα κατά deg (90/180/270) μέσω canvas. Επιστρέφει {data, media}.
+function rotateB64(b64, media, deg){
+  return new Promise((resolve)=>{
+    const mt = (media && media.indexOf('png')>=0) ? 'image/png' : 'image/jpeg';
+    const img=new Image();
+    img.onload=()=>{
+      const r=((deg%360)+360)%360;
+      const c=document.createElement('canvas');
+      const swap = (r===90||r===270);
+      c.width  = swap ? img.height : img.width;
+      c.height = swap ? img.width  : img.height;
+      const ctx=c.getContext('2d');
+      ctx.translate(c.width/2, c.height/2);
+      ctx.rotate(r*Math.PI/180);
+      ctx.drawImage(img, -img.width/2, -img.height/2);
+      const out=c.toDataURL(mt, 0.9).split(',')[1];
+      resolve({data:out, media:mt});
+    };
+    img.onerror=()=>resolve({data:b64, media:media}); // fallback χωρίς περιστροφή
+    img.src='data:'+(media||'image/jpeg')+';base64,'+b64;
+  });
+}
 
 async function renderPdfPreview(dataUrl){
   window._pdfText='';
@@ -711,9 +770,13 @@ async function analyze(){
   if(hasCleanText){
     // μόνο κείμενο
   } else if(FILE_KIND==='image'){
-    content.push({type:'image',source:{type:'base64',media_type:FILE_MEDIA,data:FILE_B64}});
+    let b64=FILE_B64, media=FILE_MEDIA;
+    if(ROT){ const r=await rotateB64(FILE_B64, FILE_MEDIA, ROT); b64=r.data; media=r.media; }
+    content.push({type:'image',source:{type:'base64',media_type:media,data:b64}});
   } else if(window._pdfPng){
-    content.push({type:'image',source:{type:'base64',media_type:window._pdfPngMedia||'image/jpeg',data:window._pdfPng}});
+    let b64=window._pdfPng, media=window._pdfPngMedia||'image/jpeg';
+    if(ROT){ const r=await rotateB64(window._pdfPng, media, ROT); b64=r.data; media=r.media; }
+    content.push({type:'image',source:{type:'base64',media_type:media,data:b64}});
   }
   let txtBlock='Γνωστά στοιχεία από τον χρήστη (συμπλήρωσέ τα ΜΟΝΟ αν λείπουν, ΜΗΝ τα αλλάζεις): '+JSON.stringify(hints);
   if(hasCleanText){
@@ -1111,6 +1174,7 @@ function newDiagram(){
   if(!confirm('Νέο διάγραμμα; Θα διαγραφούν όλες οι τρέχουσες καταχωρήσεις (στοιχεία, όρια, μεταβολές, δηλώσεις).')) return;
   // αρχείο & preview
   FILE=FILE_B64=FILE_MEDIA=FILE_KIND=null;
+  ROT=0; applyRot(); document.getElementById('rotControls')?.classList.add('hidden');
   const fi=document.getElementById('fileInput'); if(fi) fi.value='';
   document.getElementById('fileList').innerHTML='';
   const pv=document.getElementById('previewImg'); if(pv){pv.classList.add('hidden');pv.src='';}
