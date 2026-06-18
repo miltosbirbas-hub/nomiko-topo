@@ -137,8 +137,8 @@ table.bnd td{vertical-align:middle}
 .key-note{font-size:11px;color:#9a9484;margin-top:6px}
 .del-from{background:var(--accent)!important}
 h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}
-.preview-img{max-width:100%;border:1px solid var(--line);border-radius:3px;margin-top:10px;transition:transform .25s ease}
-.preview-wrap{overflow:hidden;display:flex;justify-content:center;align-items:center;margin-top:10px;transition:height .25s ease}
+.preview-img{max-width:100%;border:1px solid var(--line);border-radius:3px;margin-top:10px;transform-origin:center center;will-change:transform}
+.preview-wrap{overflow:hidden;display:flex;justify-content:center;align-items:center;margin-top:10px;transition:height .25s ease;touch-action:none;position:relative;background:#fafaf7;border-radius:4px}
 .preview-wrap .preview-img{margin-top:0}
 .rot-controls{margin-top:12px;padding:10px 12px;background:#eef3ef;border:1px solid #cdddc9;border-radius:7px}
 .rot-controls.hidden{display:none}
@@ -303,6 +303,13 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
         <button type="button" class="rot-btn" onclick="rotateDraw(-90)" title="Περιστροφή αριστερά">↺ Αριστερά</button>
         <button type="button" class="rot-btn" onclick="rotateDraw(90)" title="Περιστροφή δεξιά">↻ Δεξιά</button>
         <span class="rot-state" id="rotState">0°</span>
+      </div>
+      <span class="rot-label" style="margin-top:10px">🔍 Έλεγχος σχεδίου: ροδάκι ποντικιού για μεγέθυνση, σύρσιμο για μετακίνηση, διπλό κλικ για εναλλαγή. (Στο κινητό: pinch &amp; σύρσιμο)</span>
+      <div class="rot-btns">
+        <button type="button" class="rot-btn" onclick="zoomStep(1.3)" title="Μεγέθυνση">➕ Zoom</button>
+        <button type="button" class="rot-btn" onclick="zoomStep(1/1.3)" title="Σμίκρυνση">➖ Zoom</button>
+        <button type="button" class="rot-btn" onclick="resetZoom()" title="Επαναφορά">⟲ Reset</button>
+        <span class="rot-state" id="zoomState">100%</span>
       </div>
     </div>
     <div class="preview-wrap" id="previewWrap">
@@ -472,7 +479,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 
   <footer class="brb-footer">
     Powered by <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ</b> — ΛΕΥΚΑΔΑ<br>
-    <span class="brb-meta">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ <span id="appVer">v1.2</span> · <a href="#" onclick="showTerms();return false" style="color:inherit">Όροι χρήσης</a></span>
+    <span class="brb-meta">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ <span id="appVer">v1.3</span> · <a href="#" onclick="showTerms();return false" style="color:inherit">Όροι χρήσης</a></span>
   </footer>
 </div>
 
@@ -531,11 +538,13 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // Έκδοση εφαρμογής — ΑΛΛΑΞΕ ΕΔΩ σε κάθε αναβάθμιση (και στο sw.js το CACHE)
-const APP_VERSION = 'v1.2';
+const APP_VERSION = 'v1.3';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
 let ROT=0; // γωνία περιστροφής εικόνας πριν την ανάλυση (0/90/180/270)
+let ZOOM=1, PANX=0, PANY=0; // μεγέθυνση & μετατόπιση προεπισκόπησης
+let _panning=false, _px=0, _py=0;
 let DATA={boundaries:[],changes:[],areaChanges:[]};
 
 // ── Κλειδί Claude API ──
@@ -585,7 +594,7 @@ function handleFile(f){
   document.getElementById('fileList').innerHTML=
     `<div class="filerow">📎 ${f.name} <span class="muted">(${(f.size/1024/1024).toFixed(2)} MB)</span><span class="x" onclick="clearFile()">✕</span></div>`;
 }
-function clearFile(){FILE=FILE_B64=null;document.getElementById('fileList').innerHTML='';document.getElementById('previewImg').classList.add('hidden');fi.value='';ROT=0;applyRot();document.getElementById('rotControls').classList.add('hidden');}
+function clearFile(){FILE=FILE_B64=null;document.getElementById('fileList').innerHTML='';document.getElementById('previewImg').classList.add('hidden');fi.value='';ROT=0;resetZoom();applyRot();document.getElementById('rotControls').classList.add('hidden');}
 
 // Περιστροφή σχεδίου (οπτικά + θα εφαρμοστεί στην εικόνα πριν την ανάλυση)
 function rotateDraw(delta){
@@ -598,13 +607,11 @@ function applyRot(){
   const st=document.getElementById('rotState');
   const wrap=document.getElementById('previewWrap');
   if(img){
-    img.style.transform = ROT? ('rotate('+ROT+'deg)') : '';
+    applyTransform();
     if(ROT===90 || ROT===270){
-      // περιστραμμένο κατακόρυφα: το πλάτος της εικόνας πρέπει να ≤ ύψος container,
-      // και το ύψος της ≤ πλάτος container, για να μη βγαίνει εκτός.
       const avail = (wrap?wrap.clientWidth:600) || 600;
-      img.style.maxWidth = avail+'px';   // το «πλάτος» (που γίνεται ύψος) περιορίζεται
-      img.style.maxHeight = avail+'px';  // το «ύψος» (που γίνεται πλάτος) επίσης
+      img.style.maxWidth = avail+'px';
+      img.style.maxHeight = avail+'px';
       img.classList.add('rotated');
     } else {
       img.style.maxWidth = '100%';
@@ -615,6 +622,17 @@ function applyRot(){
   }
   if(st) st.textContent = ROT+'°';
 }
+
+// Ενιαίο transform: μετατόπιση (pan) + μεγέθυνση (zoom) + περιστροφή (rot)
+function applyTransform(){
+  const img=document.getElementById('previewImg');
+  if(!img) return;
+  img.style.transform = `translate(${PANX}px,${PANY}px) scale(${ZOOM}) rotate(${ROT}deg)`;
+  img.style.cursor = ZOOM>1 ? 'grab' : 'zoom-in';
+}
+function resetZoom(){ ZOOM=1; PANX=0; PANY=0; applyTransform(); updateZoomLabel(); }
+function updateZoomLabel(){ const z=document.getElementById('zoomState'); if(z) z.textContent=Math.round(ZOOM*100)+'%'; }
+function zoomStep(f){ ZOOM=Math.min(8,Math.max(1,ZOOM*f)); if(ZOOM===1){PANX=0;PANY=0;} applyTransform(); updateZoomLabel(); }
 
 // Δίνει στο container ύψος ίσο με το προβαλλόμενο ύψος της περιστραμμένης εικόνας
 function fitRotated(){
@@ -635,7 +653,78 @@ function fitRotated(){
 }
 function showRotControls(){
   document.getElementById('rotControls').classList.remove('hidden');
-  ROT=0; applyRot();
+  ROT=0; resetZoom(); applyRot();
+  setupZoomPan();
+}
+
+// Σύνδεση χειρισμών zoom (ροδάκι) & pan (σύρσιμο) — γίνεται μία φορά
+let _zoomReady=false;
+function setupZoomPan(){
+  if(_zoomReady) return; _zoomReady=true;
+  const wrap=document.getElementById('previewWrap');
+  const img=document.getElementById('previewImg');
+  if(!wrap||!img) return;
+
+  // ΡΟΔΑΚΙ: zoom in/out προς το σημείο του κέρσορα
+  wrap.addEventListener('wheel',(e)=>{
+    if(img.classList.contains('hidden')) return;
+    e.preventDefault();
+    const rect=wrap.getBoundingClientRect();
+    const cx=e.clientX-rect.left-rect.width/2;
+    const cy=e.clientY-rect.top-rect.height/2;
+    const prev=ZOOM;
+    const factor = e.deltaY<0 ? 1.15 : 1/1.15;
+    ZOOM=Math.min(8, Math.max(1, ZOOM*factor));
+    // προσαρμογή pan ώστε να μεγεθύνει γύρω από τον κέρσορα
+    if(ZOOM!==prev){
+      const k=ZOOM/prev;
+      PANX=(PANX-cx)*k+cx;
+      PANY=(PANY-cy)*k+cy;
+      if(ZOOM===1){PANX=0;PANY=0;}
+      applyTransform(); updateZoomLabel();
+    }
+  },{passive:false});
+
+  // PAN: σύρσιμο όταν είναι ζουμαρισμένο
+  wrap.addEventListener('mousedown',(e)=>{
+    if(ZOOM<=1) return;
+    _panning=true; _px=e.clientX-PANX; _py=e.clientY-PANY;
+    img.style.cursor='grabbing'; e.preventDefault();
+  });
+  window.addEventListener('mousemove',(e)=>{
+    if(!_panning) return;
+    PANX=e.clientX-_px; PANY=e.clientY-_py; applyTransform();
+  });
+  window.addEventListener('mouseup',()=>{ if(_panning){_panning=false; const img=document.getElementById('previewImg'); if(img) img.style.cursor=ZOOM>1?'grab':'zoom-in';} });
+
+  // ΔΙΠΛΟ ΚΛΙΚ: εναλλαγή zoom
+  wrap.addEventListener('dblclick',(e)=>{
+    if(img.classList.contains('hidden')) return;
+    if(ZOOM>1){ resetZoom(); }
+    else {
+      const rect=wrap.getBoundingClientRect();
+      const cx=e.clientX-rect.left-rect.width/2;
+      const cy=e.clientY-rect.top-rect.height/2;
+      ZOOM=2.5; PANX=-cx*1.5; PANY=-cy*1.5; applyTransform(); updateZoomLabel();
+    }
+  });
+
+  // ΑΦΗ (κινητό): pinch zoom + drag
+  let _pd=0, _pz=1;
+  wrap.addEventListener('touchstart',(e)=>{
+    if(e.touches.length===2){ _pd=_tdist(e); _pz=ZOOM; }
+    else if(e.touches.length===1 && ZOOM>1){ _panning=true; _px=e.touches[0].clientX-PANX; _py=e.touches[0].clientY-PANY; }
+  },{passive:true});
+  wrap.addEventListener('touchmove',(e)=>{
+    if(e.touches.length===2){
+      e.preventDefault();
+      const d=_tdist(e); if(_pd>0){ ZOOM=Math.min(8,Math.max(1,_pz*d/_pd)); if(ZOOM===1){PANX=0;PANY=0;} applyTransform(); updateZoomLabel(); }
+    } else if(_panning && e.touches.length===1){
+      PANX=e.touches[0].clientX-_px; PANY=e.touches[0].clientY-_py; applyTransform();
+    }
+  },{passive:false});
+  wrap.addEventListener('touchend',()=>{ _panning=false; _pd=0; });
+  function _tdist(e){const a=e.touches[0],b=e.touches[1];return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
 }
 
 // Περιστρέφει μια base64 εικόνα κατά deg (90/180/270) μέσω canvas. Επιστρέφει {data, media}.
