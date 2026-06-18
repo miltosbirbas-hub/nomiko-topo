@@ -137,7 +137,7 @@ table.bnd td{vertical-align:middle}
 .key-note{font-size:11px;color:#9a9484;margin-top:6px}
 .del-from{background:var(--accent)!important}
 h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}
-.preview-img{max-width:100%;border:1px solid var(--line);border-radius:3px;margin-top:10px;transform-origin:center center;will-change:transform}
+.preview-img{max-width:100%;border:1px solid var(--line);border-radius:3px;margin-top:10px;transform-origin:center center;will-change:transform;image-rendering:auto}
 .preview-wrap{overflow:hidden;display:flex;justify-content:center;align-items:center;margin-top:10px;transition:height .25s ease;touch-action:none;position:relative;background:#fafaf7;border-radius:4px}
 .preview-wrap .preview-img{margin-top:0}
 .rot-controls{margin-top:12px;padding:10px 12px;background:#eef3ef;border:1px solid #cdddc9;border-radius:7px}
@@ -481,7 +481,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 
   <footer class="brb-footer">
     Powered by <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ</b> — ΛΕΥΚΑΔΑ<br>
-    <span class="brb-meta">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ <span id="appVer">v1.5</span> · <a href="#" onclick="showTerms();return false" style="color:inherit">Όροι χρήσης</a></span>
+    <span class="brb-meta">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ <span id="appVer">v1.7</span> · <a href="#" onclick="showTerms();return false" style="color:inherit">Όροι χρήσης</a></span>
   </footer>
 </div>
 
@@ -540,7 +540,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // Έκδοση εφαρμογής — ΑΛΛΑΞΕ ΕΔΩ σε κάθε αναβάθμιση (και στο sw.js το CACHE)
-const APP_VERSION = 'v1.5';
+const APP_VERSION = 'v1.7';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
@@ -635,7 +635,7 @@ function applyTransform(){
 }
 function resetZoom(){ ZOOM=1; PANX=0; PANY=0; applyTransform(); updateZoomLabel(); }
 function updateZoomLabel(){ const z=document.getElementById('zoomState'); if(z) z.textContent=Math.round(ZOOM*100)+'%'; }
-function zoomStep(f){ if(!ZOOM_ENABLED) return; ZOOM=Math.min(8,Math.max(1,ZOOM*f)); if(ZOOM===1){PANX=0;PANY=0;} applyTransform(); updateZoomLabel(); }
+function zoomStep(f){ if(!ZOOM_ENABLED) return; ZOOM=Math.min(12,Math.max(1,ZOOM*f)); if(ZOOM===1){PANX=0;PANY=0;} applyTransform(); updateZoomLabel(); }
 // Ενεργοποίηση/απενεργοποίηση zoom (zoom μόνο ΜΕΤΑ την ανάλυση)
 function enableZoom(){
   ZOOM_ENABLED=true;
@@ -687,7 +687,7 @@ function setupZoomPan(){
     const cy=e.clientY-rect.top-rect.height/2;
     const prev=ZOOM;
     const factor = e.deltaY<0 ? 1.15 : 1/1.15;
-    ZOOM=Math.min(8, Math.max(1, ZOOM*factor));
+    ZOOM=Math.min(12, Math.max(1, ZOOM*factor));
     // προσαρμογή pan ώστε να μεγεθύνει γύρω από τον κέρσορα
     if(ZOOM!==prev){
       const k=ZOOM/prev;
@@ -732,7 +732,7 @@ function setupZoomPan(){
   wrap.addEventListener('touchmove',(e)=>{
     if(e.touches.length===2){
       e.preventDefault();
-      const d=_tdist(e); if(_pd>0){ ZOOM=Math.min(8,Math.max(1,_pz*d/_pd)); if(ZOOM===1){PANX=0;PANY=0;} applyTransform(); updateZoomLabel(); }
+      const d=_tdist(e); if(_pd>0){ ZOOM=Math.min(12,Math.max(1,_pz*d/_pd)); if(ZOOM===1){PANX=0;PANY=0;} applyTransform(); updateZoomLabel(); }
     } else if(_panning && e.touches.length===1){
       PANX=e.touches[0].clientX-_px; PANY=e.touches[0].clientY-_py; applyTransform();
     }
@@ -776,13 +776,27 @@ async function renderPdfPreview(dataUrl){
     }catch(e){window._pdfText='';}
     // rasterize at high resolution for spatial reading (which side is N/S/E/W)
     const vp=page.getViewport({scale:1});
-    const scale=Math.min(2400/vp.width,3.2);
+    // Υψηλή ανάλυση για ΕΥΚΡΙΝΗ προεπισκόπηση/zoom (καθαροί χαρακτήρες όταν μεγεθύνεις)
+    const dpr=window.devicePixelRatio||1;
+    const scale=Math.min(4200/vp.width, 5*dpr, 6);
     const sv=page.getViewport({scale});
     const c=document.createElement('canvas');c.width=sv.width;c.height=sv.height;
-    await page.render({canvasContext:c.getContext('2d'),viewport:sv}).promise;
+    const cx=c.getContext('2d');
+    cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality='high';
+    await page.render({canvasContext:cx,viewport:sv}).promise;
     const img=document.getElementById('previewImg');
-    img.src=c.toDataURL('image/jpeg',0.7);img.classList.remove('hidden');
-    window._pdfPng=c.toDataURL('image/jpeg',0.9).split(',')[1];
+    // ΠΡΟΕΠΙΣΚΟΠΗΣΗ: PNG υψηλής ποιότητας (χωρίς απώλειες) → καθαρά γράμματα στο zoom
+    img.src=c.toDataURL('image/png');img.classList.remove('hidden');
+    img.dataset.hi='1';
+    // ΓΙΑ ΤΟ AI: ξεχωριστή, πιο συμπιεσμένη εκδοχή (αρκεί για ανάγνωση, μικρότερο μέγεθος)
+    let aiC=c;
+    if(c.width>2600){ // σμίκρυνση μόνο για το AI ώστε να μη φουσκώνει το request
+      const k=2600/c.width;
+      aiC=document.createElement('canvas'); aiC.width=Math.round(c.width*k); aiC.height=Math.round(c.height*k);
+      const ax=aiC.getContext('2d'); ax.imageSmoothingEnabled=true; ax.imageSmoothingQuality='high';
+      ax.drawImage(c,0,0,aiC.width,aiC.height);
+    }
+    window._pdfPng=aiC.toDataURL('image/jpeg',0.92).split(',')[1];
     window._pdfPngMedia='image/jpeg';
     // ΕΛΕΓΧΟΣ ΠΟΙΟΤΗΤΑΣ: είναι το κείμενο πραγματικό ελληνικό ή σπασμένο/encoding;
     window._textOK=isTextUsable(window._pdfText);
@@ -797,15 +811,30 @@ async function renderPdfPreview(dataUrl){
 
 // Ελέγχει αν το εξαγόμενο κείμενο είναι αξιοποιήσιμο (όχι σπασμένο encoding)
 function isTextUsable(t){
-  if(!t || t.length<300) return false;
-  const greek=(t.match(/[Α-Ωα-ωΆ-Ώά-ώ]/g)||[]).length;
+  if(!t || t.length<200) return false;
+  const greek=(t.match(/[Α-Ωα-ωΆ-Ώάέήίόύώϊϋΐΰ]/g)||[]).length;
   const digits=(t.match(/[0-9]/g)||[]).length;
-  const greekRatio=greek/t.length;
-  // αναμενόμενες λέξεις τοπογραφικού/ΔΓΜ
-  const kw=['ΚΑΕΚ','ΕΓΣΑ','ΕΜΒΑΔ','ΣΗΜΕΙ','ΚΟΡΥΦ','ΙΔΙΟΚΤΗ','ΔΗΜΟ','ΘΕΣΗ','ΠΙΝΑΚΑΣ','ΣΥΝΤΕΤΑΓΜΕΝ'];
-  const hits=kw.filter(k=>t.toUpperCase().includes(k)).length;
-  // χρειάζεται αρκετά ελληνικά + ψηφία + τουλάχιστον μερικές λέξεις-κλειδιά
-  return greekRatio>0.15 && digits>50 && hits>=3;
+  const letters=(t.match(/[A-Za-zΑ-Ωα-ωΆ-Ώά-ώ]/g)||[]).length;
+  // ποσοστό ελληνικών ΩΣ ΠΡΟΣ ΤΑ ΓΡΑΜΜΑΤΑ (όχι ως προς όλους τους χαρακτήρες,
+  // γιατί οι πίνακες συντεταγμένων είναι γεμάτοι αριθμούς και ρίχνουν λάθος το ποσοστό)
+  const greekOfLetters = letters>0 ? greek/letters : 0;
+  // λέξεις-κλειδιά τοπογραφικού/ΔΓΜ (με & χωρίς τόνους/παραλλαγές)
+  const up=t.toUpperCase();
+  const kw=['ΚΑΕΚ','ΕΓΣΑ','ΕΜΒΑΔ','ΣΗΜΕΙ','ΚΟΡΥΦ','ΙΔΙΟΚΤ','ΔΗΜΟ','ΘΕΣΗ','ΠΙΝΑΚ','ΣΥΝΤΕΤΑΓΜ','ΟΙΚΟΠΕΔ','ΓΕΩΤΕΜΑΧ','ΟΡΙΑ','ΟΜΟΡ','ΑΓΡΟΤΕΜΑΧ','ΤΟΠΟΓΡΑΦ','ΚΛΙΜΑΚ','ΑΡΤΙ'];
+  const hits=kw.filter(k=>up.includes(k)).length;
+
+  // Χαρακτηρισμός «σπασμένου» encoding: πολλά σύμβολα/περίεργοι χαρακτήρες αντί για γράμματα.
+  // Αν το κείμενο έχει πάρα πολλούς μη-αναγνώσιμους χαρακτήρες, είναι αλλοιωμένο.
+  const weird=(t.match(/[^\u0020-\u007E\u0370-\u03FF\u1F00-\u1FFF\s]/g)||[]).length;
+  const weirdRatio=weird/t.length;
+  if(weirdRatio>0.25) return false; // αλλοιωμένο encoding
+
+  // ΚΑΘΑΡΟ αν: αρκετά γράμματα είναι ελληνικά + υπάρχουν αρκετοί αριθμοί + μερικές λέξεις-κλειδιά.
+  // Χαλαρότερα όρια ώστε να ΜΗΝ θεωρεί λάθος «σκαναρισμένα» τα πρωτότυπα PDF.
+  const enoughGreek = greekOfLetters>0.30 || greek>80;
+  const enoughDigits = digits>30;
+  const enoughKw = hits>=2;
+  return enoughGreek && enoughDigits && enoughKw;
 }
 
 function setStatus(msg,kind){
