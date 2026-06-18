@@ -138,7 +138,8 @@ table.bnd td{vertical-align:middle}
 .del-from{background:var(--accent)!important}
 h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}
 .preview-img{max-width:100%;border:1px solid var(--line);border-radius:3px;margin-top:10px;transition:transform .25s ease}
-.preview-wrap{overflow:hidden;display:flex;justify-content:center}
+.preview-wrap{overflow:hidden;display:flex;justify-content:center;align-items:center;margin-top:10px;transition:height .25s ease}
+.preview-wrap .preview-img{margin-top:0}
 .rot-controls{margin-top:12px;padding:10px 12px;background:#eef3ef;border:1px solid #cdddc9;border-radius:7px}
 .rot-controls.hidden{display:none}
 .rot-label{display:block;font-size:12.5px;color:#3f5238;margin-bottom:8px;line-height:1.5}
@@ -591,11 +592,46 @@ function rotateDraw(delta){
   ROT=(ROT+delta+360)%360;
   applyRot();
 }
+window.addEventListener('resize', ()=>{ if(ROT) applyRot(); });
 function applyRot(){
   const img=document.getElementById('previewImg');
   const st=document.getElementById('rotState');
-  if(img) img.style.transform = ROT? ('rotate('+ROT+'deg)') : '';
+  const wrap=document.getElementById('previewWrap');
+  if(img){
+    img.style.transform = ROT? ('rotate('+ROT+'deg)') : '';
+    if(ROT===90 || ROT===270){
+      // περιστραμμένο κατακόρυφα: το πλάτος της εικόνας πρέπει να ≤ ύψος container,
+      // και το ύψος της ≤ πλάτος container, για να μη βγαίνει εκτός.
+      const avail = (wrap?wrap.clientWidth:600) || 600;
+      img.style.maxWidth = avail+'px';   // το «πλάτος» (που γίνεται ύψος) περιορίζεται
+      img.style.maxHeight = avail+'px';  // το «ύψος» (που γίνεται πλάτος) επίσης
+      img.classList.add('rotated');
+    } else {
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '';
+      img.classList.remove('rotated');
+    }
+    fitRotated();
+  }
   if(st) st.textContent = ROT+'°';
+}
+
+// Δίνει στο container ύψος ίσο με το προβαλλόμενο ύψος της περιστραμμένης εικόνας
+function fitRotated(){
+  const img=document.getElementById('previewImg');
+  const wrap=document.getElementById('previewWrap');
+  if(!img||!wrap) return;
+  const set=()=>{
+    if(ROT===90 || ROT===270){
+      // μετά την περιστροφή, το οπτικό ύψος = το πλάτος του στοιχείου εικόνας
+      const w=img.offsetWidth||img.clientWidth;
+      if(w) wrap.style.height = w+'px';
+    } else {
+      wrap.style.height='';
+    }
+  };
+  if(img.complete) requestAnimationFrame(set);
+  else img.addEventListener('load', ()=>requestAnimationFrame(set), {once:true});
 }
 function showRotControls(){
   document.getElementById('rotControls').classList.remove('hidden');
