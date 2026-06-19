@@ -590,7 +590,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     <p>Τρέχον υπόλοιπο κατόψεων: <b id="floorModalBalance">—</b> &nbsp;·&nbsp; Συνδρομή: <b id="floorModalTier">—</b></p>
 
     <div id="floorLockNote" class="banner-warn hidden" style="margin:10px 0">
-      🔒 <b>Εξαντλήθηκαν τα δωρεάν δείγματα.</b> Η ανάλυση κάτοψης ενεργοποιείται με συνδρομή <b>Premium ή Ultra</b>. Επιλέξτε πακέτο παρακάτω.
+      🔒 <b>Εξαντλήθηκαν τα δωρεάν δείγματα.</b> Προσθέστε το πακέτο κάτοψης για να γίνετε <b>Premium Plus</b> ή <b>Ultra Plus</b> και να ξεκλειδώσετε τη δυνατότητα. Επιλέξτε παρακάτω.
     </div>
 
     <div class="pkg-grid">
@@ -631,7 +631,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // Έκδοση εφαρμογής — ΑΛΛΑΞΕ ΕΔΩ σε κάθε αναβάθμιση (και στο sw.js το CACHE)
-const APP_VERSION = 'v2.2';
+const APP_VERSION = 'v2.3';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
@@ -1022,16 +1022,18 @@ async function analyze(){
 
   // ΕΛΕΓΧΟΣ ΥΠΟΛΟΙΠΟΥ — πριν ξοδέψουμε ανάλυση
   if(MODE==='oriz'){
-    // floor-plan wallet: 5 demo για όλους· μετά κλείδωμα εκτός Premium/Ultra
+    // floor-plan wallet: 5 demo για όλους· μετά κλείδωμα εκτός *_plus
     try{
       const { data, error } = await SB.rpc('my_floor_status');
       if(error) throw error;
       const fb=(data&&typeof data.floor_balance==='number')?data.floor_balance:0;
       const ft=(data&&data.tier)||'free';
-      FLOOR_BAL=fb; FLOOR_TIER=ft; updateFloorBadge(fb,ft);
+      const isPlus=(data&&data.is_plus)===true;
+      FLOOR_BAL=fb; FLOOR_TIER=ft; FLOOR_LABEL=(data&&data.label)||tierLabel(ft);
+      updateFloorBadge(fb,ft,FLOOR_LABEL);
       if(fb<=0){
-        if(ft==='free'){
-          setStatus('🔒 Εξαντλήθηκαν τα 5 δωρεάν δείγματα ανάλυσης κάτοψης. Η δυνατότητα ενεργοποιείται με συνδρομή <b>Premium ή Ultra</b>.','err');
+        if(!isPlus){
+          setStatus('🔒 Εξαντλήθηκαν τα 5 δωρεάν δείγματα ανάλυσης κάτοψης. Προσθέστε το πακέτο κάτοψης για να γίνετε <b>Premium Plus</b> ή <b>Ultra Plus</b> και να ξεκλειδώσετε τη δυνατότητα.','err');
         }else{
           setStatus('Εξαντλήθηκαν οι αναλύσεις κάτοψης. Αποκτήστε πακέτο ή επανατροφοδότηση για να συνεχίσετε.','err');
         }
@@ -1108,7 +1110,7 @@ async function analyze(){
       applyResultOriz(parsed);
       try{
         const { data:fr } = await SB.rpc('spend_floor_token');
-        if(fr && fr.ok && typeof fr.floor_balance==='number'){ FLOOR_BAL=fr.floor_balance; updateFloorBadge(fr.floor_balance, fr.tier||FLOOR_TIER); }
+        if(fr && fr.ok && typeof fr.floor_balance==='number'){ FLOOR_BAL=fr.floor_balance; updateFloorBadge(fr.floor_balance, fr.tier||FLOOR_TIER, tierLabel(fr.tier||FLOOR_TIER)); }
       }catch(e){}
       const verts=parsed.vertices||[];
       const truncNoteO = truncated ? '<br><b>⚠ Η απάντηση ίσως κόπηκε</b> — ελέγξτε μήπως λείπουν πλευρές/χώροι.' : '';
@@ -1758,15 +1760,19 @@ function showNoTokens(){
 }
 
 // ── FLOOR-PLAN WALLET (Οριζόντια Ιδιοκτησία) ──
-let FLOOR_BAL=null, FLOOR_TIER='free';
-function updateFloorBadge(n,tier){
+let FLOOR_BAL=null, FLOOR_TIER='free', FLOOR_LABEL='Free';
+function tierLabel(t){
+  return t==='premium'?'Premium':t==='ultra'?'Ultra':t==='premium_plus'?'Premium Plus':t==='ultra_plus'?'Ultra Plus':'Free';
+}
+function updateFloorBadge(n,tier,label){
   const badge=document.getElementById('floorBadge');
   const cnt=document.getElementById('floorCount');
   if(cnt) cnt.textContent=(n==null?'—':n);
   if(badge) badge.classList.remove('hidden');
   if(n!=null && n<=1) badge && badge.classList.add('low'); else badge && badge.classList.remove('low');
+  const lbl = label || tierLabel(tier);
   const mb=document.getElementById('floorModalBalance'); if(mb) mb.textContent=(n==null?'—':n);
-  const mt=document.getElementById('floorModalTier'); if(mt) mt.textContent=(tier==='premium'?'Premium':(tier==='ultra'?'Ultra':'Free'));
+  const mt=document.getElementById('floorModalTier'); if(mt) mt.textContent=lbl;
 }
 async function refreshFloor(){
   if(!SB) return;
@@ -1777,10 +1783,11 @@ async function refreshFloor(){
     if(error) throw error;
     FLOOR_BAL=(data&&typeof data.floor_balance==='number')?data.floor_balance:0;
     FLOOR_TIER=(data&&data.tier)||'free';
-    updateFloorBadge(FLOOR_BAL,FLOOR_TIER);
-    // δείξε/κρύψε το note κλειδώματος μέσα στο modal
+    FLOOR_LABEL=(data&&data.label)||tierLabel(FLOOR_TIER);
+    const isPlus=(data&&data.is_plus)===true;
+    updateFloorBadge(FLOOR_BAL,FLOOR_TIER,FLOOR_LABEL);
     const ln=document.getElementById('floorLockNote');
-    if(ln){ if(FLOOR_BAL<=0 && FLOOR_TIER==='free') ln.classList.remove('hidden'); else ln.classList.add('hidden'); }
+    if(ln){ if(FLOOR_BAL<=0 && !isPlus) ln.classList.remove('hidden'); else ln.classList.add('hidden'); }
   }catch(e){ document.getElementById('floorBadge').classList.add('hidden'); }
 }
 function showBuyFloor(){ refreshFloor(); document.getElementById('buyFloorModal').classList.remove('hidden'); }

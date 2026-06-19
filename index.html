@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ΝΟΜΙΚΟ ΤΟΠΟ — Από το τοπογραφικό στο συμβόλαιο</title>
-<meta name="description" content="Εργαλείο για συμβολαιογράφους & δικηγόρους: μετατρέπει τοπογραφικά διαγράμματα, ΔΓΜ και κατόψεις οριζόντιας ιδιοκτησίας σε έτοιμη περιγραφή για το συμβόλαιο.">
+<meta name="description" content="Εργαλείο για συμβολαιογράφους & δικηγόρους: μετατρέπει τοπογραφικά διαγράμματα και ΔΓΜ σε έτοιμη περιγραφή ιδιοκτησίας για το συμβόλαιο.">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,10 +39,6 @@
   .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
   .brand{display:flex;align-items:center;gap:12px;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--navy);letter-spacing:.5px}
   .brand img{width:38px;height:38px;object-fit:contain}
-  .nav-links{display:flex;align-items:center;gap:22px}
-  .nav-link{font-family:'Inter';font-size:14px;font-weight:500;color:var(--navy);text-decoration:none;opacity:.8;transition:opacity .2s}
-  .nav-link:hover{opacity:1}
-  .nav-link .new-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-left:5px;vertical-align:middle}
   .nav-cta{font-family:'Inter';font-size:14px;font-weight:600;padding:9px 18px;background:var(--navy);color:#fff;border-radius:4px;text-decoration:none;transition:background .2s}
   .nav-cta:hover{background:var(--navy-deep)}
 
@@ -74,32 +70,6 @@
   .t-after .hl{background:rgba(169,139,60,.18);padding:0 3px;border-radius:2px}
   .t-arrow{font-size:30px;color:var(--gold)}
   .t-arrow .mono{font-size:11px;display:block;color:var(--muted);letter-spacing:1px;margin-top:4px}
-
-  /* ===== NEW FEATURE HOOK (Οριζόντια Ιδιοκτησία) ===== */
-  .hook{background:var(--navy);color:var(--cream);position:relative;overflow:hidden;
-    background-image:
-      repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 1px, transparent 1px 38px),
-      repeating-linear-gradient(-45deg, rgba(255,255,255,.04) 0 1px, transparent 1px 38px);}
-  .hook-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
-  .hook-badge{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#15293f;background:var(--gold);padding:6px 14px;border-radius:20px;margin-bottom:22px;font-weight:500}
-  .hook h2{color:#fff;font-size:clamp(30px,4.2vw,44px);margin-bottom:16px;line-height:1.08}
-  .hook h2 em{font-style:italic;color:var(--gold)}
-  .hook-sub{font-size:17px;color:rgba(244,241,234,.82);margin-bottom:28px;max-width:520px}
-  .hook-list{list-style:none;margin-bottom:30px}
-  .hook-list li{font-size:15px;color:rgba(244,241,234,.9);padding:8px 0 8px 30px;position:relative}
-  .hook-list li::before{content:'';position:absolute;left:0;top:13px;width:14px;height:14px;border-radius:50%;background:rgba(169,139,60,.25);border:1.5px solid var(--gold)}
-  .hook-list li b{color:#fff;font-weight:600}
-  .hook .btn-primary{background:var(--gold);color:#15293f}
-  .hook .btn-primary:hover{background:#bd9c47}
-  .hook-demo{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:26px}
-  .hook-demo .t-label{color:rgba(244,241,234,.55)}
-  .hook-poly{font-family:'JetBrains Mono';font-size:12.5px;color:rgba(244,241,234,.85);line-height:1.9;margin-bottom:18px}
-  .hook-poly span{color:var(--gold)}
-  .hook-arrow{text-align:center;color:var(--gold);font-size:13px;letter-spacing:1px;font-family:'JetBrains Mono';margin:6px 0 14px}
-  .hook-out{font-size:13.5px;line-height:1.75;color:rgba(244,241,234,.92)}
-  .hook-out .hl{background:rgba(169,139,60,.25);padding:0 3px;border-radius:2px;color:#fff}
-  .hook-rooms{margin-top:14px;display:flex;flex-wrap:wrap;gap:7px}
-  .hook-chip{font-size:12px;font-family:'Inter';background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:rgba(244,241,234,.9);padding:4px 11px;border-radius:14px}
 
   /* ===== SECTIONS ===== */
   section{padding:80px 0}
@@ -161,29 +131,27 @@
   .price-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:32px 26px;text-align:center;position:relative}
   .price-card.best{border:2px solid var(--gold);transform:scale(1.03)}
   .price-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--gold);color:#fff;font-size:11px;font-weight:600;letter-spacing:.5px;padding:4px 14px;border-radius:12px;font-family:'Inter'}
-  .price-name{font-family:'Inter';font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px}
+  .price-name{font-family:'Inter';font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+  .price-tier{font-family:'JetBrains Mono';font-size:11px;letter-spacing:1px;color:var(--gold);margin-bottom:12px}
   .price-amt{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:700;color:var(--navy);line-height:1}
   .price-amt small{font-size:18px;color:var(--muted)}
   .price-vat{font-size:12.5px;color:var(--muted);margin:6px 0 16px}
   .price-feat{font-size:14px;color:var(--ink);margin-bottom:6px}
   .price-unit{font-size:12.5px;color:var(--gold);font-family:'JetBrains Mono'}
   .price-note{text-align:center;font-size:13.5px;color:var(--muted);margin-top:26px}
-  /* floor pricing band */
-  .floor-price{max-width:920px;margin:40px auto 0;background:var(--navy);border-radius:14px;padding:30px 32px;color:var(--cream);
-    background-image:
-      repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 1px, transparent 1px 38px),
-      repeating-linear-gradient(-45deg, rgba(255,255,255,.04) 0 1px, transparent 1px 38px);}
-  .floor-price-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-  .floor-price-head .fp-badge{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:1px;text-transform:uppercase;background:var(--gold);color:#15293f;padding:3px 10px;border-radius:12px;font-weight:500}
-  .floor-price h3{color:#fff;font-size:26px;margin:0}
-  .floor-price .fp-sub{font-size:14px;color:rgba(244,241,234,.75);margin-bottom:20px}
+  /* floor pricing band (διακριτικό, κάτω από τις συνδρομές) */
+  .floor-price{max-width:920px;margin:36px auto 0;background:#fff;border:1.5px solid var(--gold);border-radius:14px;padding:26px 30px}
+  .floor-price-head{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+  .floor-price-head .fp-badge{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:1px;text-transform:uppercase;background:var(--gold);color:#fff;padding:3px 10px;border-radius:12px}
+  .floor-price h3{font-size:24px;margin:0;color:var(--navy)}
+  .floor-price .fp-sub{font-size:14px;color:var(--muted);margin:6px 0 18px}
   .fp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  .fp-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:20px;text-align:center}
-  .fp-amt{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;color:#fff;line-height:1}
-  .fp-amt small{font-size:15px;color:rgba(244,241,234,.7)}
-  .fp-vat{font-size:12px;color:rgba(244,241,234,.6);margin:5px 0 8px}
-  .fp-feat{font-size:13.5px;color:rgba(244,241,234,.92)}
-  .fp-note{font-size:12.5px;color:rgba(244,241,234,.6);text-align:center;margin-top:16px}
+  .fp-card{background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:18px;text-align:center}
+  .fp-amt{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--navy);line-height:1}
+  .fp-amt small{font-size:15px;color:var(--muted)}
+  .fp-vat{font-size:12px;color:var(--muted);margin:5px 0 8px}
+  .fp-feat{font-size:13px;color:var(--ink)}
+  .fp-note{font-size:12.5px;color:var(--muted);text-align:center;margin-top:14px}
 
   /* CTA final */
   .cta-final{background:var(--navy);color:var(--cream);text-align:center;
@@ -212,14 +180,12 @@
   @media(max-width:860px){
     .transform{grid-template-columns:1fr;gap:18px}
     .t-arrow{transform:rotate(90deg);margin:0 auto}
-    .hook-grid{grid-template-columns:1fr;gap:32px}
     .steps{grid-template-columns:1fr;gap:40px}
     .outputs{grid-template-columns:1fr}
     .feat{grid-template-columns:1fr 1fr}
     .price-grid{grid-template-columns:1fr;max-width:380px}
     .price-card.best{transform:none}
     .fp-grid{grid-template-columns:1fr}
-    .nav-links .nav-link{display:none}
   }
   @media(max-width:480px){
     .feat{grid-template-columns:1fr}
@@ -233,11 +199,7 @@
 <nav>
   <div class="wrap nav-in">
     <div class="brand"><img src="emblem-navy.png" alt="ΝΟΜΙΚΟ ΤΟΠΟ">ΝΟΜΙΚΟ ΤΟΠΟ</div>
-    <div class="nav-links">
-      <a href="#oriz" class="nav-link">Οριζόντια ιδιοκτησία<span class="new-dot"></span></a>
-      <a href="#times" class="nav-link">Τιμές</a>
-      <a href="app.html" class="nav-cta">Είσοδος στην εφαρμογή</a>
-    </div>
+    <a href="app.html" class="nav-cta">Είσοδος στην εφαρμογή</a>
   </div>
 </nav>
 
@@ -245,11 +207,11 @@
 <header class="hero">
   <div class="wrap">
     <div class="eyebrow reveal">Για συμβολαιογράφους & δικηγόρους</div>
-    <h1 class="reveal">Από το σχέδιο<br>στο <em>συμβόλαιο</em>.</h1>
-    <p class="hero-sub reveal">Ανεβάζετε τοπογραφικό, Δ.Γ.Μ. ή <b>κάτοψη οριζόντιας ιδιοκτησίας</b>. Η εφαρμογή διαβάζει όρια, μήκη, όμορους, χώρους και συντεταγμένες, και συντάσσει έτοιμη την περιγραφή για το σώμα του συμβολαίου — σε δευτερόλεπτα.</p>
+    <h1 class="reveal">Από το τοπογραφικό<br>στο <em>συμβόλαιο</em>.</h1>
+    <p class="hero-sub reveal">Ανεβάζετε το τοπογραφικό διάγραμμα ή το Δ.Γ.Μ. Η εφαρμογή διαβάζει όρια, μήκη, όμορους και συντεταγμένες, και συντάσσει έτοιμη την περιγραφή ιδιοκτησίας για το σώμα του συμβολαίου — σε δευτερόλεπτα.</p>
     <div class="hero-cta reveal">
       <a href="app.html" class="btn btn-primary">Δοκιμάστε δωρεάν →</a>
-      <a href="#oriz" class="btn btn-ghost">🏠 Νέο: Περιγραφή από κάτοψη</a>
+      <a href="#diadikasia" class="btn btn-ghost">Δείτε πώς δουλεύει</a>
     </div>
 
     <!-- SIGNATURE: μετασχηματισμός -->
@@ -272,45 +234,6 @@
   </div>
 </header>
 
-<!-- ΚΡΑΧΤΗΣ: ΟΡΙΖΟΝΤΙΑ ΙΔΙΟΚΤΗΣΙΑ (ΝΕΟ) -->
-<section class="hook" id="oriz">
-  <div class="wrap">
-    <div class="hook-grid">
-      <div class="reveal">
-        <div class="hook-badge">★ Νέο · Οριζόντια ιδιοκτησία</div>
-        <h2>Τώρα και <em>περιγραφή από κάτοψη</em>.</h2>
-        <p class="hook-sub">Για πράξεις σύστασης οριζόντιας ιδιοκτησίας. Ανεβάζετε την κάτοψη του διαμερίσματος ή καταστήματος και η εφαρμογή διαβάζει το περίγραμμα, τα μήκη πλευρών, τη σύνθεση των χώρων και το εμβαδόν.</p>
-        <ul class="hook-list">
-          <li><b>Ανάμεικτες κορυφές</b> — διαβάζει σειρά όπως «(14, δ, ζ, στ, 15)», γράμματα &amp; αριθμοί μαζί.</li>
-          <li><b>Σύνθεση χώρων</b> — κοιτώνες, σαλόνι, κουζίνα, λουτρό, χωλ, ημιυπαίθριος, εξώστης, ανελκυστήρας.</li>
-          <li><b>Ελεύθερος Βορράς</b> — από συντεταγμένες ΕΓΣΑ '87 ή με ένα βέλος πάνω στην εικόνα.</li>
-          <li><b>Έλεγχος πριν το Word</b> — ό,τι δεν διαβάστηκε με ασφάλεια επισημαίνεται· μηδέν λάθος νούμερο.</li>
-        </ul>
-        <a href="app.html" class="btn btn-primary">🏠 Δοκιμάστε το τώρα →</a>
-      </div>
-
-      <div class="hook-demo reveal">
-        <div class="t-label">Κάτοψη · Διαμέρισμα Α1</div>
-        <div class="hook-poly">
-          Διαμέρισμα Α1 <span>(14, δ, ζ, στ, 15)</span><br>
-          Ε = <span>60,96</span> τ.μ. · Α' όροφος
-        </div>
-        <div class="hook-arrow">↓ ΑΝΑΛΥΣΗ</div>
-        <div class="hook-out">
-          «…έχει εμβαδόν <span class="hl">εξήντα τετραγωνικών μέτρων και ενενήντα έξι εκατοστών (60,96 τ.μ.)</span> και αποτελείται από <span class="hl">σαλόνι, κουζίνα, κοιτώνες και λουτρό</span>. Άρχεται από το σημείο 14, διά πλευράς μήκους <span class="hl">έξι μέτρων και δεκαεννέα εκατοστών (6,19μ.)</span> φθάνει στο σημείο δ…»
-        </div>
-        <div class="hook-rooms">
-          <span class="hook-chip">Κοιτών 1</span>
-          <span class="hook-chip">Κοιτών 2</span>
-          <span class="hook-chip">Σαλόνι</span>
-          <span class="hook-chip">Κουζίνα</span>
-          <span class="hook-chip">Λουτρό</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ΔΙΑΔΙΚΑΣΙΑ -->
 <section id="diadikasia">
   <div class="wrap">
@@ -324,7 +247,7 @@
         <div class="step-n">01</div>
         <div class="step-body">
           <h3>Ανέβασμα σχεδίου</h3>
-          <p>Σύρετε τοπογραφικό, Δ.Γ.Μ. ή κάτοψη σε PDF ή εικόνα. Η εφαρμογή ελέγχει αυτόματα την ποιότητα του αρχείου.</p>
+          <p>Σύρετε το τοπογραφικό ή το Δ.Γ.Μ. σε PDF ή εικόνα. Η εφαρμογή ελέγχει αυτόματα την ποιότητα του αρχείου.</p>
           <div class="step-media">
             <img src="step-1.png" alt="Ανέβασμα σχεδίου" class="step-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="ph" style="display:none">📤 Screenshot: ανέβασμα σχεδίου<span class="mono">step-1.png</span></div>
@@ -335,7 +258,7 @@
         <div class="step-n">02</div>
         <div class="step-body">
           <h3>Αυτόματη ανάγνωση</h3>
-          <p>Εντοπίζονται όρια, μήκη πλευρών, όμοροι, χώροι, προσανατολισμοί και — στα Δ.Γ.Μ. — όλοι οι πίνακες μεταβολών.</p>
+          <p>Εντοπίζονται όρια, μήκη πλευρών, όμοροι, προσανατολισμοί και — στα Δ.Γ.Μ. — όλοι οι πίνακες μεταβολών.</p>
           <div class="step-media">
             <img src="step-2.png" alt="Αποτελέσματα ανάλυσης" class="step-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="ph" style="display:none">🔍 Screenshot: αποτελέσματα ανάλυσης<span class="mono">step-2.png</span></div>
@@ -381,7 +304,7 @@
 <section>
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="eyebrow">Τρία έγγραφα</div>
+      <div class="eyebrow">Τι παράγει</div>
       <h2>Περιγραφή ακινήτου, οριζόντιας ιδιοκτησίας & τεχνική έκθεση.</h2>
     </div>
     <div class="outputs">
@@ -423,7 +346,7 @@
 
     <div class="feat">
       <div class="feat-item reveal"><div class="fi">📐</div><h4>ΕΓΣΑ '87</h4><p>Ακριβής ανάγνωση συντεταγμένων</p></div>
-      <div class="feat-item reveal"><div class="fi">🔒</div><h4>Έλεγχος ορθότητας</h4><p>Αυστηρός αυτοέλεγχος πριν την εξαγωγή</p></div>
+      <div class="feat-item reveal"><div class="fi">🏠</div><h4>Κατόψεις</h4><p>Περιγραφή οριζόντιας ιδιοκτησίας</p></div>
       <div class="feat-item reveal"><div class="fi">✏️</div><h4>Πλήρως επεξεργάσιμο</h4><p>Διορθώνετε ό,τι θέλετε χειροκίνητα</p></div>
       <div class="feat-item reveal"><div class="fi">⚡</div><h4>Δευτερόλεπτα</h4><p>Αντί για ώρες πληκτρολόγησης</p></div>
     </div>
@@ -431,7 +354,7 @@
 </section>
 
 <!-- ΤΙΜΕΣ -->
-<section class="pricing" id="times">
+<section class="pricing">
   <div class="wrap">
     <div class="sec-head reveal">
       <div class="eyebrow">Συνδρομές</div>
@@ -441,6 +364,7 @@
     <div class="price-grid">
       <div class="price-card reveal">
         <div class="price-name">Εξάμηνη</div>
+        <div class="price-tier">PREMIUM</div>
         <div class="price-amt">210<small>€</small></div>
         <div class="price-vat">+ ΦΠΑ 24% · 260,40€</div>
         <div class="price-feat">120 διαγράμματα</div>
@@ -449,6 +373,7 @@
       <div class="price-card best reveal">
         <div class="price-badge">Καλύτερη αξία</div>
         <div class="price-name">Ετήσια</div>
+        <div class="price-tier">ULTRA</div>
         <div class="price-amt">380<small>€</small></div>
         <div class="price-vat">+ ΦΠΑ 24% · 471,20€</div>
         <div class="price-feat">250 διαγράμματα</div>
@@ -456,6 +381,7 @@
       </div>
       <div class="price-card reveal">
         <div class="price-name">Δεκάδα</div>
+        <div class="price-tier">TOP-UP</div>
         <div class="price-amt">50<small>€</small></div>
         <div class="price-vat">+ ΦΠΑ 24% · 62,00€</div>
         <div class="price-feat">+10 αναλύσεις</div>
@@ -464,18 +390,18 @@
     </div>
     <p class="price-note">Η εγγραφή και η δοκιμή είναι δωρεάν. Η αγορά γίνεται με απλό αίτημα μέσα από την εφαρμογή.</p>
 
-    <!-- ΤΙΜΕΣ ΚΑΤΟΨΗΣ (ΝΕΟ) -->
+    <!-- ΠΡΟΣΘΗΚΗ ΚΑΤΟΨΗΣ (διακριτικό) -->
     <div class="floor-price reveal">
       <div class="floor-price-head">
         <span class="fp-badge">★ Νέο</span>
-        <h3>🏠 Αναλύσεις κάτοψης — Οριζόντια ιδιοκτησία</h3>
+        <h3>🏠 Προσθήκη: Αναλύσεις Κάτοψης (Plus)</h3>
       </div>
-      <p class="fp-sub">Ξεχωριστή δυνατότητα. Κάθε νέο μέλος έχει 5 δωρεάν δοκιμαστικές αναλύσεις κάτοψης. Μετά, ενεργοποιείται με συνδρομή Premium ή Ultra.</p>
+      <p class="fp-sub">Η περιγραφή οριζόντιας ιδιοκτησίας από κάτοψη είναι ξεχωριστή δυνατότητα. Κάθε νέο μέλος έχει 5 δωρεάν δοκιμές. Με την προσθήκη του πακέτου, η συνδρομή σας γίνεται <b>Premium Plus</b> ή <b>Ultra Plus</b>.</p>
       <div class="fp-grid">
         <div class="fp-card">
           <div class="fp-amt">100<small>€</small></div>
           <div class="fp-vat">+ ΦΠΑ 24% · 124,00€</div>
-          <div class="fp-feat">Πακέτο 100 αναλύσεων κάτοψης — 1,00€ / κάτοψη</div>
+          <div class="fp-feat">100 αναλύσεις κάτοψης — 1,00€/κάτοψη</div>
         </div>
         <div class="fp-card">
           <div class="fp-amt">0,90<small>€</small></div>
@@ -483,7 +409,7 @@
           <div class="fp-feat">Επανατροφοδότηση ανά σχέδιο (top-up)</div>
         </div>
       </div>
-      <p class="fp-note">Οι 5 πρώτες αναλύσεις κάτοψης είναι δωρεάν για κάθε νέο μέλος, ώστε να δοκιμάσετε τη δυνατότητα.</p>
+      <p class="fp-note">Οι 5 πρώτες αναλύσεις κάτοψης είναι δωρεάν για κάθε νέο μέλος.</p>
     </div>
   </div>
 </section>
@@ -492,7 +418,7 @@
 <section class="cta-final">
   <div class="wrap">
     <h2 class="reveal">Δοκιμάστε το στο επόμενο συμβόλαιο.</h2>
-    <p class="reveal">Εγγραφή σε ένα λεπτό, πέντε αναλύσεις δωρεάν — και πέντε ακόμη για κατόψεις οριζόντιας ιδιοκτησίας. Δείτε μόνοι σας τη διαφορά στον χρόνο σύνταξης.</p>
+    <p class="reveal">Εγγραφή σε ένα λεπτό, πέντε αναλύσεις δωρεάν. Δείτε μόνοι σας τη διαφορά στον χρόνο σύνταξης.</p>
     <a href="app.html" class="btn btn-primary reveal">Ξεκινήστε δωρεάν →</a>
     <div class="contact-row reveal">
       <a href="mailto:brb.develop@gmail.com">✉️ brb.develop@gmail.com</a>
