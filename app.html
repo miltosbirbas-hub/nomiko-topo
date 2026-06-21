@@ -577,7 +577,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       </div>
       <p class="pay-email-line">Ή στείλτε email απευθείας στο <b><a id="payEmailLink" href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a></b></p>
     </div>
-    <button class="btn-nav" style="margin-top:14px;width:100%" onclick="refreshTokens();closeBuyTokens()">Ανανέωση υπολοίπου</button>
+    <button class="btn-nav" style="margin-top:14px;width:100%" onclick="refreshTokensManual(this)">Ανανέωση υπολοίπου</button>
   </div>
 </div>
 
@@ -623,7 +623,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       </div>
       <p class="pay-email-line">Ή στείλτε email απευθείας στο <b><a href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a></b></p>
     </div>
-    <button class="btn-nav" style="margin-top:14px;width:100%" onclick="refreshFloor();closeBuyFloor()">Ανανέωση υπολοίπου</button>
+    <button class="btn-nav" style="margin-top:14px;width:100%" onclick="refreshFloorManual(this)">Ανανέωση υπολοίπου</button>
   </div>
 </div>
 
@@ -631,7 +631,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // Έκδοση εφαρμογής — ΑΛΛΑΞΕ ΕΔΩ σε κάθε αναβάθμιση (και στο sw.js το CACHE)
-const APP_VERSION = 'v2.4';
+const APP_VERSION = 'v2.5';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
@@ -1729,6 +1729,19 @@ function updateTokenBadge(n){
   const mb=document.getElementById('modalBalance'); if(mb) mb.textContent=(n==null?'—':n);
 }
 let IS_SUBSCRIBER=false;
+async function refreshTokensManual(btn){
+  const old = btn ? btn.textContent : '';
+  if(btn){ btn.disabled=true; btn.textContent='Ανανέωση...'; }
+  try{
+    await refreshTokens();
+    const mb=document.getElementById('modalBalance');
+    const bal = mb ? mb.textContent : '—';
+    if(btn){ btn.textContent='✓ Υπόλοιπο: '+bal+' αναλύσεις'; }
+    setTimeout(()=>{ if(btn){ btn.disabled=false; btn.textContent=old||'Ανανέωση υπολοίπου'; } }, 2200);
+  }catch(e){
+    if(btn){ btn.disabled=false; btn.textContent=old||'Ανανέωση υπολοίπου'; }
+  }
+}
 async function refreshTokens(){
   if(!SB) return;
   try{
@@ -1801,6 +1814,19 @@ async function refreshFloor(){
 }
 function showBuyFloor(){ refreshFloor(); document.getElementById('buyFloorModal').classList.remove('hidden'); }
 function closeBuyFloor(){ document.getElementById('buyFloorModal').classList.add('hidden'); }
+// Ανανέωση υπολοίπου με ΟΡΑΤΗ επιβεβαίωση (το modal ΜΕΝΕΙ ανοιχτό)
+async function refreshFloorManual(btn){
+  const old = btn ? btn.textContent : '';
+  if(btn){ btn.disabled=true; btn.textContent='Ανανέωση...'; }
+  try{
+    await refreshFloor();
+    const bal = (typeof FLOOR_BAL==='number') ? FLOOR_BAL : '—';
+    if(btn){ btn.textContent='✓ Υπόλοιπο: '+bal+' κατόψεις'; }
+    setTimeout(()=>{ if(btn){ btn.disabled=false; btn.textContent=old||'Ανανέωση υπολοίπου'; } }, 2200);
+  }catch(e){
+    if(btn){ btn.disabled=false; btn.textContent=old||'Ανανέωση υπολοίπου'; }
+  }
+}
 
 // Αίτημα αγοράς → ανοίγει έτοιμο email προς εμάς
 async function requestPurchase(pkg){
