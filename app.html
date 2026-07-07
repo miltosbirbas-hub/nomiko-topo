@@ -417,6 +417,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
         <tbody></tbody>
       </table>
       <button class="btn-ghost addrow" onclick="addAreaRow()">+ Προσθήκη γραμμής</button>
+      <div id="balanceBanner" class="hidden"></div>
     </div>
 
     <!-- ΚΤΙΣΜΑΤΑ εντός οικοπέδου -->
@@ -1146,6 +1147,10 @@ async function analyze(){
     // Αυστηρός αυτοέλεγχος (errors = κόκκινο, infos = διακριτική ενημέρωση)
     const nV=(parsed.vertices||[]).length;
     const check=validateVertices(parsed.vertices);
+    // Έλεγχος ισοζυγίου εμβαδών (πίνακες 5 & 5β — μόνο ΔΓΜ, αλλιώς κενό)
+    const bal=validateChangeBalance();
+    check.errors=check.errors.concat(bal.errors);
+    check.infos=check.infos.concat(bal.infos);
     const infoNote = check.infos.length ? '<br><span class="muted">ℹ️ '+check.infos.join('<br>ℹ️ ')+'</span>' : '';
     const truncNote = truncated ? '<br><b>⚠ Η απάντηση ήταν μεγάλη και ίσως κόπηκε</b> — ανακτήθηκε ό,τι διαβάστηκε· ελέγξτε μήπως λείπουν κορυφές/πίνακες στο τέλος.' : '';
     if(parsed.readError || nV===0){
@@ -1398,6 +1403,94 @@ function validateVertices(vertices){
     if(allRound && lens.length<=6) infos.push('Όλα τα μήκη είναι στρογγυλά — επιβεβαιώστε ότι πρόκειται για πραγματικές μετρήσεις.');
   }
   return {errors, infos};
+}
+
+// ── Έλεγχος ισοζυγίου εμβαδών ΔΓΜ (πίνακες 5 & 5β) ──
+// Ελληνική/αγγλική μορφή αριθμού: «2.101,78», «2101,78», «2101.78»
+function parseArea(s){
+  s=String(s==null?'':s).replace(/\s/g,'').replace(/τ\.?μ\.?/gi,'').trim();
+  if(!s) return NaN;
+  if(s.indexOf('.')>-1 && s.indexOf(',')>-1) s=s.replace(/\./g,'').replace(',','.');
+  else s=s.replace(',','.');
+  const v=parseFloat(s);
+  return isFinite(v)?v:NaN;
+}
+// «Σε ΚΑΕΚ» μπορεί να έχει πολλαπλά ΚΑΕΚ (π.χ. «010393405007/010393405006»)
+function splitKaeks(s){
+  return String(s||'').split(/[\/,;+]+/).map(t=>t.trim()).filter(t=>t.length>=8);
+}
+// Επιστρέφει {errors, infos}:
+// 1) Σ(αρχικών) = Σ(τελικών) — σε διόρθωση ορίων το συνολικό εμβαδόν διατηρείται
+// 2) ανά ΚΑΕΚ: τελικό = αρχικό − τμήματα που δίνει + τμήματα που παίρνει
+// 3) το εμβαδόν της φόρμας = τελικό του ΚΑΕΚ-θέματος στον πίνακα 5β
+function validateChangeBalance(){
+  const errors=[], infos=[];
+  const rows=(DATA.areaChanges||[]).filter(a=>String(a.kaek||'').trim());
+  if(!rows.length) return {errors, infos};
+  const TOL=0.05; // ανοχή στρογγυλοποίησης (2 δεκαδικά ανά γραμμή)
+  let sumI=0, sumF=0, unreadable=false;
+  rows.forEach(a=>{
+    const i=parseArea(a.initial), f=parseArea(a.final);
+    if(!isFinite(i)||!isFinite(f)){ unreadable=true; return; }
+    sumI+=i; sumF+=f;
+  });
+  if(unreadable){
+    infos.push('Πίνακας 5β: κάποια εμβαδά δεν διαβάζονται ως αριθμοί — ο έλεγχος ισοζυγίου δεν ολοκληρώθηκε.');
+    return {errors, infos};
+  }
+  const diff=sumF-sumI;
+  if(Math.abs(diff)>TOL){
+    errors.push('Ισοζύγιο εμβαδών: Σ(αρχικών)='+numGr(sumI)+' τ.μ. ≠ Σ(τελικών)='+numGr(sumF)+' τ.μ. — διαφορά '+numGr(diff)+' τ.μ. Σε διόρθωση ορίων το συνολικό εμβαδόν των εμπλεκόμενων γεωτεμαχίων πρέπει να διατηρείται.');
+  } else {
+    infos.push('Ισοζύγιο εμβαδών ΟΚ: Σ(αρχικών)=Σ(τελικών)='+numGr(sumI)+' τ.μ.');
+  }
+  // ανά ΚΑΕΚ, με βάση τον πίνακα μεταβολών (5)
+  const parts=(DATA.changes||[]).filter(c=>String(c.area||'').trim());
+  let ambiguous=false;
+  rows.forEach(a=>{
+    const k=String(a.kaek).trim();
+    const i=parseArea(a.initial), f=parseArea(a.final);
+    let expected=i, skip=false;
+    parts.forEach(c=>{
+      const area=parseArea(c.area);
+      if(!isFinite(area)){ skip=true; return; }
+      const from=splitKaeks(c.fromKaek), to=splitKaeks(c.toKaek);
+      if(from.indexOf(k)>-1){ if(from.length>1){ ambiguous=true; skip=true; } else expected-=area; }
+      if(to.indexOf(k)>-1){ if(to.length>1){ ambiguous=true; skip=true; } else expected+=area; }
+    });
+    if(skip) return;
+    if(Math.abs(expected-f)>TOL){
+      errors.push('ΚΑΕΚ '+k+': αρχικό '+numGr(i)+' − δίνει + παίρνει = '+numGr(expected)+' τ.μ., αλλά ο πίνακας 5β δηλώνει τελικό '+numGr(f)+' τ.μ. (διαφορά '+numGr(f-expected)+' τ.μ.).');
+    }
+  });
+  if(ambiguous) infos.push('Κάποια τμήματα έχουν πολλαπλά ΚΑΕΚ στο «Από/Σε» — ο ανά-ΚΑΕΚ έλεγχος παραλείφθηκε για τα εμπλεκόμενα ΚΑΕΚ.');
+  // δηλωμένο εμβαδόν φόρμας vs τελικό ΚΑΕΚ-θέματος
+  const subj=String(val('fKaek')||'').trim();
+  if(subj){
+    const row=rows.find(a=>String(a.kaek).trim()===subj);
+    if(row){
+      const f=parseArea(row.final), decl=parseArea(val('fEmvado'));
+      if(isFinite(f)&&isFinite(decl)&&Math.abs(f-decl)>TOL){
+        errors.push('Το εμβαδόν της φόρμας ('+numGr(decl)+' τ.μ.) διαφέρει από το τελικό εμβαδόν του ΚΑΕΚ '+subj+' στον πίνακα 5β ('+numGr(f)+' τ.μ.).');
+      }
+    }
+  }
+  return {errors, infos};
+}
+// Banner ισοζυγίου κάτω από τον πίνακα 5β — ενημερώνεται live στην επεξεργασία
+function renderBalanceBanner(){
+  const el=document.getElementById('balanceBanner'); if(!el) return;
+  const rows=(DATA.areaChanges||[]).filter(a=>String(a.kaek||'').trim());
+  if(!rows.length){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  const bal=validateChangeBalance();
+  el.classList.remove('hidden');
+  if(bal.errors.length){
+    el.style.cssText='margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #e05858;background:rgba(224,88,88,.08)';
+    el.innerHTML='<b>⚠ Έλεγχος ισοζυγίου:</b><br>• '+bal.errors.join('<br>• ')+(bal.infos.length?'<br><span class="muted">ℹ️ '+bal.infos.join('<br>ℹ️ ')+'</span>':'');
+  } else {
+    el.style.cssText='margin-top:10px;padding:8px 12px;border-radius:8px;border:1px solid rgba(120,170,120,.5);background:rgba(120,170,120,.08)';
+    el.innerHTML='✓ '+(bal.infos.length?bal.infos.join('<br>ℹ️ '):'Το ισοζύγιο εμβαδών επαληθεύτηκε.');
+  }
 }
 
 // Από vertices (με πεδίο nb ανά κορυφή) → ΜΙΑ γραμμή ανά πλευρά (1-2, 2-3, ...)
@@ -1916,12 +2009,13 @@ function renderChg(){
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td><input value="${esc(c.part)}" oninput="DATA.changes[${i}].part=this.value"></td>
-      <td><input value="${esc(c.fromKaek)}" oninput="DATA.changes[${i}].fromKaek=this.value"></td>
-      <td><input value="${esc(c.toKaek)}" oninput="DATA.changes[${i}].toKaek=this.value"></td>
-      <td><input value="${esc(c.area)}" oninput="DATA.changes[${i}].area=this.value"></td>
+      <td><input value="${esc(c.fromKaek)}" oninput="DATA.changes[${i}].fromKaek=this.value;renderBalanceBanner()"></td>
+      <td><input value="${esc(c.toKaek)}" oninput="DATA.changes[${i}].toKaek=this.value;renderBalanceBanner()"></td>
+      <td><input value="${esc(c.area)}" oninput="DATA.changes[${i}].area=this.value;renderBalanceBanner()"></td>
       <td><span class="x" style="cursor:pointer;color:var(--accent)" onclick="DATA.changes.splice(${i},1);renderChg()">✕</span></td>`;
     tb.appendChild(tr);
   });
+  renderBalanceBanner();
 }
 function addChgRow(){DATA.changes.push({part:'',fromKaek:'',toKaek:'',area:''});renderChg();}
 
@@ -1930,12 +2024,13 @@ function renderArea(){
   DATA.areaChanges.forEach((a,i)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td><input value="${esc(a.kaek)}" oninput="DATA.areaChanges[${i}].kaek=this.value"></td>
-      <td><input value="${esc(a.initial)}" oninput="DATA.areaChanges[${i}].initial=this.value"></td>
-      <td><input value="${esc(a.final)}" oninput="DATA.areaChanges[${i}].final=this.value"></td>
+      <td><input value="${esc(a.kaek)}" oninput="DATA.areaChanges[${i}].kaek=this.value;renderBalanceBanner()"></td>
+      <td><input value="${esc(a.initial)}" oninput="DATA.areaChanges[${i}].initial=this.value;renderBalanceBanner()"></td>
+      <td><input value="${esc(a.final)}" oninput="DATA.areaChanges[${i}].final=this.value;renderBalanceBanner()"></td>
       <td><span class="x" style="cursor:pointer;color:var(--accent)" onclick="DATA.areaChanges.splice(${i},1);renderArea()">✕</span></td>`;
     tb.appendChild(tr);
   });
+  renderBalanceBanner();
 }
 function addAreaRow(){DATA.areaChanges.push({kaek:'',initial:'',final:''});renderArea();}
 
