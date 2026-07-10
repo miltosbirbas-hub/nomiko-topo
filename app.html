@@ -733,7 +733,7 @@ function handleFile(f){
   document.getElementById('fileList').innerHTML=
     `<div class="filerow">📎 ${f.name} <span class="muted">(${(f.size/1024/1024).toFixed(2)} MB)</span><span class="x" onclick="clearFile()">✕</span></div>`;
 }
-function clearFile(){FILE=FILE_B64=null;document.getElementById('fileList').innerHTML='';document.getElementById('previewImg').classList.add('hidden');fi.value='';ROT=0;disableZoom();applyRot();document.getElementById('rotControls').classList.add('hidden');}
+function clearFile(){FILE=FILE_B64=null;window._pdfDataUrl=null;const _pi=document.getElementById('previewImg');if(_pi)delete _pi.dataset.ultra;document.getElementById('fileList').innerHTML='';document.getElementById('previewImg').classList.add('hidden');fi.value='';ROT=0;disableZoom();applyRot();document.getElementById('rotControls').classList.add('hidden');}
 
 // Περιστροφή σχεδίου (οπτικά + θα εφαρμοστεί στην εικόνα πριν την ανάλυση)
 function rotateDraw(delta){
@@ -768,6 +768,32 @@ function applyTransform(){
   if(!img) return;
   img.style.transform = `translate(${PANX}px,${PANY}px) scale(${ZOOM}) rotate(${ROT}deg)`;
   img.style.cursor = ZOOM>1 ? 'grab' : 'zoom-in';
+  if(ZOOM>=1.6) maybeUpgradePreview(); // σε βαθύ zoom, ανέβασε την ανάλυση της προεπισκόπησης
+}
+// Δυναμική αναβάθμιση προεπισκόπησης PDF: το αρχικό render (~4200px) φτάνει για γενική εικόνα,
+// αλλά σε μεγάλα φύλλα (Α1/Α0) «σπάει» στο zoom. Στο πρώτο zoom >160% ξανα-renderάρουμε το PDF
+// σε έως ~40MP (όριο μνήμης για κινητά) και αλλάζουμε το src — μία φορά, μετά είναι cached.
+let _hiPrevBusy=false;
+async function maybeUpgradePreview(){
+  const img=document.getElementById('previewImg');
+  if(_hiPrevBusy || !img || img.dataset.ultra==='1') return;
+  if(FILE_KIND!=='pdf' || !window._pdfDataUrl) return;
+  _hiPrevBusy=true;
+  try{
+    const pdf=await pdfjsLib.getDocument(window._pdfDataUrl).promise;
+    const page=await pdf.getPage(1);
+    const vp=page.getViewport({scale:1});
+    // κλίμακα: έως 2.6x, με όριο συνολικών pixels ~40MP
+    const scale=Math.min(2.6, Math.sqrt(40e6/(vp.width*vp.height)));
+    if(scale<=1.35){ img.dataset.ultra='1'; return; } // δεν αξίζει αναβάθμιση
+    const sv=page.getViewport({scale});
+    const c=document.createElement('canvas'); c.width=Math.round(sv.width); c.height=Math.round(sv.height);
+    const cx=c.getContext('2d'); cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality='high';
+    await page.render({canvasContext:cx,viewport:sv}).promise;
+    img.src=c.toDataURL('image/png');
+    img.dataset.ultra='1';
+  }catch(e){ console.warn('preview upgrade failed',e); img.dataset.ultra='1'; }
+  finally{ _hiPrevBusy=false; }
 }
 function resetZoom(){ ZOOM=1; PANX=0; PANY=0; applyTransform(); updateZoomLabel(); }
 function updateZoomLabel(){ const z=document.getElementById('zoomState'); if(z) z.textContent=Math.round(ZOOM*100)+'%'; }
@@ -902,6 +928,7 @@ function rotateB64(b64, media, deg){
 
 async function renderPdfPreview(dataUrl){
   window._pdfText='';
+  window._pdfDataUrl=dataUrl; // για δυναμική αναβάθμιση προεπισκόπησης στο zoom
   try{
     const pdf=await pdfjsLib.getDocument(dataUrl).promise;
     const page=await pdf.getPage(1);
