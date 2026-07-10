@@ -1335,10 +1335,12 @@ const PROMPT_MULTI=`ΚΡΙΣΙΜΟ: Απάντησε ΜΟΝΟ με ένα έγκ
 στ) ΠΡΟΣΑΝΑΤΟΛΙΣΜΟΣ: προκύπτει ΜΟΝΟ από τις συντεταγμένες (Βορράς=αύξηση Υ), ΟΧΙ από το πώς είναι γυρισμένη η εικόνα — αντίγραψε τους αριθμούς πιστά, τίποτα άλλο.
 ζ) ΕΣΩΤΕΡΙΚΑ ΠΟΛΥΓΩΝΑ (islands): αν ένα τμήμα βρίσκεται εξ ολοκλήρου μέσα σε άλλο, δώσε το ως κανονικό ξεχωριστό πολύγωνο με τον δικό του πίνακα — ΜΗΝ το ενσωματώσεις στο περίγραμμα του εξωτερικού.
 η) Τυχόν τεχνικά ονόματα layers (DGM_PROP_FINAL, PST_KAEK, AREA_A/D, TOPO_PROP, KORYFES κ.λπ.) χρησιμεύουν ΜΟΝΟ για να καταλάβεις τον ρόλο κάθε πίνακα — ΠΟΤΕ μην τα γράφεις σε label, nb ή άλλο πεδίο που θα εμφανιστεί σε περιγραφή· εκεί μόνο ελληνικές ονομασίες όπως στο σχέδιο («ΤΜΗΜΑ Α», «ιδιοκτησία …», «αγροτική οδός»).
+θ) ΚΡΙΣΙΜΟ — ΕΠΙΛΟΓΗ ΑΡΧΙΚΟΥ: Τα σχέδια συχνά έχουν ΔΥΟ περιγράμματα του ίδιου ακινήτου: το ΚΤΗΜΑΤΟΛΟΓΙΚΟ (τίτλοι όπως «ΓΕΩΤΕΜΑΧΙΟ Ε.Κ.», με ΚΑΕΚ, layer PST_KAEK/Δ12) και το ΜΕΤΡΗΜΕΝΟ (τίτλοι όπως «ΓΕΩΤΕΜΑΧΙΟ Τ.Δ.», layer TOPO_PROP/Δ13). Το source είναι ΠΑΝΤΑ το ΜΕΤΡΗΜΕΝΟ (Τ.Δ.) — αυτό κατατέμνεται, και το άθροισμα των εμβαδών των τμημάτων ισούται με το εμβαδόν ΤΟΥ, όχι του κτηματολογικού. Τα νέα τμήματα συχνά τιτλοφορούνται «ΝΕΟ ΓΕΩΤ. ΕΓΓΡ. ΠΡΑΞΗΣ» (TOPO_PROP_NEW/Δ14). Το κτηματολογικό περίγραμμα ΜΗΝ το βάλεις στο source — δώσ' το χωριστά στο προαιρετικό "cadastral":{"label","kaek","area","vertices"}. ΕΠΑΛΗΘΕΥΣΗ πριν απαντήσεις: Σ(εμβαδών result) = εμβαδόν source (±0,05).
 Επίσης: δήμος/κοινότητα, θέση, ιδιοκτήτης/-ες (πολλοί → με κόμμα), crs, dilosi651 (ΑΥΤΟΥΣΙΟ το κείμενο δήλωσης Ν.651/77 & 1337/83 — σε κατατμήσεις είναι εκτενής, με αρτιότητα ΑΝΑ ΤΜΗΜΑ· αντίγραψέ την ΟΛΟΚΛΗΡΗ), dilosiDasiki (ΑΥΤΟΥΣΙΟ).
 Επέστρεψε ΜΟΝΟ JSON:
 {"operation":"katatmisi","dimos":"","thesi":"","owner":"","crs":"ΕΓΣΑ '87",
- "source":[{"label":"ΑΡΧΙΚΟ ΓΕΩΤΕΜΑΧΙΟ","kaek":"","area":"6303.45","vertices":[{"n":"1","x":238277.310,"y":4280855.650,"nb":"ΑΓΡΟΤΙΚΗ ΟΔΟΣ","nbKaek":""}]}],
+ "source":[{"label":"ΓΕΩΤΕΜΑΧΙΟ Τ.Δ.","kaek":"","area":"6303.45","vertices":[{"n":"1","x":238277.310,"y":4280855.650,"nb":"ΑΓΡΟΤΙΚΗ ΟΔΟΣ","nbKaek":""}]}],
+ "cadastral":{"label":"ΓΕΩΤΕΜΑΧΙΟ Ε.Κ.","kaek":"010963235016","area":"6398.20","vertices":[{"n":"Κ1","x":238277.310,"y":4280855.650}]},
  "result":[{"label":"ΤΜΗΜΑ Α","kaek":"","area":"1050.58","vertices":[{"n":"1","x":238277.310,"y":4280855.650,"nb":"ΤΜΗΜΑ Β της παρούσας πράξης","nbKaek":""}]}],
  "dilosi651":"","dilosiDasiki":"","readError":""}
 Συντεταγμένες ως αριθμοί (τελεία υποδιαστολή). Εμβαδά/ΚΑΕΚ/ετικέτες ως κείμενο, επακριβώς. ΜΗΝ παραλείψεις κανένα τμήμα.`;
@@ -1586,6 +1588,34 @@ function sanitizeParcelText(list){
   });
 }
 function multiParcels(M){ return [].concat(M&&M.source||[], M&&M.result||[]); }
+// Αυτόματη διόρθωση επιλογής ΑΡΧΙΚΟΥ σε κατάτμηση: το σωστό αρχικό είναι το ΜΕΤΡΗΜΕΝΟ (Τ.Δ.),
+// αυτό δηλ. του οποίου το εμβαδόν ισούται με Σ(τμημάτων). Αν το μοντέλο έβαλε στο source το
+// κτηματολογικό περίγραμμα (Ε.Κ./ΚΑΕΚ) ή και τα δύο, εδώ επιλέγεται το σωστό και το άλλο
+// φυλάσσεται ως cadastral (για αναφορά στην περιγραφή).
+function fixSourceSelection(M){
+  if(!M || (M.operation==='synenosi')) return;
+  const res=M.result||[]; if(res.length<2) return;
+  let sumR=0, bad=false;
+  res.forEach(t=>{ const a=parseArea(t.area); if(!isFinite(a)) bad=true; else sumR+=a; });
+  if(bad) return;
+  const TOL=0.05*Math.max(2,res.length);
+  const match=(p)=>{ const a=parseArea(p&&p.area); return isFinite(a)&&Math.abs(a-sumR)<=TOL; };
+  const src=M.source||[];
+  // Περίπτωση 1: πολλαπλά source — κράτα αυτό που κλείνει το ισοζύγιο, το άλλο → cadastral
+  if(src.length>1){
+    const good=src.find(match);
+    if(good){
+      const rest=src.filter(x=>x!==good);
+      M.source=[good];
+      if(!M.cadastral && rest.length) M.cadastral=rest[0];
+    }
+    return;
+  }
+  // Περίπτωση 2: ένα source που ΔΕΝ κλείνει, αλλά το cadastral κλείνει → αντάλλαξέ τα
+  if(src.length===1 && !match(src[0]) && M.cadastral && match(M.cadastral)){
+    const c=M.cadastral; M.cadastral=src[0]; M.source=[c];
+  }
+}
 // Χειροκίνητη επιλογή είδους πράξης (override του αυτόματου εντοπισμού)
 function setMultiOp(v){
   const M=window._multi; if(!M) return;
@@ -1694,7 +1724,7 @@ function validateMulti(M){
   const TOL=0.05*Math.max(2, src.length+res.length);
   if(isFinite(sumS)&&isFinite(sumR)){
     const d=sumR-sumS;
-    if(Math.abs(d)>TOL) errors.push('Ισοζύγιο πράξης: Σ(αρχικών)='+numGr(sumS)+' τ.μ. ≠ Σ('+(op==='katatmisi'?'τμημάτων':'ενιαίου')+')='+numGr(sumR)+' τ.μ. — διαφορά '+numGr(d)+' τ.μ.');
+    if(Math.abs(d)>TOL) errors.push('Ισοζύγιο πράξης: Σ(αρχικών)='+numGr(sumS)+' τ.μ. ≠ Σ('+(op==='katatmisi'?'τμημάτων':'ενιαίου')+')='+numGr(sumR)+' τ.μ. — διαφορά '+numGr(d)+' τ.μ.'+(op==='katatmisi'?' Ελέγξτε μήπως ως αρχικό διαβάστηκε το ΚΤΗΜΑΤΟΛΟΓΙΚΟ περίγραμμα (Ε.Κ./ΚΑΕΚ) αντί του ΜΕΤΡΗΜΕΝΟΥ (Τ.Δ.) — το σωστό αρχικό είναι αυτό που ισούται με το άθροισμα των τμημάτων.':''));
     else infos.push('Ισοζύγιο ΟΚ: Σ(αρχικών)=Σ('+(op==='katatmisi'?'τμημάτων':'ενιαίου')+')='+numGr(sumS)+' τ.μ.');
   } else {
     infos.push('Κάποια εμβαδά δεν διαβάζονται ως αριθμοί — το ισοζύγιο δεν ολοκληρώθηκε.');
@@ -1766,7 +1796,9 @@ function applyResultMulti(p){
   // καθάρισμα closing vertices σε ΟΛΑ τα πολύγωνα
   ['source','result'].forEach(k=>{(p[k]||[]).forEach(t=>{ if(t&&Array.isArray(t.vertices)) t.vertices=stripClosingVertex(t.vertices); });});
   window._multi=p;
-  sanitizeParcelText(p.source); sanitizeParcelText(p.result);
+  if(p.cadastral&&Array.isArray(p.cadastral.vertices)) p.cadastral.vertices=stripClosingVertex(p.cadastral.vertices);
+  sanitizeParcelText(p.source); sanitizeParcelText(p.result); sanitizeParcelText(p.cadastral?[p.cadastral]:[]);
+  fixSourceSelection(p); // αν μπήκε το κτηματολογικό (Ε.Κ.) αντί του μετρημένου (Τ.Δ.), διόρθωσε
   p._detectedOp=(p.operation==='synenosi')?'synenosi':'katatmisi';
   detectMultiNeighbors(p); // όμοροι μεταξύ τμημάτων από κοινές πλευρές (συντεταγμένες)
   const sel=document.getElementById('multiOpSelect'); if(sel) sel.value='auto';
@@ -1824,8 +1856,11 @@ function buildDescriptionMulti(){
   out+='Ακίνητα '+(bits.length?bits.join(', ')+', ':'')+"αποτυπωμένα σε σύστημα "+(crs||"ΕΓΣΑ '87")+'.\n\n';
   const src=M.source||[], res=M.result||[];
   if(op==='katatmisi'){
-    out+='Ι. ΤΟ ΑΡΧΙΚΟ ΓΕΩΤΕΜΑΧΙΟ\n\n';
+    out+='Ι. ΤΟ ΑΡΧΙΚΟ ΓΕΩΤΕΜΑΧΙΟ (κατά την αποτύπωση)\n\n';
     src.forEach(p=>{ out+=descrParcel(p,style)+'\n'; });
+    if(M.cadastral&&(M.cadastral.kaek||M.cadastral.area)){
+      out+='Κατά τα κτηματολογικά διαγράμματα, το γεωτεμάχιο'+(M.cadastral.kaek?' φέρει ΚΑΕΚ '+M.cadastral.kaek:'')+(M.cadastral.area?' με αναγραφόμενο εμβαδόν '+cleanEmv(String(M.cadastral.area))+' τ.μ.':'')+'.\n\n';
+    }
     out+='ΙΙ. ΤΑ ΔΗΜΙΟΥΡΓΟΥΜΕΝΑ ΤΜΗΜΑΤΑ ('+res.length+')\n\n';
     res.forEach((p,i)=>{ out+=(i+1)+'. '+descrParcel(p,style)+'\n'; });
   } else {
