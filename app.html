@@ -33,10 +33,17 @@ header h1{font-size:20px;font-weight:600;letter-spacing:.5px}
 header .sub{font-size:12px;color:#b9c4d2;width:100%;margin-top:-4px}
 .wrap{max-width:1000px;margin:0 auto;padding:22px}
 .tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.tab{flex:1 1 0;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px;cursor:pointer;border-left:4px solid transparent;transition:flex-grow .28s ease, box-shadow .15s, border-color .15s, background .15s}
-.tab.active{flex-grow:1.45;border-left-color:var(--olive);box-shadow:0 2px 12px rgba(30,58,90,.12);background:#fdfdfb}
+.tab{flex:1 1 0;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px;cursor:pointer;border-left:4px solid transparent;transition:flex-grow .28s ease, box-shadow .22s ease, border-color .15s, background .15s, transform .22s ease}
+.tab.active{flex-grow:1.45;border-left-color:var(--olive);border-color:var(--olive);background:#fdfdf8;
+  transform:translate(-2px,-3px);
+  /* 3D ανασήκωμα: πολυεπίπεδη σκιά στο πλάι (δεξιά-κάτω) + απαλό περιβάλλον */
+  box-shadow:
+    5px 5px 0 rgba(74,96,64,.22),
+    9px 9px 0 rgba(74,96,64,.10),
+    12px 14px 24px rgba(30,58,90,.18)}
+.tab:not(.active):hover{box-shadow:3px 3px 0 rgba(74,96,64,.10);transform:translate(-1px,-1px)}
 .tab h3{font-size:15px;color:var(--navy);margin-bottom:4px;transition:font-size .28s ease}
-.tab.active h3{font-size:16.5px}
+.tab.active h3{font-size:16.5px;color:var(--olive)}
 .tab p{font-size:12px;color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:20px;margin-bottom:18px}
 .card h2{font-size:16px;color:var(--navy);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
