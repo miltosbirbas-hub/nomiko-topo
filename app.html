@@ -33,9 +33,10 @@ header h1{font-size:20px;font-weight:600;letter-spacing:.5px}
 header .sub{font-size:12px;color:#b9c4d2;width:100%;margin-top:-4px}
 .wrap{max-width:1000px;margin:0 auto;padding:22px}
 .tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.tab{flex:1;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px;cursor:pointer;transition:.15s;border-left:4px solid transparent}
-.tab.active{border-left-color:var(--olive);box-shadow:0 2px 10px rgba(30,58,90,.08)}
-.tab h3{font-size:15px;color:var(--navy);margin-bottom:4px}
+.tab{flex:1 1 0;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px;cursor:pointer;border-left:4px solid transparent;transition:flex-grow .28s ease, box-shadow .15s, border-color .15s, background .15s}
+.tab.active{flex-grow:1.45;border-left-color:var(--olive);box-shadow:0 2px 12px rgba(30,58,90,.12);background:#fdfdfb}
+.tab h3{font-size:15px;color:var(--navy);margin-bottom:4px;transition:font-size .28s ease}
+.tab.active h3{font-size:16.5px}
 .tab p{font-size:12px;color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:20px;margin-bottom:18px}
 .card h2{font-size:16px;color:var(--navy);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
@@ -478,8 +479,8 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     <div class="card">
       <h2>6. Κείμενο Περιγραφής για το Συμβόλαιο</h2>
       <div class="field">
-        <label>Έναρξη φράσης ορίων</label>
-        <select id="phraseStyle" onchange="buildDescription()">
+        <label style="font-size:13px;color:var(--olive);font-weight:800;letter-spacing:.2px">✒️ Στυλ διατύπωσης περιγραφής</label>
+        <select id="phraseStyle" onchange="buildDescription()" style="border:2px solid var(--olive);background:#f0f3ee;color:var(--navy);font-weight:700;font-size:14px;padding:11px 12px;box-shadow:0 1px 8px rgba(74,96,64,.18);cursor:pointer">
           <option value="full">«…σε πλευρά 1-2 μήκους δεκατεσσάρων μέτρων… (14,12μ.) συνορεύει με…»</option>
           <option value="compact">«Πλευρά 1-2: μήκος 14,12 μ., όμορος …»</option>
           <option value="grouped">«Συνορεύει ΒΟΡΕΙΑ …, επί των σημείων Α7, Α8, …, σε μήκη … (1,24 μ.), συν … (3,91 μ.)» — ομαδοποίηση ανά προσανατολισμό</option>
