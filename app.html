@@ -206,6 +206,10 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       <h3>🏠 Οριζόντια Ιδιοκτησία</h3>
       <p>Ανάρτηση κάτοψης → περιγραφή περιμέτρου (κορυφές α,β,γ…) + σύνθεση χώρων + εμβαδόν για σύσταση</p>
     </div>
+    <div class="tab" id="tabMulti" onclick="switchMode('multi')">
+      <h3>✂️ Κατάτμηση / Συνένωση</h3>
+      <p>Ανάρτηση σχεδίου κατάτμησης ή συνένωσης → ενιαία πράξη: αρχικό/-ά γεωτεμάχια + περιγραφή κάθε τμήματος ένα-ένα + έλεγχος ισοζυγίου</p>
+    </div>
   </div>
 
   <!-- MODAL ΒΟΗΘΕΙΑΣ -->
@@ -418,6 +422,28 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       </table>
       <button class="btn-ghost addrow" onclick="addAreaRow()">+ Προσθήκη γραμμής</button>
       <div id="balanceBanner" class="hidden"></div>
+    </div>
+
+    <!-- parcels table (multi only: κατάτμηση/συνένωση) -->
+    <div class="card hidden" id="multiCard">
+      <h2>5. Γεωτεμάχια της πράξης <span class="muted" id="multiOpLabel"></span></h2>
+      <div style="margin:6px 0 10px">
+        <label class="muted" style="margin-right:8px">Είδος πράξης:</label>
+        <select id="multiOpSelect" onchange="setMultiOp(this.value)">
+          <option value="auto">Αυτόματα (από την ανάλυση)</option>
+          <option value="katatmisi">Κατάτμηση (1 αρχικό → τμήματα)</option>
+          <option value="synenosi">Συνένωση (πολλά → ενιαίο)</option>
+        </select>
+      </div>
+      <p class="muted">Το εμβαδόν «από συντεταγμένες» υπολογίζεται αυτόματα (shoelace) και συγκρίνεται με το αναγραφόμενο. Διορθώστε ετικέτες/ΚΑΕΚ/εμβαδά όπου χρειάζεται.</p>
+      <table class="bnd" id="multiTable">
+        <thead><tr>
+          <th style="width:60px"></th><th>Τμήμα / Ετικέτα</th><th style="width:140px">ΚΑΕΚ</th>
+          <th style="width:120px">Εμβαδόν (τ.μ.)</th><th style="width:130px">Από συντ/νες</th><th style="width:70px">Κορυφές</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="multiBalanceBanner" class="hidden"></div>
     </div>
 
     <!-- ΚΤΙΣΜΑΤΑ εντός οικοπέδου -->
@@ -667,9 +693,11 @@ function switchMode(m){
   document.getElementById('tabTopo').classList.toggle('active',m==='topo');
   document.getElementById('tabDiag').classList.toggle('active',m==='diag');
   const to=document.getElementById('tabOriz'); if(to) to.classList.toggle('active',m==='oriz');
-  document.getElementById('modePill').textContent= m==='topo'?'Τοπογραφικό':(m==='diag'?'Διάγραμμα Μεταβολών':'Οριζόντια Ιδιοκτησία');
+  const tm=document.getElementById('tabMulti'); if(tm) tm.classList.toggle('active',m==='multi');
+  document.getElementById('modePill').textContent= m==='topo'?'Τοπογραφικό':(m==='diag'?'Διάγραμμα Μεταβολών':(m==='multi'?'Κατάτμηση / Συνένωση':'Οριζόντια Ιδιοκτησία'));
   document.getElementById('changesCard').classList.toggle('hidden',m!=='diag');
   document.getElementById('areaCard').classList.toggle('hidden',m!=='diag');
+  const mc=document.getElementById('multiCard'); if(mc) mc.classList.toggle('hidden',m!=='multi');
   const rb=document.getElementById('btnReport'); if(rb) rb.classList.toggle('hidden',m!=='diag');
   // oriz-specific UI
   const sc=document.getElementById('spacesCard'); if(sc) sc.classList.toggle('hidden',m!=='oriz');
@@ -1059,7 +1087,7 @@ async function analyze(){
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Ανάλυση...';
   setStatus('Αποστολή στο Claude για ανάγνωση του σχεδίου...','info');
 
-  const sys = MODE==='topo' ? PROMPT_TOPO : (MODE==='diag' ? PROMPT_DIAG : PROMPT_ORIZ);
+  const sys = MODE==='topo' ? PROMPT_TOPO : (MODE==='diag' ? PROMPT_DIAG : (MODE==='multi' ? PROMPT_MULTI : PROMPT_ORIZ));
   const hints = collectHints();
 
   // ΑΚΡΙΒΕΙΑ: αν το ενσωματωμένο κείμενο είναι ΚΑΘΑΡΟ, στέλνουμε ΜΟΝΟ κείμενο (χωρίς λάθη οπτικής ανάγνωσης).
@@ -1141,6 +1169,24 @@ async function analyze(){
       return;
     }
 
+    // ── ΚΑΤΑΤΜΗΣΗ / ΣΥΝΕΝΩΣΗ ──
+    if(MODE==='multi'){
+      applyResultMulti(parsed);
+      refreshTokens();
+      const nP=((parsed.source||[]).length)+((parsed.result||[]).length);
+      const chk=validateMulti(parsed);
+      const infoN = chk.infos.length ? '<br><span class="muted">ℹ️ '+chk.infos.join('<br>ℹ️ ')+'</span>' : '';
+      const trN = truncated ? '<br><b>⚠ Η απάντηση ίσως κόπηκε</b> — ελέγξτε μήπως λείπουν τμήματα/πίνακες στο τέλος.' : '';
+      if(parsed.readError || nP===0){
+        setStatus('⚠ '+(parsed.readError||'Δεν διαβάστηκαν οι πίνακες κορυφών.')+'<br><span class="muted">Δώστε PDF με αναγνώσιμο κείμενο ή καθαρότερη εικόνα.</span>','err');
+      } else if(chk.errors.length){
+        setStatus('⚠ Διαβάστηκαν '+nP+' γεωτεμάχια/τμήματα, αλλά ο έλεγχος εντόπισε:<br>• '+chk.errors.join('<br>• ')+infoN+trN,'err');
+      } else {
+        setStatus('✓ Η ανάλυση πέρασε τους ελέγχους ('+nP+' γεωτεμάχια/τμήματα). Ελέγξτε & διορθώστε τα στοιχεία παρακάτω.'+infoN+trN, truncated?'err':'ok');
+      }
+      return;
+    }
+
     applyResult(parsed);
     // Η χρέωση έγινε SERVER-SIDE στην Edge Function. Απλώς ανανέωσε το υπόλοιπο.
     refreshTokens();
@@ -1218,6 +1264,7 @@ const PROMPT_DIAG=`ΚΡΙΣΙΜΟ: Απάντησε ΜΟΝΟ με ένα έγκ�
 γ) ΜΗΝ αναμείξεις στο vertices κορυφές από πίνακες ΑΡΧΙΚΩΝ γεωτεμαχίων, ΟΜΟΡΩΝ ΚΑΕΚ, ΑΠΟΚΟΠΤΟΜΕΝΩΝ/ΔΙΕΚΔΙΚΟΥΜΕΝΩΝ ΤΜΗΜΑΤΩΝ (Α1, Α2, Δ1, Δ2 κλπ) ή δασικών τμημάτων — αυτοί πάνε ΜΟΝΟ στο "tables".
 δ) ΚΛΕΙΣΙΜΟ ΠΟΛΥΓΩΝΟΥ: Στους πίνακες η πρώτη κορυφή επαναλαμβάνεται στο τέλος για να κλείσει το πολύγωνο (π.χ. 1,...,10,1 ή 39,1,...,10,39). Στο vertices βάλε κάθε κορυφή ΜΙΑ φορά — ΜΗΝ επαναλάβεις την πρώτη κορυφή στο τέλος. Το ίδιο ισχύει για τα vertices κάθε πίνακα στο "tables" και κάθε κτίσματος.
 ε) Το emvado πάρ' το από τη γραμμή «Ε (...)» του πίνακα που επέλεξες στο (β).
+στ) ΒΟΗΘΗΜΑ — ονόματα επιπέδων (layers) που συχνά υπάρχουν στο υπόμνημα/κείμενο και δηλώνουν τον ρόλο κάθε πολυγώνου: DGM_PROP_FINAL=τελικά γεωτεμάχια (αυτά ενημερώνουν την κτηματολογική βάση), PST_KAEK=αρχικά επίδικα γεωτεμάχια κατά μεταφορά από τα ΚΔ, TOPO_PROP/FOREST_FINAL=προτεινόμενο/διεκδικούμενο πολύγωνο, AREA_A=αποκοπτόμενα τμήματα Αi, AREA_D=τμήματα ομόρων Δi, KORYFES=αρίθμηση κορυφών, VST/EAS=χώροι αποκλειστικής χρήσης/δουλείες. Χρησιμοποίησέ τα για να ταξινομήσεις σωστά τους πίνακες στο "tables" (category) και να επιλέξεις τον σωστό πίνακα για το vertices. ΠΡΟΣΟΧΗ: τα ονόματα layers είναι ΑΠΟΚΛΕΙΣΤΙΚΑ για εσωτερική ταξινόμηση — ΠΟΤΕ μην τα γράφεις σε πεδία που εμφανίζονται σε περιγραφή/έγγραφο (nb, owner, thesi, label κτισμάτων). Εκεί χρησιμοποιείς μόνο τις ελληνικές ονομασίες όπως αναγράφονται στο σχέδιο (π.χ. «ιδιοκτησία …», «αγροτική οδός», «ΤΜΗΜΑ Α1»).
 ΕΡΓΟ ΣΟΥ:
 1) vertices: ΟΛΕΣ τις κορυφές του ΤΕΛΙΚΟΥ γεωτεμαχίου (κατά τους κανόνες α-δ) με σειρά, αριθμό (n), Χ,Υ, ΚΑΙ "nb"=όνομα όμορου («ιδιοκτησία [ΟΝΟΜΑ]») + "nbKaek"=ΚΑΕΚ του ομόρου αν φαίνεται. Δρόμοι/αιγιαλός/ρέμα στο "nb", "nbKaek":"". Ένας όμορος μπορεί να καλύπτει πολλές πλευρές — ίδιο "nb"/"nbKaek" σε όλες· "" αν δεν αναγράφεται.
 2) changes: ΑΚΡΙΒΩΣ οι γραμμές του «ΠΙΝΑΚΑ ΓΙΑ ΤΗ ΔΙΟΡΘΩΣΗ ΤΩΝ ΓΕΩΤΕΜΑΧΙΩΝ» — ποιο τμήμα, εμβαδόν, από ποιο ΚΑΕΚ σε ποιο ΚΑΕΚ.
@@ -1270,6 +1317,31 @@ const PROMPT_ORIZ=`ΚΡΙΣΙΜΟ: Απάντησε ΜΟΝΟ με ένα έγκ�
  "spaces":[{"name":"Κοιτών 1","area":"6,80"},{"name":"Κουζίνα","area":""},{"name":"Λουτρό","area":"6,53"}],
  "readError":""}
 ΥΠΕΝΘΥΜΙΣΗ: Νομικό έγγραφο — μην μαντεύεις ΜΗΚΗ (κενό "len" είναι ΟΚ). ΑΛΛΑ τις ΚΟΡΥΦΕΣ δώσ' τες (γράφονται ρητά). Αντίγραψε εμβαδά/ετικέτες γράμμα-γράμμα.`;
+
+const PROMPT_MULTI=`ΚΡΙΣΙΜΟ: Απάντησε ΜΟΝΟ με ένα έγκυρο JSON object. ΜΗΝ γράψεις καμία εξήγηση, σχόλιο, ή κείμενο πριν ή μετά — μόνο το JSON, ξεκινώντας με { και τελειώνοντας με }.
+
+ΚΡΙΣΙΜΟΣ ΚΑΝΟΝΑΣ: ΑΠΑΓΟΡΕΥΕΤΑΙ να μαντέψεις/στρογγυλέψεις/εφεύρεις κορυφές ή συντεταγμένες. Αν δεν διαβάζεις καθαρά τους πίνακες: source:[], result:[] και "readError":"Δεν διαβάστηκαν οι πίνακες κορυφών".
+Είσαι έμπειρος τοπογράφος μηχανικός. Διαβάζεις ελληνικό τοπογραφικό διάγραμμα ΚΑΤΑΤΜΗΣΗΣ ή ΣΥΝΕΝΩΣΗΣ γεωτεμαχίων (ΕΓΣΑ '87).
+ΚΑΝΟΝΑΣ ΑΚΡΙΒΕΙΑΣ: Νομικό έγγραφο. Ονόματα, θέση, ΚΑΕΚ, συντεταγμένες, εμβαδά ΑΚΡΙΒΩΣ όπως στο κείμενο. ΜΗΝ διορθώνεις, ΜΗΝ μαντεύεις.
+ΠΡΩΤΟ ΒΗΜΑ — ΤΥΠΟΣ ΠΡΑΞΗΣ:
+- ΚΑΤΑΤΜΗΣΗ: ΕΝΑ αρχικό γεωτεμάχιο διαιρείται σε ΠΟΛΛΑ τμήματα (Τμήμα Α, Β, Γ… ή 1, 2, 3…). operation:"katatmisi", source=[το αρχικό], result=[όλα τα τμήματα].
+- ΣΥΝΕΝΩΣΗ: ΠΟΛΛΑ γεωτεμάχια ενώνονται σε ΕΝΑ ενιαίο. operation:"synenosi", source=[όλα τα αρχικά], result=[το ενιαίο].
+ΚΑΝΟΝΕΣ ΠΙΝΑΚΩΝ:
+α) Κάθε πολύγωνο (αρχικό, τμήμα, ενιαίο) έχει ΔΙΚΟ ΤΟΥ πίνακα κορυφών στο σχέδιο. ΜΗΝ αναμείξεις κορυφές από διαφορετικούς πίνακες στο ίδιο πολύγωνο.
+β) Για κάθε πολύγωνο: "label" (όπως αναγράφεται, π.χ. «ΤΜΗΜΑ Α»), "kaek" (αν αναγράφεται, αλλιώς ""), "area" (από τη γραμμή «Ε (...)» του πίνακά του), "vertices" (ΟΛΕΣ οι κορυφές n,x,y με τη σειρά του πίνακα, ΚΑΙ "nb"/"nbKaek" ανά πλευρά όπου φαίνεται όμορος).
+γ) ΚΛΕΙΣΙΜΟ ΠΟΛΥΓΩΝΟΥ: η πρώτη κορυφή συχνά επαναλαμβάνεται στο τέλος του πίνακα — βάλε κάθε κορυφή ΜΙΑ φορά, ΜΗΝ επαναλάβεις την πρώτη στο τέλος.
+δ) ΚΟΙΝΕΣ ΚΟΡΥΦΕΣ: γειτονικά τμήματα μοιράζονται κορυφές (ίδια ετικέτα, ίδιες συντεταγμένες). Αντίγραψέ τες σε ΚΑΘΕ πολύγωνο που τις χρησιμοποιεί, με τις ΙΔΙΕΣ ακριβώς συντεταγμένες.
+ε) Όταν πλευρά τμήματος συνορεύει με ΑΛΛΟ τμήμα της ίδιας πράξης, "nb":"[label του άλλου τμήματος] της παρούσας πράξης". Αν δεν είσαι βέβαιος, άφησε "nb":"" — η εφαρμογή εντοπίζει τους όμορους μεταξύ τμημάτων αυτόματα από τις κοινές συντεταγμένες.
+στ) ΠΡΟΣΑΝΑΤΟΛΙΣΜΟΣ: προκύπτει ΜΟΝΟ από τις συντεταγμένες (Βορράς=αύξηση Υ), ΟΧΙ από το πώς είναι γυρισμένη η εικόνα — αντίγραψε τους αριθμούς πιστά, τίποτα άλλο.
+ζ) ΕΣΩΤΕΡΙΚΑ ΠΟΛΥΓΩΝΑ (islands): αν ένα τμήμα βρίσκεται εξ ολοκλήρου μέσα σε άλλο, δώσε το ως κανονικό ξεχωριστό πολύγωνο με τον δικό του πίνακα — ΜΗΝ το ενσωματώσεις στο περίγραμμα του εξωτερικού.
+η) Τυχόν τεχνικά ονόματα layers (DGM_PROP_FINAL, PST_KAEK, AREA_A/D, TOPO_PROP, KORYFES κ.λπ.) χρησιμεύουν ΜΟΝΟ για να καταλάβεις τον ρόλο κάθε πίνακα — ΠΟΤΕ μην τα γράφεις σε label, nb ή άλλο πεδίο που θα εμφανιστεί σε περιγραφή· εκεί μόνο ελληνικές ονομασίες όπως στο σχέδιο («ΤΜΗΜΑ Α», «ιδιοκτησία …», «αγροτική οδός»).
+Επίσης: δήμος/κοινότητα, θέση, ιδιοκτήτης/-ες (πολλοί → με κόμμα), crs, dilosi651 (ΑΥΤΟΥΣΙΟ το κείμενο δήλωσης Ν.651/77 & 1337/83 — σε κατατμήσεις είναι εκτενής, με αρτιότητα ΑΝΑ ΤΜΗΜΑ· αντίγραψέ την ΟΛΟΚΛΗΡΗ), dilosiDasiki (ΑΥΤΟΥΣΙΟ).
+Επέστρεψε ΜΟΝΟ JSON:
+{"operation":"katatmisi","dimos":"","thesi":"","owner":"","crs":"ΕΓΣΑ '87",
+ "source":[{"label":"ΑΡΧΙΚΟ ΓΕΩΤΕΜΑΧΙΟ","kaek":"","area":"6303.45","vertices":[{"n":"1","x":238277.310,"y":4280855.650,"nb":"ΑΓΡΟΤΙΚΗ ΟΔΟΣ","nbKaek":""}]}],
+ "result":[{"label":"ΤΜΗΜΑ Α","kaek":"","area":"1050.58","vertices":[{"n":"1","x":238277.310,"y":4280855.650,"nb":"ΤΜΗΜΑ Β της παρούσας πράξης","nbKaek":""}]}],
+ "dilosi651":"","dilosiDasiki":"","readError":""}
+Συντεταγμένες ως αριθμοί (τελεία υποδιαστολή). Εμβαδά/ΚΑΕΚ/ετικέτες ως κείμενο, επακριβώς. ΜΗΝ παραλείψεις κανένα τμήμα.`;
 
 // Υπολογισμός κατεύθυνσης πλευράς από αζιμούθιο (βορράς=+Υ, πάνω)
 function azimuthDir(dx,dy){
@@ -1493,6 +1565,287 @@ function renderBalanceBanner(){
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// ΚΑΤΑΤΜΗΣΗ / ΣΥΝΕΝΩΣΗ — validation, πίνακας τμημάτων, ενιαία περιγραφή
+// ═══════════════════════════════════════════════════════════════════
+// Δίχτυ ασφαλείας: τεχνικά ονόματα layers (ορολογία ΔΓΜΔΥ/Κτηματολογίου) δεν πρέπει
+// να φτάνουν ΠΟΤΕ σε συμβολαιογραφική περιγραφή ή Τεχνική Έκθεση — αφαιρούνται στην είσοδο.
+const LAYER_CODES=/\b(DGM_PROP_FINAL|DBOUND_FOR|BOUND_UNIMPL|BOUND_IMPL|FOREST_FINAL|TOPO_PROP_NEW|TOPO_PROP|PST_KAEK|KORYFES|VST_FINAL|EAS_FINAL|LINE_XM_VST|LINE_XM|EI_PNT|EIA|EAS|VST|AREA_[AΑ]( HATCH)?|AREA_D( HATCH)?|KYROSH)\b/g;
+function stripLayerCodes(t){
+  if(t==null) return t;
+  const c=String(t).replace(LAYER_CODES,'')
+    .replace(/\(\s*[\/,\-–—]*\s*\)|\[\s*\]|«\s*»/g,'') // άδειες παρενθέσεις/αγκύλες/εισαγωγικά
+    .replace(/\s{2,}/g,' ').replace(/^[\s\-–—:,]+|[\s\-–—:,]+$/g,'');
+  return c;
+}
+function sanitizeParcelText(list){
+  (list||[]).forEach(p=>{
+    if(!p) return;
+    if(p.label) p.label=stripLayerCodes(p.label)||p.label.trim();
+    (p.vertices||[]).forEach(v=>{ if(v&&v.nb) v.nb=stripLayerCodes(v.nb); });
+  });
+}
+function multiParcels(M){ return [].concat(M&&M.source||[], M&&M.result||[]); }
+// Χειροκίνητη επιλογή είδους πράξης (override του αυτόματου εντοπισμού)
+function setMultiOp(v){
+  const M=window._multi; if(!M) return;
+  if(v==='auto'){ M.operation = M._detectedOp || M.operation; }
+  else {
+    if(M._detectedOp===undefined) M._detectedOp = M.operation; // κράτα το αρχικό
+    if(v!==M.operation){
+      M.operation=v;
+      // αν η φορά δεν ταιριάζει με τα πλήθη (π.χ. 1 source/5 result αλλά «συνένωση»), αντάλλαξε
+      const s=(M.source||[]).length, r=(M.result||[]).length;
+      if((v==='synenosi'&&s===1&&r>1)||(v==='katatmisi'&&s>1&&r===1)){
+        const t=M.source; M.source=M.result; M.result=t;
+      }
+    }
+  }
+  detectMultiNeighbors(M);
+  renderMulti(); buildDescription();
+}
+// Σημείο εντός πολυγώνου (ray casting) — για εντοπισμό εσωτερικών πολυγώνων (islands)
+function pointInPoly(x,y,vs){
+  let inside=false;
+  for(let i=0,j=vs.length-1;i<vs.length;j=i++){
+    const xi=+String(vs[i].x).replace(',','.'), yi=+String(vs[i].y).replace(',','.');
+    const xj=+String(vs[j].x).replace(',','.'), yj=+String(vs[j].y).replace(',','.');
+    if(((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+// Αυτόματος εντοπισμός ομόρων ΜΕΤΑΞΥ των τμημάτων της πράξης από τις ΚΟΙΝΕΣ ΠΛΕΥΡΕΣ:
+// δύο πολύγωνα που μοιράζονται πλευρά έχουν 2 διαδοχικές κορυφές με ίδιες συντεταγμένες (±5mm).
+// Συμπληρώνει το "nb" ΜΟΝΟ όπου είναι κενό — δεν πατάει ό,τι διάβασε το μοντέλο από το σχέδιο.
+function detectMultiNeighbors(M){
+  const parcels=(M&&M.result&&M.result.length>1)?M.result:((M&&M.source&&M.source.length>1)?M.source:null);
+  if(!parcels) return; // όμοροι μεταξύ τμημάτων έχουν νόημα μόνο στην πλευρά με τα πολλά πολύγωνα
+  const num=v=>+String(v==null?'':v).replace(',','.');
+  const key=(v)=>Math.round(num(v.x)*200)+'|'+Math.round(num(v.y)*200); // κβαντισμός 5mm
+  // ευρετήριο πλευρών: key(a)+'>'+key(b) → parcel
+  const edgeOwner={};
+  parcels.forEach((p,pi)=>{
+    const vs=p.vertices||[];
+    for(let i=0;i<vs.length;i++){
+      const a=vs[i], b=vs[(i+1)%vs.length];
+      edgeOwner[key(a)+'>'+key(b)]=pi;
+    }
+  });
+  parcels.forEach((p,pi)=>{
+    const vs=p.vertices||[];
+    for(let i=0;i<vs.length;i++){
+      const a=vs[i], b=vs[(i+1)%vs.length];
+      if(a.nb&&String(a.nb).trim()) continue; // μην πατάς ό,τι υπάρχει
+      // η κοινή πλευρά στο γειτονικό πολύγωνο διατρέχεται ΑΝΤΙΘΕΤΑ (b→a)
+      const other=edgeOwner[key(b)+'>'+key(a)];
+      if(other!==undefined && other!==pi){
+        a.nb=(parcels[other].label||('Τμήμα '+(other+1)))+' της παρούσας πράξης';
+      }
+    }
+  });
+}
+// Εντοπισμός εσωτερικών πολυγώνων (islands): σύγκριση ΜΟΝΟ εντός ίδιας ομάδας
+// (τμήμα-με-τμήμα / αρχικό-με-αρχικό) — σε κατάτμηση όλα τα τμήματα είναι ούτως ή άλλως εντός του αρχικού.
+function detectIslands(M){
+  const out=[]; const num=v=>+String(v==null?'':v).replace(',','.');
+  [(M&&M.source)||[], (M&&M.result)||[]].forEach(group=>{
+    group.forEach((p,i)=>{
+      const vs=p.vertices||[]; if(vs.length<3) return;
+      group.forEach((q,j)=>{
+        if(i===j) return;
+        const qs=q.vertices||[]; if(qs.length<3) return;
+        const allInside=vs.every(v=>pointInPoly(num(v.x),num(v.y),qs));
+        if(allInside) out.push((p.label||('Τμήμα '+(i+1)))+' βρίσκεται εξ ολοκλήρου ΕΝΤΟΣ του '+(q.label||('Τμήμα '+(j+1)))+' (εσωτερικό πολύγωνο/island).');
+      });
+    });
+  });
+  return out;
+}
+function parcelShoelace(p){
+  const vs=(p&&p.vertices)||[]; if(vs.length<3) return NaN;
+  return Math.abs(polygonSignedArea(vs));
+}
+// Έλεγχοι πράξης: ανά πολύγωνο + ισοζύγιο Σ(αρχικών)=Σ(τελικών) + κοινές κορυφές
+function validateMulti(M){
+  const errors=[], infos=[];
+  const src=(M&&M.source)||[], res=(M&&M.result)||[];
+  if(!src.length&&!res.length) return {errors:['Δεν διαβάστηκαν γεωτεμάχια.'],infos:[]};
+  if(!src.length) errors.push('Δεν διαβάστηκε αρχικό γεωτεμάχιο (source).');
+  if(!res.length) errors.push('Δεν διαβάστηκαν προκύπτοντα τμήματα (result).');
+  const op=(M.operation==='synenosi')?'synenosi':'katatmisi';
+  if(op==='katatmisi'&&res.length<2) infos.push('Κατάτμηση με '+res.length+' τμήμα — ελέγξτε αν λείπουν τμήματα.');
+  if(op==='synenosi'&&src.length<2) infos.push('Συνένωση με '+src.length+' αρχικό — ελέγξτε αν λείπουν γεωτεμάχια.');
+  // ── ανά πολύγωνο: κορυφές + σύγκριση δηλωμένου/υπολογισμένου εμβαδού ──
+  multiParcels(M).forEach(p=>{
+    const tag=(p.label||p.kaek||'Τμήμα');
+    const v=validateVertices(p.vertices);
+    v.errors.forEach(e=>errors.push(tag+': '+e));
+    v.infos.forEach(e=>infos.push(tag+': '+e));
+    const decl=parseArea(p.area), calc=parcelShoelace(p);
+    if(isFinite(decl)&&isFinite(calc)&&decl>0){
+      const dev=Math.abs(calc-decl)/decl;
+      if(dev>0.02) errors.push(tag+': το εμβαδόν από συντεταγμένες ('+numGr(calc)+' τ.μ.) αποκλίνει '+numGr(dev*100)+'% από το αναγραφόμενο ('+numGr(decl)+' τ.μ.) — πιθανό λάθος ανάγνωσης κορυφών.');
+      else if(dev>0.005) infos.push(tag+': μικρή απόκλιση εμβαδού συντεταγμένων/αναγραφόμενου ('+numGr(calc)+' έναντι '+numGr(decl)+' τ.μ.) — πιθανώς συντελεστής κλίμακας Κο.');
+    }
+  });
+  // ── ισοζύγιο: Σ(source) = Σ(result) ──
+  const sum=list=>{ let t=0,bad=false; list.forEach(p=>{ const a=parseArea(p.area); if(!isFinite(a)) bad=true; else t+=a; }); return bad?NaN:t; };
+  const sumS=sum(src), sumR=sum(res);
+  const TOL=0.05*Math.max(2, src.length+res.length);
+  if(isFinite(sumS)&&isFinite(sumR)){
+    const d=sumR-sumS;
+    if(Math.abs(d)>TOL) errors.push('Ισοζύγιο πράξης: Σ(αρχικών)='+numGr(sumS)+' τ.μ. ≠ Σ('+(op==='katatmisi'?'τμημάτων':'ενιαίου')+')='+numGr(sumR)+' τ.μ. — διαφορά '+numGr(d)+' τ.μ.');
+    else infos.push('Ισοζύγιο ΟΚ: Σ(αρχικών)=Σ('+(op==='katatmisi'?'τμημάτων':'ενιαίου')+')='+numGr(sumS)+' τ.μ.');
+  } else {
+    infos.push('Κάποια εμβαδά δεν διαβάζονται ως αριθμοί — το ισοζύγιο δεν ολοκληρώθηκε.');
+  }
+  // ── κοινές κορυφές: ίδια ετικέτα ⇒ ίδιες συντεταγμένες (±5mm) παντού ──
+  const seen={}; let conflicts=0;
+  multiParcels(M).forEach(p=>{
+    ((p&&p.vertices)||[]).forEach(v=>{
+      const n=String(v.n==null?'':v.n).trim(); if(!n) return;
+      const x=+String(v.x).replace(',','.'), y=+String(v.y).replace(',','.');
+      if(!isFinite(x)||!isFinite(y)) return;
+      if(seen[n]){
+        if(Math.abs(seen[n].x-x)>0.005||Math.abs(seen[n].y-y)>0.005){
+          conflicts++;
+          if(conflicts<=3) errors.push('Κορυφή «'+n+'»: διαφορετικές συντεταγμένες μεταξύ πινάκων ('+seen[n].tag+' και '+(p.label||p.kaek||'τμήμα')+') — λάθος ανάγνωσης ή ασυνέπεια σχεδίου.');
+        }
+      } else seen[n]={x,y,tag:(p.label||p.kaek||'τμήμα')};
+    });
+  });
+  if(conflicts>3) errors.push('… και '+(conflicts-3)+' ακόμη κορυφές με ασυνεπείς συντεταγμένες.');
+  // εσωτερικά πολύγωνα (islands) — ενημέρωση, όχι σφάλμα (βλ. προδιαγραφές ΔΓΜΔΥ: το εμβαδόν
+  // island μπορεί να χρειάζεται χειροκίνητη προσαρμογή στο τελικό)
+  detectIslands(M).forEach(m=>infos.push(m));
+  return {errors, infos};
+}
+function renderMulti(){
+  const M=window._multi; const tb=document.querySelector('#multiTable tbody'); if(!tb) return;
+  tb.innerHTML='';
+  if(!M){ return; }
+  const op=(M.operation==='synenosi')?'synenosi':'katatmisi';
+  const lbl=document.getElementById('multiOpLabel');
+  if(lbl) lbl.textContent = op==='katatmisi' ? '(κατάτμηση: αρχικό → τμήματα)' : '(συνένωση: αρχικά → ενιαίο)';
+  const groups=[
+    {name: op==='katatmisi'?'ΑΡΧΙΚΟ':'ΣΥΝΕΝΟΥΜΕΝΑ', list:M.source||[], key:'source'},
+    {name: op==='katatmisi'?'ΤΜΗΜΑΤΑ':'ΕΝΙΑΙΟ', list:M.result||[], key:'result'}
+  ];
+  groups.forEach(g=>{
+    g.list.forEach((p,i)=>{
+      const calc=parcelShoelace(p);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td class="muted">${g.name==='ΑΡΧΙΚΟ'||g.name==='ΣΥΝΕΝΟΥΜΕΝΑ'?'ΑΠΟ':'ΣΕ'}</td>
+        <td><input value="${esc(p.label||'')}" oninput="window._multi.${g.key}[${i}].label=this.value;buildDescription()"></td>
+        <td><input value="${esc(p.kaek||'')}" oninput="window._multi.${g.key}[${i}].kaek=this.value;buildDescription()"></td>
+        <td><input value="${esc(p.area||'')}" oninput="window._multi.${g.key}[${i}].area=this.value;renderMultiBalance();buildDescription()"></td>
+        <td class="muted">${isFinite(calc)?numGr(calc):'—'}</td>
+        <td class="muted">${((p.vertices)||[]).length}</td>`;
+      tb.appendChild(tr);
+    });
+  });
+  renderMultiBalance();
+}
+function renderMultiBalance(){
+  const el=document.getElementById('multiBalanceBanner'); if(!el) return;
+  const M=window._multi;
+  if(!M||!multiParcels(M).length){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  const chk=validateMulti(M);
+  el.classList.remove('hidden');
+  if(chk.errors.length){
+    el.style.cssText='margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #e05858;background:rgba(224,88,88,.08)';
+    el.innerHTML='<b>⚠ Έλεγχος πράξης:</b><br>• '+chk.errors.join('<br>• ')+(chk.infos.length?'<br><span class="muted">ℹ️ '+chk.infos.join('<br>ℹ️ ')+'</span>':'');
+  } else {
+    el.style.cssText='margin-top:10px;padding:8px 12px;border-radius:8px;border:1px solid rgba(120,170,120,.5);background:rgba(120,170,120,.08)';
+    el.innerHTML='✓ '+(chk.infos.length?chk.infos.join('<br>ℹ️ '):'Οι έλεγχοι της πράξης επαληθεύτηκαν.');
+  }
+}
+function applyResultMulti(p){
+  enableZoom();
+  // καθάρισμα closing vertices σε ΟΛΑ τα πολύγωνα
+  ['source','result'].forEach(k=>{(p[k]||[]).forEach(t=>{ if(t&&Array.isArray(t.vertices)) t.vertices=stripClosingVertex(t.vertices); });});
+  window._multi=p;
+  sanitizeParcelText(p.source); sanitizeParcelText(p.result);
+  p._detectedOp=(p.operation==='synenosi')?'synenosi':'katatmisi';
+  detectMultiNeighbors(p); // όμοροι μεταξύ τμημάτων από κοινές πλευρές (συντεταγμένες)
+  const sel=document.getElementById('multiOpSelect'); if(sel) sel.value='auto';
+  if(p.dimos&&!val('fDimos'))document.getElementById('fDimos').value=p.dimos;
+  if(p.thesi&&!val('fThesi'))document.getElementById('fThesi').value=p.thesi;
+  if(p.owner&&!val('fOwner'))document.getElementById('fOwner').value=p.owner;
+  // ΚΑΕΚ/εμβαδόν φόρμας: το «θέμα» είναι το αρχικό (κατάτμηση) ή το ενιαίο (συνένωση)
+  const op=(p.operation==='synenosi')?'synenosi':'katatmisi';
+  const subj=op==='katatmisi' ? (p.source||[])[0] : (p.result||[])[0];
+  if(subj){
+    if(subj.kaek&&!val('fKaek'))document.getElementById('fKaek').value=subj.kaek;
+    if(subj.area&&!val('fEmvado'))document.getElementById('fEmvado').value=subj.area;
+    // τα όρια του «θέματος» και στον γενικό πίνακα πλευρών (επεξεργάσιμα)
+    if((subj.vertices||[]).length>=3){ DATA.boundaries=buildBoundariesFromVertices(subj.vertices,null); window._vertices=subj.vertices; }
+  }
+  window._dilosi651=p.dilosi651||''; window._dilosiDasiki=p.dilosiDasiki||'';
+  const d1=document.getElementById('fDilosi651'); if(d1) d1.value=window._dilosi651;
+  const d2=document.getElementById('fDilosiDasiki'); if(d2) d2.value=window._dilosiDasiki;
+  if(!DATA.boundaries.length)['ΑΝΑΤΟΛΙΚΑ','ΝΟΤΙΑ','ΔΥΤΙΚΑ','ΒΟΡΕΙΑ'].forEach(d=>DATA.boundaries.push({direction:d,length:'',neighbor:''}));
+  document.getElementById('results').classList.remove('hidden');
+  renderMulti(); renderBnd(); buildDescription();
+}
+// Περιγραφή ενός γεωτεμαχίου/τμήματος (επαναχρησιμοποιεί τη φρασεολογία του buildDescription)
+function descrParcel(p, style){
+  const head=[];
+  if(p.label) head.push(p.label);
+  if(p.kaek) head.push('με ΚΑΕΚ '+p.kaek);
+  if(p.area) head.push('εμβαδού '+cleanEmv(String(p.area))+' τ.μ.');
+  let out=(head.join(', ')||'Γεωτεμάχιο')+', ορίζεται/συνορεύει ως εξής:\n';
+  const bnds=buildBoundariesFromVertices(p.vertices||[],null);
+  if(!bnds.length) return out+'– (δεν διαβάστηκαν κορυφές — συμπληρώστε χειροκίνητα)\n';
+  out+=bnds.map(b=>{
+    const side=b.side?`σε πλευρά ${b.side} `:'';
+    const lw=b.length?lengthWords(b.length):'';
+    const len=b.length?`μήκους ${lw} (${b.length}μ.) `:'';
+    const nb=b.neighbor||'ΙΔΙΟΚΤΗΣΙΑ ΑΓΝΩΣΤΟΥ';
+    const dir=b.direction?` (${b.direction.toLowerCase()})`:'';
+    return style==='full' ? `– ${side}${len}συνορεύει με ${nb}${dir}.` : `– Πλευρά ${b.side||''}${dir}: ${b.length?'μήκος '+b.length+' μ., ':''}όμορος ${nb}.`;
+  }).join('\n')+'\n';
+  return out;
+}
+// Ενιαία πράξη: κατάτμηση = αρχικό → τμήματα ένα-ένα · συνένωση = αρχικά ένα-ένα → ενιαίο
+function buildDescriptionMulti(){
+  const M=window._multi;
+  const outEl=document.getElementById('descOut');
+  if(!M){ if(outEl) outEl.textContent='—'; return ''; }
+  const style=document.getElementById('phraseStyle').value;
+  const op=(M.operation==='synenosi')?'synenosi':'katatmisi';
+  const dimos=val('fDimos'),thesi=val('fThesi'),owner=val('fOwner'),crs=val('fCrs');
+  let out= op==='katatmisi' ? 'ΠΡΑΞΗ ΚΑΤΑΤΜΗΣΗΣ ΓΕΩΤΕΜΑΧΙΟΥ\n\n' : 'ΠΡΑΞΗ ΣΥΝΕΝΩΣΗΣ ΓΕΩΤΕΜΑΧΙΩΝ\n\n';
+  const bits=[];
+  if(owner) bits.push('ιδιοκτησίας '+owner);
+  if(thesi) bits.push('στη θέση '+thesi);
+  if(dimos) bits.push(dimos);
+  out+='Ακίνητα '+(bits.length?bits.join(', ')+', ':'')+"αποτυπωμένα σε σύστημα "+(crs||"ΕΓΣΑ '87")+'.\n\n';
+  const src=M.source||[], res=M.result||[];
+  if(op==='katatmisi'){
+    out+='Ι. ΤΟ ΑΡΧΙΚΟ ΓΕΩΤΕΜΑΧΙΟ\n\n';
+    src.forEach(p=>{ out+=descrParcel(p,style)+'\n'; });
+    out+='ΙΙ. ΤΑ ΔΗΜΙΟΥΡΓΟΥΜΕΝΑ ΤΜΗΜΑΤΑ ('+res.length+')\n\n';
+    res.forEach((p,i)=>{ out+=(i+1)+'. '+descrParcel(p,style)+'\n'; });
+  } else {
+    out+='Ι. ΤΑ ΣΥΝΕΝΟΥΜΕΝΑ ΓΕΩΤΕΜΑΧΙΑ ('+src.length+')\n\n';
+    src.forEach((p,i)=>{ out+=(i+1)+'. '+descrParcel(p,style)+'\n'; });
+    out+='ΙΙ. ΤΟ ΕΝΙΑΙΟ (ΤΕΛΙΚΟ) ΓΕΩΤΕΜΑΧΙΟ\n\n';
+    res.forEach(p=>{ out+=descrParcel(p,style)+'\n'; });
+  }
+  // ισοζύγιο στην κατακλείδα (μόνο αν κλείνει)
+  const sum=list=>{let t=0,b=false;list.forEach(p=>{const a=parseArea(p.area);if(!isFinite(a))b=true;else t+=a;});return b?NaN:t;};
+  const sS=sum(src), sR=sum(res);
+  if(isFinite(sS)&&isFinite(sR)&&Math.abs(sS-sR)<=0.05*Math.max(2,src.length+res.length)){
+    out+= op==='katatmisi'
+      ? 'Το άθροισμα των εμβαδών των δημιουργούμενων τμημάτων ('+numGr(sR)+' τ.μ.) ισούται με το εμβαδόν του αρχικού γεωτεμαχίου ('+numGr(sS)+' τ.μ.).\n'
+      : 'Το εμβαδόν του ενιαίου γεωτεμαχίου ('+numGr(sR)+' τ.μ.) ισούται με το άθροισμα των εμβαδών των συνενούμενων γεωτεμαχίων ('+numGr(sS)+' τ.μ.).\n';
+  }
+  if(outEl) outEl.textContent=out;
+  return out;
+}
+
 // Από vertices (με πεδίο nb ανά κορυφή) → ΜΙΑ γραμμή ανά πλευρά (1-2, 2-3, ...)
 function buildBoundariesFromVertices(vertices,edges){
   if(!vertices||vertices.length<3) return [];
@@ -1541,6 +1894,9 @@ function applyResult(p){
 
   // Αφαίρεση closing vertex (επανάληψη 1ης κορυφής στο τέλος) από όλα τα πολύγωνα
   if(p.vertices) p.vertices=stripClosingVertex(p.vertices);
+  // Καθαρισμός τεχνικών ονομάτων layers από πεδία που καταλήγουν σε περιγραφή/έκθεση
+  (p.vertices||[]).forEach(v=>{ if(v&&v.nb) v.nb=stripLayerCodes(v.nb); });
+  (p.buildings||[]).forEach(b=>{ if(b){ if(b.label)b.label=stripLayerCodes(b.label)||b.label; if(b.note)b.note=stripLayerCodes(b.note); } });
   if(Array.isArray(p.tables)) p.tables.forEach(t=>{ if(t&&Array.isArray(t.vertices)) t.vertices=stripClosingVertex(t.vertices); });
   if(Array.isArray(p.buildings)) p.buildings.forEach(b=>{ if(b&&Array.isArray(b.vertices)) b.vertices=stripClosingVertex(b.vertices); });
 
@@ -2059,6 +2415,7 @@ function esc(s){return(s||'').replace(/"/g,'&quot;');}
 // ---- description text ----
 function buildDescription(){
   if(MODE==='oriz'){ return buildDescriptionOriz(); }
+  if(MODE==='multi'){ return buildDescriptionMulti(); }
   const style=document.getElementById('phraseStyle').value;
   const dimos=val('fDimos'),thesi=val('fThesi'),kaek=val('fKaek'),emv=cleanEmv(val('fEmvado')),owner=val('fOwner'),crs=val('fCrs');
   let out='';
@@ -2187,6 +2544,8 @@ async function exportDocx(){
 
   // ── ΟΡΙΖΟΝΤΙΑ ΙΔΙΟΚΤΗΣΙΑ: ολόκληρη έκθεση ──
   if(MODE==='oriz'){ await exportDocxOriz(D); return; }
+  // ── ΚΑΤΑΤΜΗΣΗ/ΣΥΝΕΝΩΣΗ: ενιαία πράξη ──
+  if(MODE==='multi'){ await exportDocxMulti(D); return; }
 
   const title= MODE==='topo'?'ΠΕΡΙΓΡΑΦΗ ΑΚΙΝΗΤΟΥ (βάσει τοπογραφικού διαγράμματος)':'ΠΕΡΙΓΡΑΦΗ ΑΚΙΝΗΤΟΥ & ΓΕΩΜΕΤΡΙΚΩΝ ΜΕΤΑΒΟΛΩΝ (βάσει Δ.Γ.Μ.)';
 
@@ -2294,6 +2653,50 @@ async function exportDocx(){
   saveAs(buf,name);
   setStatus('✓ Το αρχείο '+name+' δημιουργήθηκε.','ok');
   }catch(e){setStatus('Σφάλμα δημιουργίας DOCX: '+e.message,'err');console.error(e);}
+}
+// ── DOCX: ενιαία πράξη κατάτμησης/συνένωσης ──
+async function exportDocxMulti(D){
+  const M=window._multi;
+  if(!M){ setStatus('Δεν υπάρχει ανάλυση κατάτμησης/συνένωσης για εξαγωγή.','err'); return; }
+  const F=docFont(), BASE=docBase(), SC=BASE/24;
+  const sz=(x)=>Math.round(x*SC);
+  const P=(opts)=>new D.Paragraph(opts);
+  const T=(t,o={})=>{ const oo=Object.assign({text:t,font:F,size:BASE},o); if(o.size) oo.size=sz(o.size); return new D.TextRun(oo); };
+  const op=(M.operation==='synenosi')?'synenosi':'katatmisi';
+  const title= op==='katatmisi'?'ΠΕΡΙΓΡΑΦΗ ΠΡΑΞΗΣ ΚΑΤΑΤΜΗΣΗΣ ΓΕΩΤΕΜΑΧΙΟΥ':'ΠΕΡΙΓΡΑΦΗ ΠΡΑΞΗΣ ΣΥΝΕΝΩΣΗΣ ΓΕΩΤΕΜΑΧΙΩΝ';
+  const children=[];
+  children.push(P({heading:D.HeadingLevel.HEADING_1,children:[T(title,{bold:true,size:28})]}));
+  const info=[];
+  const owner=val('fOwner'),dimos=val('fDimos'),thesi=val('fThesi'),crs=val('fCrs');
+  if(owner)info.push(['Ιδιοκτήτης/-ες',owner]);
+  if(dimos)info.push(['Δήμος / Κοινότητα',dimos]);
+  if(thesi)info.push(['Θέση',thesi]);
+  info.push(['Είδος πράξης', op==='katatmisi'?'Κατάτμηση σε '+((M.result||[]).length)+' τμήματα':'Συνένωση '+((M.source||[]).length)+' γεωτεμαχίων']);
+  if(crs)info.push(['Σύστημα αναφοράς',crs]);
+  children.push(new D.Table({
+    width:{size:9360,type:D.WidthType.DXA},columnWidths:[3200,6160],
+    rows:info.map(r=>new D.TableRow({children:[cell(D,r[0],3200,true),cell(D,r[1],6160,false)]}))
+  }));
+  children.push(P({children:[T('')]}));
+  // το σώμα από την ενιαία περιγραφή — τίτλοι ενοτήτων bold
+  const body=buildDescriptionMulti();
+  body.split('\n').forEach(line=>{
+    if(!line.trim()){ children.push(P({children:[T('')]})); return; }
+    const isHead=/^(ΠΡΑΞΗ |Ι\. |ΙΙ\. )/.test(line.trim());
+    const isSub=/^\d+\. /.test(line.trim())&&line.indexOf('ορίζεται')>-1;
+    children.push(P({alignment:D.AlignmentType.JUSTIFIED,children:[T(line,{bold:isHead||isSub})]}));
+  });
+  children.push(P({spacing:{before:300},children:[T('Η παρούσα περιγραφή συντάχθηκε βάσει του τοπογραφικού διαγράμματος κατάτμησης/συνένωσης που επισυνάπτεται και αποτελεί αναπόσπαστο τμήμα του παρόντος.',{size:20,color:'6b6657'})]}));
+  pushDeclarations(D,children);
+  const doc=new D.Document({
+    styles:{default:{document:{run:{font:F,size:BASE}}},
+      paragraphStyles:[{id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{size:sz(28),bold:true,font:F,color:'1E3A5A'},paragraph:{spacing:{before:120,after:200},outlineLevel:0}}]},
+    sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1440,right:1440,bottom:1440,left:1440}}},children}]
+  });
+  const buf=await D.Packer.toBlob(doc);
+  const name=`praxi_${op==='katatmisi'?'katatmisis':'synenosis'}_${safeName(val('fKaek'))||'akinito'}.docx`;
+  saveAs(buf,name);
+  setStatus('✓ Το αρχείο '+name+' δημιουργήθηκε.','ok');
 }
 // ── DOCX: ολόκληρη έκθεση οριζόντιας ιδιοκτησίας ──
 async function exportDocxOriz(D){
