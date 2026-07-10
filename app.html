@@ -195,15 +195,15 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 
   <div class="tabs">
     <div class="tab active" id="tabTopo" onclick="switchMode('topo')">
-      <h3>📐 Τοπογραφικό Διάγραμμα</h3>
+      <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M4.5 9 L10 4.5 L20 7 L18 17.5 L7 20 Z"/><line x1="7" y1="20" x2="20" y2="7" stroke-dasharray="2.6 2.2" stroke-width="1.2"/><circle cx="4.5" cy="9" r="1.4" fill="currentColor" stroke="none"/><circle cx="10" cy="4.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="20" cy="7" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="17.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="7" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg> Τοπογραφικό Διάγραμμα</h3>
       <p>Ανάρτηση τοπογραφικού → περιγραφή ορίων ιδιοκτησίας (ανατολικά / νότια / δυτικά / βόρεια)</p>
     </div>
     <div class="tab" id="tabDiag" onclick="switchMode('diag')">
-      <h3>🔀 Διάγραμμα Γεωμετρικών Μεταβολών</h3>
+      <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="5" width="18" height="14" rx="1"/><line x1="11" y1="5" x2="11" y2="19" stroke-dasharray="2.6 2.2" stroke-width="1.2"/><line x1="15.5" y1="5" x2="15.5" y2="19"/><line x1="11.8" y1="12" x2="14.6" y2="12" stroke-width="1.2"/><path d="M13.6 10.9 L14.9 12 L13.6 13.1" stroke-width="1.2"/></svg> Διάγραμμα Γεωμετρικών Μεταβολών</h3>
       <p>Ανάρτηση ΔΓΜ → περιγραφή ορίων + πίνακες μεταβολών (ποιο τμήμα από ΚΑΕΚ σε ΚΑΕΚ)</p>
     </div>
     <div class="tab" id="tabOriz" onclick="switchMode('oriz')">
-      <h3>🏠 Οριζόντια Ιδιοκτησία</h3>
+      <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="12"/><line x1="3" y1="12" x2="15.5" y2="12"/><path d="M15.5 12 A 4.5 4.5 0 0 1 20 16.5" stroke-dasharray="2.4 2" stroke-width="1.2"/></svg> Οριζόντια Ιδιοκτησία</h3>
       <p>Ανάρτηση κάτοψης → περιγραφή περιμέτρου (κορυφές α,β,γ…) + σύνθεση χώρων + εμβαδόν για σύσταση</p>
     </div>
     <div class="tab" id="tabMulti" onclick="switchMode('multi')">
@@ -1447,45 +1447,46 @@ function stripClosingVertex(vs){
   return (sameXY||sameN) ? vs.slice(0,-1) : vs;
 }
 
-// Ομαδοποιημένη διατύπωση ορίων: συνεχόμενες πλευρές με ΙΔΙΟ προσανατολισμό ΚΑΙ ΙΔΙΟ όμορο
-// ενώνονται σε μία πρόταση με τα σημεία στη σειρά και τα μήκη ολογράφως («συν»), + συνολικό μήκος.
-// Οι ομάδες ΤΑΞΙΝΟΜΟΥΝΤΑΙ με τη φορά της πυξίδας (Β→ΒΑ→Α→ΝΑ→Ν→ΝΔ→Δ→ΒΔ) και ομάδες με ίδιο
-// προσανατολισμό+όμορο που εμφανίζονται σε διαφορετικά σημεία της περιμέτρου συγχωνεύονται.
+// Ομαδοποιημένη διατύπωση ορίων: ΣΥΝΕΧΟΜΕΝΕΣ πλευρές με ΚΟΙΝΟ ΟΜΟΡΟ (συνορίτη) ενώνονται σε
+// μία πρόταση — ακόμα κι αν ο προσανατολισμός αλλάζει στην πορεία (αναφέρονται όλοι με τη σειρά).
+// Η περίμετρος είναι κυκλική: αν πρώτη & τελευταία ακολουθία έχουν τον ίδιο όμορο, ενώνονται.
+// Το «συνολικού μήκους» αφορά ΜΟΝΟ πραγματικά συνεχόμενο όριο με κοινό όμορο.
 const DIR_ORDER=['ΒΟΡΕΙΑ','ΒΟΡΕΙΟΑΝΑΤΟΛΙΚΑ','ΑΝΑΤΟΛΙΚΑ','ΝΟΤΙΟΑΝΑΤΟΛΙΚΑ','ΝΟΤΙΑ','ΝΟΤΙΟΔΥΤΙΚΑ','ΔΥΤΙΚΑ','ΒΟΡΕΙΟΔΥΤΙΚΑ'];
 function groupedBoundaryLines(bnds){
   const rows=(bnds||[]).filter(b=>b.side||b.length||b.neighbor);
-  // 1) συνεχόμενες πλευρές → runs
+  // 1) συνεχόμενες πλευρές με ΙΔΙΟ ΟΜΟΡΟ → ακολουθίες (ο προσανατολισμός επιτρέπεται να αλλάζει)
   const runs=[];
   rows.forEach(b=>{
     const g=runs[runs.length-1];
-    if(g && g.direction===(b.direction||'') && (g.neighbor||'')===(b.neighbor||'')) g.items.push(b);
-    else runs.push({direction:b.direction||'',neighbor:b.neighbor||'',items:[b]});
+    if(g && (g.neighbor||'')===(b.neighbor||'')) g.items.push(b);
+    else runs.push({neighbor:b.neighbor||'',items:[b]});
   });
-  // 2) ΧΩΡΙΣ συγχώνευση μη συνεχόμενων ακολουθιών: κάθε συνεχόμενη ακολουθία = δική της πρόταση,
-  // ώστε το «συνολικού μήκους» να αφορά ΜΟΝΟ πραγματικά συνεχόμενο όριο (νομική σαφήνεια).
-  // 3) ταξινόμηση με τη φορά της πυξίδας (σταθερή — ίδιοι προσανατολισμοί κρατούν τη σειρά περιμέτρου)
-  const merged=runs.map(r=>({direction:r.direction,neighbor:r.neighbor,runs:[r.items]}));
-  merged.sort((a,b)=>{
-    const ia=DIR_ORDER.indexOf(a.direction), ib=DIR_ORDER.indexOf(b.direction);
-    return (ia<0?99:ia)-(ib<0?99:ib);
-  });
+  // 2) κυκλικό κλείσιμο περιμέτρου: τελευταία + πρώτη ακολουθία με ίδιο όμορο = ενιαίο σύνορο
+  if(runs.length>1 && (runs[0].neighbor||'')===(runs[runs.length-1].neighbor||'')){
+    const last=runs.pop();
+    runs[0].items=last.items.concat(runs[0].items);
+  }
+  // 3) ταξινόμηση με τη φορά της πυξίδας (βάσει του πρώτου προσανατολισμού κάθε ακολουθίας)
+  const dirIdx=d=>{ const i=DIR_ORDER.indexOf(d||''); return i<0?99:i; };
+  runs.sort((a,b)=>dirIdx(a.items[0].direction)-dirIdx(b.items[0].direction));
   // 4) διατύπωση
-  return merged.map(g=>{
-    const ptRuns=g.runs.map(items=>{
-      const pts=[];
-      items.forEach((b,i)=>{
-        const parts=String(b.side||'').split('-').map(t=>t.trim()).filter(Boolean);
-        if(parts.length===2){ if(i===0||!pts.length) pts.push(parts[0]); pts.push(parts[1]); }
-      });
-      return pts;
-    }).filter(p=>p.length);
-    const allItems=[].concat.apply([],g.runs);
-    const lens=allItems.map(b=>String(b.length||'').trim()).filter(Boolean);
+  return runs.map(g=>{
+    // προσανατολισμοί με τη σειρά εμφάνισης, χωρίς επαναλήψεις διαδοχικών
+    const dirs=[];
+    g.items.forEach(b=>{ const d=b.direction||''; if(d && dirs[dirs.length-1]!==d) dirs.push(d); });
+    const dirTxt = dirs.length>1 ? dirs.slice(0,-1).join(', ')+' και '+dirs[dirs.length-1] : (dirs[0]||'—');
+    // σημεία στη σειρά
+    const pts=[];
+    g.items.forEach(b=>{
+      const parts=String(b.side||'').split('-').map(t=>t.trim()).filter(Boolean);
+      if(parts.length===2){ if(!pts.length) pts.push(parts[0]); pts.push(parts[1]); }
+    });
+    const lens=g.items.map(b=>String(b.length||'').trim()).filter(Boolean);
     let total=0, allNum=lens.length>0;
     lens.forEach(L=>{ const v=parseFloat(String(L).replace(',','.')); if(isFinite(v)) total+=v; else allNum=false; });
     const lenJoin=lens.map(L=>lengthWords(L)+' ('+String(L).replace('.',',')+' μ.)').join(', συν ');
-    let line='– Συνορεύει '+(g.direction||'—')+' με '+(g.neighbor||'ΙΔΙΟΚΤΗΣΙΑ ΑΓΝΩΣΤΟΥ');
-    if(ptRuns.length) line+=', επί των σημείων '+ptRuns.map(p=>p.join(', ')).join(' και εν συνεχεία ');
+    let line='– Συνορεύει '+dirTxt+' με '+(g.neighbor||'ΙΔΙΟΚΤΗΣΙΑ ΑΓΝΩΣΤΟΥ');
+    if(pts.length) line+=', επί των σημείων '+pts.join(', ');
     if(lenJoin) line+=', σε '+(lens.length>1?'μήκη πλευρών ':'μήκος πλευράς ')+lenJoin;
     if(lens.length>1&&allNum) line+=', ήτοι συνολικού μήκους '+lengthWords(total.toFixed(2))+' ('+numGr(total)+' μ.)';
     return line+'.';
