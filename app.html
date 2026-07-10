@@ -934,6 +934,32 @@ async function renderPdfPreview(dataUrl){
     }
     window._pdfPng=aiC.toDataURL('image/jpeg',0.92).split(',')[1];
     window._pdfPngMedia='image/jpeg';
+    // TILES ΥΨΗΛΗΣ ΑΝΑΛΥΣΗΣ: το Claude συρρικνώνει κάθε εικόνα στα ~1568px στη μεγάλη πλευρά,
+    // οπότε σε μεγάλα φύλλα (Α1/Α0) οι δηλώσεις/παρατηρήσεις/πίνακες γίνονται δυσανάγνωστες.
+    // Renderάρουμε πλέγμα κομματιών ΑΠΕΥΘΕΙΑΣ από το PDF σε υψηλή κλίμακα (offset viewport ανά
+    // κομμάτι — όχι γιγάντιος καμβάς), καθένα ≤1500px → περνούν ατόφια στο μοντέλο.
+    window._pdfTiles=null; window._pdfTileGrid=null;
+    if(c.width>2600 || c.height>2600){
+      try{
+        const T=1500, MAXC=4, MAXR=3;
+        // κλίμακα tiles: στόχος ~1.8x, περιορισμένη ώστε το πλέγμα να χωρά σε MAXC×MAXR
+        const ts=Math.min(1.9, (MAXC*T)/vp.width, (MAXR*T)/vp.height);
+        const tvp=page.getViewport({scale:ts});
+        const cols=Math.max(1,Math.min(MAXC,Math.ceil(tvp.width/T)));
+        const rows=Math.max(1,Math.min(MAXR,Math.ceil(tvp.height/T)));
+        const tw=Math.ceil(tvp.width/cols), th=Math.ceil(tvp.height/rows);
+        const tiles=[];
+        for(let r=0;r<rows;r++)for(let q=0;q<cols;q++){
+          const w=Math.min(tw,Math.ceil(tvp.width)-q*tw), h=Math.min(th,Math.ceil(tvp.height)-r*th);
+          const t=document.createElement('canvas'); t.width=w; t.height=h;
+          const tx=t.getContext('2d');
+          const ov=page.getViewport({scale:ts, offsetX:-q*tw, offsetY:-r*th});
+          await page.render({canvasContext:tx,viewport:ov}).promise;
+          tiles.push(t.toDataURL('image/jpeg',0.9).split(',')[1]);
+        }
+        window._pdfTiles=tiles; window._pdfTileGrid={cols,rows};
+      }catch(e){ console.warn('tiling failed',e); window._pdfTiles=null; }
+    }
     // ΕΛΕΓΧΟΣ ΠΟΙΟΤΗΤΑΣ: είναι το κείμενο πραγματικό ελληνικό ή σπασμένο/encoding;
     window._textOK=isTextUsable(window._pdfText);
     const hint = window._textOK
@@ -1096,6 +1122,7 @@ async function analyze(){
   // ΕΞΑΙΡΕΣΗ: στην ΟΡΙΖΟΝΤΙΑ ΙΔΙΟΚΤΗΣΙΑ το περίγραμμα/σειρά κορυφών/αντιστοίχιση μηκών
   // είναι ΧΩΡΙΚΗ πληροφορία — το σκέτο κείμενο δεν αρκεί. Στέλνουμε ΠΑΝΤΑ την εικόνα.
   let content=[];
+  let tileNote='';
   const isOriz = (MODE==='oriz');
   const hasCleanText = window._textOK===true;
   const sendTextOnly = hasCleanText && !isOriz; // oriz → ποτέ μόνο κείμενο
@@ -1109,6 +1136,12 @@ async function analyze(){
     let b64=window._pdfPng, media=window._pdfPngMedia||'image/jpeg';
     if(ROT){ const r=await rotateB64(window._pdfPng, media, ROT); b64=r.data; media=r.media; }
     content.push({type:'image',source:{type:'base64',media_type:media,data:b64}});
+    // Μεγάλα φύλλα: στείλε ΚΑΙ τα κομμάτια υψηλής ανάλυσης (χωρίς περιστροφή — τα tiles είναι στην αρχική φορά)
+    if(!ROT && !isOriz && Array.isArray(window._pdfTiles) && window._pdfTiles.length){
+      window._pdfTiles.forEach(t=>content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:t}}));
+      const g=window._pdfTileGrid||{cols:1,rows:1};
+      tileNote='\n\nΕΚΤΟΣ από την 1η (συνολική) εικόνα, ακολουθούν '+window._pdfTiles.length+' ΤΜΗΜΑΤΑ ΥΨΗΛΗΣ ΑΝΑΛΥΣΗΣ του ΙΔΙΟΥ σχεδίου, σε πλέγμα '+g.rows+' σειρές × '+g.cols+' στήλες (σειρά: αριστερά→δεξιά, πάνω→κάτω). Η συνολική εικόνα είναι ΜΟΝΟ για τη γενική διάταξη. Τους ΠΙΝΑΚΕΣ ΣΥΝΤΕΤΑΓΜΕΝΩΝ, τις ΠΑΡΑΤΗΡΗΣΕΙΣ και τις ΔΗΛΩΣΕΙΣ (Ν.651/77 & 1337/83, Δασικής Πληροφορίας) διάβασέ τα ΑΠΟΚΛΕΙΣΤΙΚΑ από τα τμήματα υψηλής ανάλυσης — εκεί το κείμενο είναι ευκρινές. Κείμενο που συνεχίζεται από τμήμα σε γειτονικό τμήμα ένωσέ το.';
+    }
   }
   let txtBlock='Γνωστά στοιχεία από τον χρήστη (συμπλήρωσέ τα ΜΟΝΟ αν λείπουν, ΜΗΝ τα αλλάζεις): '+JSON.stringify(hints);
   if(sendTextOnly){
@@ -1119,6 +1152,7 @@ async function analyze(){
   } else {
     txtBlock+='\n\n(Σκαναρισμένο σχέδιο — διάβασε προσεκτικά από την εικόνα, με μέγιστη ακρίβεια στα ονόματα και τους αριθμούς.)';
   }
+  txtBlock+=tileNote;
   txtBlock+='\n\nΕπέστρεψε ΜΟΝΟ έγκυρο JSON, χωρίς markdown.';
   content.push({type:'text',text:txtBlock});
 
