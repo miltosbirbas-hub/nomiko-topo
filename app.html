@@ -667,7 +667,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // Έκδοση εφαρμογής — ΑΛΛΑΞΕ ΕΔΩ σε κάθε αναβάθμιση (και στο sw.js το CACHE)
-const APP_VERSION = 'v2.7';
+const APP_VERSION = 'v2.8';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
@@ -3170,8 +3170,11 @@ async function exportReport(){
     sections:[{
       properties:{page:{size:{width:11906,height:16838},margin:{top:1440,right:1440,bottom:1440,left:1440}}},
       footers:{default:new D.Footer({children:[
-        new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({children:['Σελίδα ',D.PageNumber.CURRENT,' από ',D.PageNumber.TOTAL_PAGES],size:18,color:'777777',font:F})]}),
-        new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ — ΛΕΥΚΑΔΑ',size:14,color:'999999',font:F})]})
+        new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[
+          new D.TextRun({text:'ΔΓΜ ΚΑΕΚ '+(kaek||'—')+'   ·   ',size:18,color:'555555',font:F,bold:true}),
+          new D.TextRun({children:['Σελίδα ',D.PageNumber.CURRENT,' από ',D.PageNumber.TOTAL_PAGES],size:18,color:'777777',font:F})
+        ]}),
+        new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'www.nomikotopo.gr',size:16,color:'4A6040',font:F,bold:true})]})
       ]})},
       children:ch
     }]
