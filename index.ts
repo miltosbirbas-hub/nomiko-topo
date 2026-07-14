@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     const userId = userData.user.id;
 
     // ── 2) Είσοδος: ΜΟΝΟ mode + content (ΟΧΙ system από τον client) ──
-    const { mode, content } = await req.json();
+    const { mode, content, stream } = await req.json();
     if (!mode || !PROMPTS[mode as keyof typeof PROMPTS]) {
       return json({ error: "Άγνωστο ή ελλιπές mode." }, 400);
     }
@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 16000,
+        stream: !!stream, // streaming: η απάντηση ρέει → δεν λήγει το gateway σε μεγάλα σχέδια (504)
         system: [
           { type: "text", text: system, cache_control: { type: "ephemeral" } },
         ],
@@ -117,8 +118,8 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const data = await claudeRes.json();
     if (!claudeRes.ok) {
+      const data = await claudeRes.json().catch(() => ({}));
       // Η κλήση Claude απέτυχε ΜΕΤΑ τη χρέωση → επίστρεψε το token (refund).
       try {
         if (mode === "oriz") await admin.rpc("refund_floor_token_for", { p_user: userId });
@@ -127,6 +128,14 @@ Deno.serve(async (req) => {
       return json({ error: "Claude API: " + JSON.stringify(data) }, claudeRes.status);
     }
 
+    // ── STREAMING: προώθηση της SSE ροής του Claude απευθείας στον client ──
+    if (stream) {
+      return new Response(claudeRes.body, {
+        headers: { ...CORS, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+      });
+    }
+
+    const data = await claudeRes.json();
     const text = (data.content || [])
       .filter((c: any) => c.type === "text")
       .map((c: any) => c.text)
