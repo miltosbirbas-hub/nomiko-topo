@@ -4,173 +4,56 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Πολιτική Απορρήτου | ΝΟΜΙΚΟ ΤΟΠΟ</title>
-<meta name="description" content="Πολιτική Απορρήτου και Προστασίας Προσωπικών Δεδομένων της εφαρμογής ΝΟΜΙΚΟ ΤΟΠΟ (nomikotopo.gr) — GDPR, Κανονισμός (ΕΕ) 2016/679.">
+<meta name="description" content="Πολιτική Απορρήτου της εφαρμογής ΝΟΜΙΚΟ ΤΟΠΟ (nomikotopo.gr) — προστασία προσωπικών δεδομένων σύμφωνα με τον GDPR (Κανονισμός ΕΕ 2016/679).">
 <link rel="canonical" href="https://nomikotopo.gr/privacy.html">
 <meta name="robots" content="index, follow">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --navy:#1E3A5A;
     --navy-deep:#15293f;
-    --navy-ink:#0e1d2e;
     --cream:#F4F1EA;
     --cream-warm:#EDE8DC;
     --gold:#A98B3C;
-    --gold-soft:#c8ad63;
     --olive:#4A6040;
     --ink:#23211C;
     --muted:#6b6657;
     --line:#d9d2c2;
-    --card:#fbfaf6;
-    --radius:14px;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  ::selection{background:var(--gold);color:#fff}
   body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.75;font-size:15.5px;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
-  a{color:var(--olive)}
-  a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:3px}
-
-  /* ---- scroll progress ---- */
-  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-soft));z-index:60;transition:width .08s linear}
-
-  /* ---- nav (glass) ---- */
-  nav{position:sticky;top:0;z-index:50;background:rgba(244,241,234,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(217,210,194,.7)}
-  .nav-in{display:flex;align-items:center;justify-content:space-between;padding:13px 0}
-  .brand{display:flex;align-items:center;gap:11px;font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--navy);letter-spacing:.5px;text-decoration:none}
-  .brand img{height:32px}
-  .nav-cta{font-size:13.5px;font-weight:600;padding:9px 18px;background:var(--navy);color:#fff;border-radius:100px;text-decoration:none;transition:background .2s,transform .2s}
-  .nav-cta:hover{background:var(--navy-deep);transform:translateY(-1px)}
-
-  /* ---- hero: τοπογραφικός κάνναβος ---- */
-  .hero{position:relative;background:linear-gradient(160deg,var(--navy) 0%,var(--navy-deep) 55%,var(--navy-ink) 100%);color:var(--cream);overflow:hidden}
-  .hero .grid{position:absolute;inset:-60px;background-image:
-      linear-gradient(rgba(244,241,234,.055) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(244,241,234,.055) 1px,transparent 1px);
-    background-size:56px 56px;animation:drift 60s linear infinite}
-  @keyframes drift{to{transform:translate(56px,56px)}}
-  .hero .contour{position:absolute;right:-140px;bottom:-190px;width:640px;height:640px;border-radius:50%;border:1px solid rgba(200,173,99,.22);pointer-events:none}
-  .hero .contour::before,.hero .contour::after{content:"";position:absolute;inset:70px;border-radius:50%;border:1px solid rgba(200,173,99,.16)}
-  .hero .contour::after{inset:150px;border-color:rgba(200,173,99,.10)}
-  .cross{position:absolute;font-family:'JetBrains Mono',monospace;color:rgba(244,241,234,.28);font-size:15px;line-height:1;user-select:none;pointer-events:none}
-  .cross small{display:block;font-size:9.5px;letter-spacing:.6px;margin-top:5px;color:rgba(200,173,99,.55)}
-  .hero-in{position:relative;padding:86px 0 70px}
-  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold-soft);margin-bottom:22px}
-  .eyebrow::before{content:"";width:26px;height:1px;background:var(--gold-soft)}
-  h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(40px,6.5vw,66px);line-height:1.05;max-width:640px}
-  h1 em{font-style:italic;color:var(--gold-soft)}
-  .hero-sub{margin-top:20px;max-width:560px;font-size:16px;color:rgba(244,241,234,.75)}
-  .hero-tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:30px}
-  .tag{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.6px;padding:7px 14px;border:1px solid rgba(244,241,234,.22);border-radius:100px;color:rgba(244,241,234,.82);background:rgba(244,241,234,.04)}
-  .tag b{color:var(--gold-soft);font-weight:500}
-
-  /* ---- summary cards ---- */
-  .glance{margin-top:-38px;position:relative;z-index:5}
-  .glance-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .g-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px 18px;box-shadow:0 14px 34px -18px rgba(21,41,63,.35);transition:transform .25s,box-shadow .25s}
-  .g-card:hover{transform:translateY(-4px);box-shadow:0 22px 44px -18px rgba(21,41,63,.45)}
-  .g-card .gi{width:38px;height:38px;border-radius:10px;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;margin-bottom:13px}
-  .g-card .gi svg{width:19px;height:19px}
-  .g-card h3{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:5px;line-height:1.35}
-  .g-card p{font-size:12.5px;color:var(--muted);line-height:1.55}
-
-  /* ---- layout: TOC + content ---- */
-  .layout{display:grid;grid-template-columns:250px 1fr;gap:56px;padding:60px 0 90px;align-items:start}
-  aside.toc{position:sticky;top:84px}
-  .toc-label{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
-  .toc a{display:flex;gap:10px;align-items:baseline;padding:7px 12px;margin-left:-12px;font-size:13px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;border-radius:0 8px 8px 0;transition:color .2s,background .2s,border-color .2s}
-  .toc a .n{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gold);opacity:.75;min-width:18px}
-  .toc a:hover{color:var(--navy);background:rgba(169,139,60,.07)}
-  .toc a.active{color:var(--navy);font-weight:600;border-left-color:var(--gold);background:rgba(169,139,60,.09)}
-
-  /* ---- sections ---- */
-  section.sec{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:34px 36px;margin-bottom:22px;scroll-margin-top:92px;position:relative;overflow:hidden}
-  section.sec::before{content:attr(data-n);position:absolute;top:14px;right:22px;font-family:'Cormorant Garamond',serif;font-size:60px;font-weight:700;color:var(--cream-warm);line-height:1;pointer-events:none}
-  section.sec>*{position:relative}
-  h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:12px}
-  h2 .sn{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:1px;color:var(--gold);border:1px solid rgba(169,139,60,.4);border-radius:100px;padding:3px 10px;transform:translateY(-2px)}
-  p{margin-bottom:13px}
-  p:last-child{margin-bottom:0}
-  ul{margin:0 0 13px 4px;list-style:none}
-  ul:last-child{margin-bottom:0}
-  li{margin-bottom:9px;padding-left:24px;position:relative}
-  li::before{content:"";position:absolute;left:2px;top:11px;width:9px;height:9px;border:2px solid var(--gold);border-radius:50%}
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px}
+  nav{background:rgba(244,241,234,.7);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid rgba(217,210,194,.65);position:sticky;top:0;z-index:10}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:12px;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--navy);letter-spacing:.5px;text-decoration:none}
+  .brand img{height:34px}
+  .nav-cta{font-family:'Inter';font-size:14px;font-weight:600;padding:9px 18px;background:var(--navy);color:#fff;border-radius:100px;text-decoration:none;transition:background .2s}
+  .nav-cta:hover{background:var(--navy-deep)}
+  main{padding:52px 0 70px}
+  article.doc .eyebrow{font-family:'JetBrains Mono';font-size:12.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:44px;line-height:1.1;color:var(--navy)}
+  .doc-meta{font-family:'JetBrains Mono';font-size:12px;color:var(--muted);margin:14px 0 30px;padding-bottom:26px;border-bottom:1px solid var(--line)}
+  h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:27px;color:var(--navy);margin:36px 0 12px}
+  h2 .no{color:var(--gold)}
+  p{margin-bottom:14px}
+  p.mute{color:var(--muted);font-size:13.5px}
+  ul{margin:0 0 14px 22px}
+  li{margin-bottom:8px}
   b{color:var(--navy)}
-
-  .callout{background:linear-gradient(135deg,rgba(30,58,90,.05),rgba(169,139,60,.07));border:1px solid rgba(169,139,60,.35);border-radius:12px;padding:18px 20px;margin:0 0 16px}
-  .callout p{margin:0;font-size:14.5px}
-
-  /* ---- tables ---- */
-  .tbl{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:16px 0}
-  table{width:100%;border-collapse:collapse;font-size:14px;background:#fff}
-  th,td{padding:12px 15px;text-align:left;vertical-align:top}
-  th{background:var(--navy);color:var(--cream);font-weight:600;font-size:12.5px;letter-spacing:.4px}
-  tr:nth-child(even) td{background:var(--card)}
-  td+td,th+th{border-left:1px solid var(--line)}
-  tr+tr td{border-top:1px solid var(--line)}
-  .pill{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.4px;background:rgba(74,96,64,.12);color:var(--olive);border-radius:100px;padding:3px 10px;white-space:nowrap}
-
-  /* ---- controller box ---- */
-  .controller{display:flex;gap:18px;align-items:flex-start;background:var(--navy);color:rgba(244,241,234,.85);border-radius:var(--radius);padding:26px 28px;margin-bottom:22px;position:relative;overflow:hidden}
-  .controller::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(244,241,234,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(244,241,234,.05) 1px,transparent 1px);background-size:46px 46px;pointer-events:none}
-  .controller .ci{flex:0 0 auto;width:44px;height:44px;border-radius:12px;background:rgba(200,173,99,.18);border:1px solid rgba(200,173,99,.45);display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
-  .controller .ci svg{width:22px;height:22px;stroke:var(--gold-soft)}
-  .controller div{position:relative;z-index:1}
-  .controller b{color:var(--cream)}
-  .controller a{color:var(--gold-soft)}
-
-  /* ---- rights chips ---- */
-  .rights{display:flex;flex-wrap:wrap;gap:9px;margin:4px 0 16px}
-  .rights span{font-size:13px;font-weight:600;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:100px;padding:7px 15px;transition:border-color .2s,transform .2s}
-  .rights span:hover{border-color:var(--gold);transform:translateY(-2px)}
-
-  /* ---- footer ---- */
-  footer{background:var(--navy-ink);color:rgba(244,241,234,.6);padding:40px 0;font-size:13px;position:relative;overflow:hidden}
-  footer::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(244,241,234,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(244,241,234,.035) 1px,transparent 1px);background-size:56px 56px}
-  .foot-in{position:relative;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
+  a{color:var(--olive)}
+  a.link{color:var(--olive);font-weight:600}
+  .card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:8px;padding:18px 20px;margin:22px 0;font-size:14.5px}
+  footer{background:var(--navy-deep);color:rgba(244,241,234,.6);text-align:center;padding:30px 0;font-size:13px}
   footer b{color:var(--cream)}
-  footer a{color:rgba(244,241,234,.78);text-decoration:none}
-  footer a:hover{color:var(--gold-soft)}
-  .foot-links{display:flex;gap:20px;font-family:'JetBrains Mono',monospace;font-size:11.5px}
-
-  /* ---- back to top ---- */
-  #toTop{position:fixed;right:22px;bottom:22px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--navy);color:var(--cream);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateY(8px);z-index:40;box-shadow:0 10px 26px -10px rgba(21,41,63,.5)}
-  #toTop.show{opacity:1;pointer-events:auto;transform:none}
-
-  /* ---- reveal ---- */
-  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
-  .reveal.in{opacity:1;transform:none}
-
-  @media(prefers-reduced-motion:reduce){
-    html{scroll-behavior:auto}
-    .hero .grid{animation:none}
-    .reveal{opacity:1;transform:none;transition:none}
-    .g-card,.rights span,.nav-cta{transition:none}
-  }
-  @media(max-width:980px){
-    .glance-grid{grid-template-columns:repeat(2,1fr)}
-    .layout{grid-template-columns:1fr;gap:0;padding-top:44px}
-    aside.toc{position:relative;top:0;margin-bottom:26px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .toc-list{display:flex;gap:6px;padding-bottom:6px}
-    .toc a{white-space:nowrap;border-left:none;border:1px solid var(--line);border-radius:100px;margin-left:0;padding:7px 14px;background:#fff}
-    .toc a.active{border-color:var(--gold);background:rgba(169,139,60,.1)}
-    .cross{display:none}
-  }
-  @media(max-width:560px){
-    .glance-grid{grid-template-columns:1fr 1fr}
-    section.sec{padding:26px 20px}
-    section.sec::before{font-size:44px;top:10px;right:14px}
-    .controller{flex-direction:column}
-  }
+  footer a{color:rgba(244,241,234,.75)}
+  footer .mono{font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:6px;display:block;opacity:.7}
+  @media(max-width:640px){h1{font-size:33px}}
 </style>
 </head>
 <body>
-
-<div id="progress" aria-hidden="true"></div>
 
 <nav>
   <div class="wrap nav-in">
@@ -179,220 +62,58 @@
   </div>
 </nav>
 
-<header class="hero">
-  <div class="grid" aria-hidden="true"></div>
-  <div class="contour" aria-hidden="true"></div>
-  <span class="cross" style="top:60px;left:6%" aria-hidden="true">+<small>Χ: 218 442.61</small></span>
-  <span class="cross" style="top:130px;right:16%" aria-hidden="true">+<small>Υ: 4 292 118.07</small></span>
-  <span class="cross" style="bottom:56px;left:34%" aria-hidden="true">+<small>ΕΓΣΑ '87</small></span>
-  <div class="wrap hero-in">
-    <div class="eyebrow reveal">GDPR · Κανονισμός (ΕΕ) 2016/679 · Ν. 4624/2019</div>
-    <h1 class="reveal">Πολιτική <em>Απορρήτου</em></h1>
-    <p class="hero-sub reveal">Με την ίδια ακρίβεια που απαιτεί ένα τοπογραφικό: τι δεδομένα επεξεργαζόμαστε, γιατί, πού, και ποια είναι τα δικαιώματά σας.</p>
-    <div class="hero-tags reveal">
-      <span class="tag">Τελ. ενημέρωση: <b>Ιούλιος 2026</b></span>
-      <span class="tag">Έκδοση <b>2.0</b></span>
-      <span class="tag">Ανάγνωση <b>~6′</b></span>
-    </div>
+<main>
+  <div class="wrap">
+    <article class="doc">
+      <div class="eyebrow">GDPR · Κανονισμός (ΕΕ) 2016/679</div>
+      <h1>Πολιτική Απορρήτου</h1>
+      <div class="doc-meta">ΝΟΜΙΚΟ ΤΟΠΟ · nomikotopo.gr · Τελευταία ενημέρωση: 16/07/2026</div>
+
+      <p>Η ιστοσελίδα www.nomikotopo.gr συμμορφώνεται πλήρως με την ανάγκη της ασφαλείας των Προσωπικών Δεδομένων, καθώς και των ηλεκτρονικών συναλλαγών και έχει λάβει όλα τα απαραίτητα μέτρα, ώστε να εξασφαλίζεται η μέγιστη δυνατή ασφάλεια. Όλες οι πληροφορίες, οι οποίες σχετίζονται με τα προσωπικά στοιχεία των χρηστών, διασφαλίζονται ως απόρρητες.</p>
+      <p>Κάνοντας χρήση της ιστοσελίδας www.nomikotopo.gr και των υπηρεσιών της αποδέχεστε τους όρους με τους οποίους χειρίζεται τα προσωπικά σας δεδομένα. Ειδικότερα:</p>
+      <p>Η Εταιρία δεσμεύεται να προστατεύει τα προσωπικά δεδομένα των χρηστών της ιστοσελίδας και να επεξεργάζεται τις προσωπικές τους πληροφορίες με διαφάνεια. Ως «προσωπικά δεδομένα» χαρακτηρίζεται οποιαδήποτε πληροφορία σχετικά με φυσικό πρόσωπο που έχει ταυτοποιηθεί ή μπορεί να προσδιοριστεί. Ως προσωπικές πληροφορίες νοούνται οι πληροφορίες που σχετίζονται με εσάς, με τις οποίες έχει προσδιοριστεί η ταυτότητά σας ή μπορεί να προσδιοριστεί και οι οποίες περιλαμβάνουν, για παράδειγμα, το όνομά σας, τη διεύθυνση ηλεκτρονικού ταχυδρομείου, τη διεύθυνση IP (μόνο όταν την έχουμε συλλέξει σε συνδυασμό με άμεσες πληροφορίες ταυτοποίησης) ή τις πληροφορίες που υποβάλατε επικοινωνώντας μαζί μας. Τα προσωπικά δεδομένα που συλλέγουμε και επεξεργαζόμαστε εξαρτώνται από τον σκοπό της επίσκεψής σας και τις υπηρεσίες που συμφωνήσατε να λαμβάνετε από εμάς.</p>
+
+      <div class="card">
+        <b>Υπεύθυνος Επεξεργασίας:</b> BRB Development MON IKE, Λευκάδα, Ελλάδα<br>
+        <b>Επικοινωνία για θέματα προσωπικών δεδομένων:</b> <a class="link" href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a>
+      </div>
+
+      <h2><span class="no">1.</span> Ποια δεδομένα συλλέγουμε</h2>
+      <p>Τα δεδομένα που ενδέχεται να συλλέξουμε: Βασικές πληροφορίες (όπως όνομα, επώνυμο), οποιεσδήποτε πληροφορίες παρέχετε εσείς με την εθελοντική υποβολή μιας φόρμας επικοινωνίας για να λάβετε μία υπηρεσία από εμάς. Χρησιμοποιούμε αυτές τις πληροφορίες για να απαντήσουμε στα αιτήματά σας. Ποτέ δεν συλλέγουμε προσωπικά στοιχεία με άλλα μέσα ή με τη χρήση τρίτου αντιπροσώπου.</p>
+
+      <h2><span class="no">2.</span> Πώς επεξεργαζόμαστε τα δεδομένα</h2>
+      <p>Η Εταιρία θα δύναται να τηρεί αρχείο και να επεξεργάζεται τα δεδομένα προσωπικού χαρακτήρα του επισκέπτη/χρήστη, τα οποία θα περιέχονται σε γνώση της, μέσω της Ιστοσελίδας. Η συλλογή και επεξεργασία των δεδομένων προσωπικού χαρακτήρα από την Εταιρία θα γίνεται μόνο κατόπιν συγκατάθεσης προς τούτο του επισκέπτη/χρήστη, ο οποίος θα τα παρέχει οικειοθελώς με σκοπό την παροχή πρόσβασης στις ανωτέρω εφαρμογές ή υπηρεσίες που θα είναι διαθέσιμες μέσω της Ιστοσελίδας. Η καταχώριση των δεδομένων του επισκέπτη/χρήστη κατά την εγγραφή του στην Ιστοσελίδα θα συνεπάγεται την συγκατάθεσή του στην συλλογή, χρήση και διαβίβαση αυτών βάσει των όρων της παρούσας Πολιτικής. Ο επισκέπτης/χρήστης, ωστόσο, θα καλείται περαιτέρω ειδικώς και ρητώς να δώσει την συγκατάθεσή του προς τούτο, αποδεχόμενος την παρούσα Πολιτική πριν την ολοκλήρωση της διαδικασίας εγγραφής του.</p>
+      <p>Ειδικότερα, ο επισκέπτης/χρήστης θα αποδέχεται και συγκατατίθεται όπως η Εταιρία υπό τους όρους της εφαρμοστέας νομοθεσίας όπως ισχύει, θα τηρεί σε αρχείο και θα επεξεργάζεται τα δεδομένα προσωπικού χαρακτήρα του που θα συλλέγονται μέσω της Ιστοσελίδας, με σκοπό την πρόσβαση του επισκέπτη/χρήστη στις παρεχόμενες ηλεκτρονικές εφαρμογές, την εξυπηρέτησή του, την υποστήριξη και εκτέλεση της μεταξύ του επισκέπτη/χρήστη και της Εταιρίας συναλλακτικής σχέσης, καθώς και για στατιστικούς λόγους και για σκοπούς ενημέρωσης και προώθησης προϊόντων και υπηρεσιών της Εταιρίας κατόπιν ειδικής προς τούτο συγκατάθεσης του επισκέπτη/χρήστη. Διευκρινίζεται ότι τα προσωπικά δεδομένα που τυγχάνουν επεξεργασίας από την Εταιρία, προορίζονται αποκλειστικά για τη διασφάλιση της λειτουργίας της αντίστοιχης υπηρεσίας της Ιστοσελίδας και δεν επιτρέπεται να χρησιμοποιηθούν από την Εταιρία ή οποιονδήποτε τρίτο, χωρίς να τηρηθούν οι διατάξεις της εφαρμοστέας νομοθεσίας σχετικά με την προστασία από επεξεργασία δεδομένων προσωπικού χαρακτήρα, όπως αυτή ισχύει κάθε φορά.</p>
+      <p>Η Εταιρία ενεργεί σύμφωνα με την ισχύουσα νομοθεσία και στοχεύει στην καλύτερη εφαρμογή της ορθής πρακτικής σε ό,τι αφορά το διαδίκτυο. Τα δεδομένα προσωπικού χαρακτήρα, που θα συλλέγονται από την Εταιρία μέσω της Ιστοσελίδας, θα τηρούνται με ασφάλεια για όσο χρονικό διάστημα ο επισκέπτης/χρήστης είναι εγγεγραμμένος σε κάποια υπηρεσία της Εταιρίας ή απαιτείται με βάση τον επιδιωκόμενο σκοπό και θα διαγράφονται μετά την με οποιοδήποτε τρόπο λήξη της συναλλακτικής σχέσης του επισκέπτη/χρήστη με την Εταιρία ή εφόσον εκλείψουν οι λόγοι επεξεργασίας που αναφέρονται στην παρούσα, λαμβάνοντας υπ' όψιν τυχόν υποχρεώσεις της Εταιρίας δυνάμει της εφαρμοστέας νομοθεσίας.</p>
+      <p>Αποδέκτες στοιχείων των εν λόγω δεδομένων, δύνανται να είναι πέραν της Εταιρίας, συνδεδεμένα νομικά πρόσωπα ή συνεργαζόμενες με την Εταιρία επιχειρήσεις που μεσολαβούν για την προώθηση, υποστήριξη και εξυπηρέτηση της συναλλακτικής σχέσης και μόνο για τον σκοπό της παροχής των υπηρεσιών ηλεκτρονικών επικοινωνιών ή την τυχόν παροχή υπηρεσιών προστιθέμενης αξίας που έχει ζητήσει ο χρήστης και πάντα υπό τις προϋποθέσεις της εφαρμοστέας νομοθεσίας. Εκτός αν ρητά προβλέπεται στην Πολιτική ή επιτάσσεται εκ του νόμου ή/και τις αρμόδιες αρχές (όπως ενδεικτικά αρμόδιες δικαστικές, αστυνομικές και άλλες διοικητικές αρχές κατόπιν νομίμου αιτήματός τους), η Εταιρία δεν θα προβεί άλλως στην κοινοποίηση, γνωστοποίηση, διαβίβαση, διάδοση ή κάθε άλλης μορφής διάθεση οποιασδήποτε πληροφορίας που της παρέχει ο κάθε επισκέπτης/χρήστης άνευ της συγκατάθεσης αυτού.</p>
+      <p>Η ασφάλεια των προσωπικών δεδομένων των επισκεπτών/χρηστών της Ιστοσελίδας αποτελεί υψίστης σημασίας για εμάς. Η Εταιρία επιδιώκει να διασφαλίζει ότι λαμβάνει τα κατάλληλα τεχνικά και οργανωτικά μέτρα προκειμένου να προστατεύεται η ακεραιότητα, εμπιστευτικότητα και διαθεσιμότητα των προσωπικών δεδομένων των επισκεπτών/χρηστών έναντι της μη εξουσιοδοτημένης πρόσβασης, χρήσης, κοινοποίησης, αλλοίωσης ή καταστροφής, σε συμμόρφωση με την εφαρμοστέα νομοθεσία για την προστασία των δεδομένων προσωπικού χαρακτήρα. Ωστόσο, παρά το γεγονός ότι καταβάλλουμε κάθε δυνατή προσπάθεια να προστατεύουμε τα δεδομένα των επισκεπτών/χρηστών, η Εταιρία αδυνατεί να εγγυηθεί την ασφάλεια των πληροφοριών που παρέχονται στην Ιστοσελίδα καθώς αυτό γίνεται με την ευθύνη του επισκέπτη/χρήστη.</p>
+
+      <h2><span class="no">3.</span> Δικαιώματα του επισκέπτη/χρήστη</h2>
+      <p>Ο επισκέπτης/χρήστης διατηρεί ανά πάσα στιγμή τα δικαιώματα που προβλέπονται βάσει της ισχύουσας νομοθεσίας για την προστασία των δεδομένων προσωπικού χαρακτήρα και υπό τους όρους και προϋποθέσεις αυτής, ήτοι:</p>
+      <ul>
+        <li>το δικαίωμα της ενημέρωσης σχετικά με τα δεδομένα του που επεξεργαζόμαστε,</li>
+        <li>το δικαίωμα της πρόσβασης στα δεδομένα του που τηρούμε,</li>
+        <li>το δικαίωμα της διόρθωσης αυτών,</li>
+        <li>το δικαίωμα της διαγραφής αυτών,</li>
+        <li>το δικαίωμα περιορισμού ή εναντίωσης στην επεξεργασία των δεδομένων του,</li>
+        <li>το δικαίωμα φορητότητας αυτών σε άλλο υπεύθυνο ή εκτελούντα την επεξεργασία.</li>
+      </ul>
+      <p>Σε περίπτωση που ο επισκέπτης/χρήστης εναντιωθεί με την επεξεργασία των δεδομένων του από την Εταιρία ή επιθυμεί να ανακαλέσει την συγκατάθεσή του (που θα έχει δοθεί προηγουμένως), η Εταιρία θα συμμορφωθεί με τις σχετικές οδηγίες σύμφωνα με τις νόμιμες υποχρεώσεις της, εφόσον δοθούν εγγράφως. Σημειώνεται ότι η εναντίωση ή ανάκληση συγκατάθεσης θα συνεπάγεται ότι η Εταιρία δεν θα δύναται να ανταποκριθεί στην υλοποίηση των σκοπών που αναφέρονται στην παρούσα Πολιτική. Η ανάκληση συγκατάθεσης ενεργεί μόνο για το μέλλον και δεν θίγει την νομιμότητα της επεξεργασίας που βασίσθηκε στην συγκατάθεση προ της ανάκλησής της. Η Εταιρία θα δύναται να επεξεργάζεται τα δεδομένα και μετά την ανάκληση της συγκατάθεσης μόνο στο μέτρο που θα επιτρέπεται από τον νόμο προκειμένου να ανταποκριθεί στις νόμιμες υποχρεώσεις της ή/και για την προάσπιση των δικαιωμάτων της.</p>
+      <p>Για την ενάσκηση των δικαιωμάτων του, κάθε επισκέπτης/χρήστης μπορεί να επικοινωνεί με την Εταιρία και να υποβάλλει το αίτημά του εγγράφως στην ακόλουθη ηλεκτρονική διεύθυνση: <a class="link" href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a>. Επίσης, κάθε επισκέπτης/χρήστης έχει το δικαίωμα να απευθυνθεί στην αρμόδια εποπτική αρχή (Ελληνική Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα), η οποία εξετάζει έγγραφες καταγγελίες σύμφωνα με τις οδηγίες που παρέχονται στον ιστότοπό της (<a class="link" href="https://www.dpa.gr" target="_blank" rel="noopener">www.dpa.gr</a>), σε περίπτωση που αντιτάσσεται στην επεξεργασία από την Εταιρία των δεδομένων του.</p>
+
+      <h2><span class="no">4.</span> Ενημέρωση της παρούσας Πολιτικής</h2>
+      <p>Η Εταιρία διατηρεί το δικαίωμα να τροποποιεί την παρούσα Πολιτική Απορρήτου, όποτε αυτό απαιτείται από την ισχύουσα νομοθεσία ή τη λειτουργία των υπηρεσιών της. Η εκάστοτε ισχύουσα έκδοση θα αναρτάται στην παρούσα σελίδα με την ημερομηνία τελευταίας ενημέρωσης. Οι επισκέπτες/χρήστες καλούνται να ελέγχουν περιοδικά την παρούσα σελίδα.</p>
+      <p class="mute" style="margin-top:26px">Δείτε επίσης: <a class="link" href="terms.html">Όροι Χρήσης</a></p>
+    </article>
   </div>
-</header>
-
-<div class="wrap glance">
-  <div class="glance-grid">
-    <div class="g-card reveal">
-      <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
-      <h3>Δεν πουλάμε δεδομένα</h3>
-      <p>Καμία διαβίβαση σε τρίτους για διαφημιστικούς σκοπούς. Ποτέ.</p>
-    </div>
-    <div class="g-card reveal">
-      <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div>
-      <h3>Χωρίς διαφημιστικά cookies</h3>
-      <p>Μόνο τεχνικά απαραίτητη αποθήκευση για τη σύνδεσή σας.</p>
-    </div>
-    <div class="g-card reveal">
-      <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
-      <h3>Βάση δεδομένων στην ΕΕ</h3>
-      <p>Λογαριασμοί και χρεώσεις φιλοξενούνται σε υποδομή εντός Ευρωπαϊκής Ένωσης.</p>
-    </div>
-    <div class="g-card reveal">
-      <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-      <h3>Τα σχέδια δεν αποθηκεύονται</h3>
-      <p>Τα αρχεία σας αναλύονται παροδικά — δεν μένουν στους διακομιστές μας.</p>
-    </div>
-  </div>
-</div>
-
-<div class="wrap layout">
-
-  <aside class="toc" aria-label="Περιεχόμενα">
-    <div class="toc-label">Υπόμνημα</div>
-    <div class="toc-list">
-      <a href="#s1"><span class="n">01</span>Ποια δεδομένα</a>
-      <a href="#s2"><span class="n">02</span>Επεξεργασία με AI</a>
-      <a href="#s3"><span class="n">03</span>Δεδομένα τρίτων</a>
-      <a href="#s4"><span class="n">04</span>Σκοποί &amp; βάσεις</a>
-      <a href="#s5"><span class="n">05</span>Αποδέκτες</a>
-      <a href="#s6"><span class="n">06</span>Διατήρηση</a>
-      <a href="#s7"><span class="n">07</span>Cookies</a>
-      <a href="#s8"><span class="n">08</span>Ασφάλεια</a>
-      <a href="#s9"><span class="n">09</span>Δικαιώματά σας</a>
-      <a href="#s10"><span class="n">10</span>Ανήλικοι</a>
-      <a href="#s11"><span class="n">11</span>Ενημερώσεις</a>
-    </div>
-  </aside>
-
-  <main>
-
-    <div class="controller reveal">
-      <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-      <div>
-        <b>Υπεύθυνος Επεξεργασίας:</b> BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε. («η Εταιρεία»), με έδρα τη Λευκάδα.<br>
-        Επικοινωνία για θέματα προσωπικών δεδομένων: <a href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a> · τηλ. 6933 226314
-      </div>
-    </div>
-
-    <section class="sec reveal" id="s1" data-n="01">
-      <h2><span class="sn">01</span>Ποια δεδομένα συλλέγουμε</h2>
-      <ul>
-        <li><b>Δεδομένα λογαριασμού:</b> διεύθυνση email, προαιρετικά ονοματεπώνυμο, κωδικός πρόσβασης (αποθηκεύεται αποκλειστικά σε κρυπτογραφημένη/hashed μορφή).</li>
-        <li><b>Δεδομένα χρήσης &amp; χρέωσης:</b> υπόλοιπο διαθέσιμων αναλύσεων, ιστορικό ανάλωσης, κατάσταση και διάρκεια συνδρομής, στοιχεία που μας παρέχετε κατά την παραγγελία πακέτου (π.χ. στοιχεία τιμολόγησης).</li>
-        <li><b>Περιεχόμενο εγγράφων:</b> τα τοπογραφικά διαγράμματα, Δ.Γ.Μ., κατόψεις και λοιπά αρχεία που ανεβάζετε προς ανάλυση, καθώς και τα κείμενα που παράγονται από αυτά.</li>
-        <li><b>Τεχνικά δεδομένα:</b> διεύθυνση IP, τύπος προγράμματος περιήγησης και βασικά αρχεία καταγραφής (logs) που τηρούνται από τους παρόχους φιλοξενίας για λόγους ασφάλειας και λειτουργίας.</li>
-      </ul>
-    </section>
-
-    <section class="sec reveal" id="s2" data-n="02">
-      <h2><span class="sn">02</span>Επεξεργασία μέσω τεχνητής νοημοσύνης</h2>
-      <p>Για την παραγωγή του αποτελέσματος, το περιεχόμενο του σχεδίου που ανεβάζετε διαβιβάζεται με κρυπτογραφημένη σύνδεση (TLS), μέσω των διακομιστών μας, στην υπηρεσία τεχνητής νοημοσύνης <b>Anthropic (Claude API)</b>, αποκλειστικά και μόνο για την ανάγνωση του σχεδίου και τη σύνταξη του ζητούμενου κειμένου.</p>
-      <ul>
-        <li>Τα δεδομένα που διαβιβάζονται μέσω του Claude API <b>δεν χρησιμοποιούνται για την εκπαίδευση μοντέλων</b> τεχνητής νοημοσύνης.</li>
-        <li>Η Anthropic διατηρεί τα δεδομένα προσωρινά, για περιορισμένο χρονικό διάστημα, για λόγους ασφάλειας και σύμφωνα με την πολιτική απορρήτου της (<a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener">anthropic.com/legal/privacy</a>).</li>
-        <li>Τα αρχεία που ανεβάζετε <b>δεν αποθηκεύονται μόνιμα στους διακομιστές μας</b>· η επεξεργασία τους γίνεται παροδικά για την εξυπηρέτηση του αιτήματός σας και το αποτέλεσμα επιστρέφει στη συσκευή σας.</li>
-      </ul>
-    </section>
-
-    <section class="sec reveal" id="s3" data-n="03">
-      <h2><span class="sn">03</span>Δεδομένα τρίτων προσώπων στα έγγραφα</h2>
-      <p>Τα σχέδια που αναλύονται ενδέχεται να περιέχουν προσωπικά δεδομένα τρίτων (π.χ. ονόματα ιδιοκτητών και όμορων ιδιοκτητών, ΚΑΕΚ, στοιχεία μηχανικού).</p>
-      <div class="callout">
-        <p>Για τα δεδομένα αυτά, <b>υπεύθυνος επεξεργασίας είναι ο χρήστης</b> (συμβολαιογράφος, δικηγόρος, μηχανικός), ο οποίος τα επεξεργάζεται στο πλαίσιο της επαγγελματικής του δραστηριότητας και οφείλει να διαθέτει τη σχετική νόμιμη βάση. Η Εταιρεία ενεργεί ως <b>εκτελών την επεξεργασία</b> (άρθρο 28 GDPR).</p>
-      </div>
-      <p>Η Εταιρεία επεξεργάζεται τα δεδομένα αυτά αποκλειστικά κατ' εντολή του χρήστη, για την παραγωγή του αποτελέσματος, και δεν τα χρησιμοποιεί για δικούς της σκοπούς.</p>
-    </section>
-
-    <section class="sec reveal" id="s4" data-n="04">
-      <h2><span class="sn">04</span>Σκοποί &amp; νομικές βάσεις επεξεργασίας</h2>
-      <div class="tbl"><table>
-        <tr><th>Σκοπός</th><th>Νομική βάση (άρθρο 6 GDPR)</th></tr>
-        <tr><td>Δημιουργία λογαριασμού, παροχή της υπηρεσίας, ανάλυση σχεδίων, διαχείριση υπολοίπου αναλύσεων και συνδρομών</td><td><span class="pill">6.1.β</span> Εκτέλεση σύμβασης</td></tr>
-        <tr><td>Τιμολόγηση, φορολογικές και λογιστικές υποχρεώσεις</td><td><span class="pill">6.1.γ</span> Έννομη υποχρέωση</td></tr>
-        <tr><td>Ασφάλεια της υπηρεσίας, πρόληψη κατάχρησης, τεχνικά logs</td><td><span class="pill">6.1.στ</span> Έννομο συμφέρον</td></tr>
-        <tr><td>Επικοινωνία σχετική με τον λογαριασμό και την υπηρεσία</td><td><span class="pill">6.1.β/στ</span> Σύμβαση / έννομο συμφέρον</td></tr>
-      </table></div>
-      <p>Δεν πραγματοποιούμε εμπορική κατάρτιση προφίλ ούτε αυτοματοποιημένη λήψη αποφάσεων που παράγει έννομα αποτελέσματα για εσάς. Δεν πωλούμε ούτε παραχωρούμε τα δεδομένα σας σε τρίτους για διαφημιστικούς σκοπούς.</p>
-    </section>
-
-    <section class="sec reveal" id="s5" data-n="05">
-      <h2><span class="sn">05</span>Αποδέκτες — εκτελούντες την επεξεργασία</h2>
-      <p>Για τη λειτουργία της υπηρεσίας χρησιμοποιούμε τους ακόλουθους παρόχους, οι οποίοι επεξεργάζονται δεδομένα για λογαριασμό μας βάσει συμβάσεων επεξεργασίας δεδομένων (DPA):</p>
-      <div class="tbl"><table>
-        <tr><th>Πάροχος</th><th>Ρόλος</th><th>Τοποθεσία δεδομένων</th></tr>
-        <tr><td><b>Supabase</b></td><td>Βάση δεδομένων, αυθεντικοποίηση, διακομιστές εφαρμογής (Edge Functions)</td><td><span class="pill">ΕΕ</span></td></tr>
-        <tr><td><b>Anthropic</b> (Claude API)</td><td>Ανάλυση σχεδίων με τεχνητή νοημοσύνη</td><td><span class="pill">ΗΠΑ</span> διαβίβαση βάσει Κεφ. V GDPR (τυποποιημένες συμβατικές ρήτρες / EU-US Data Privacy Framework)</td></tr>
-        <tr><td><b>GitHub Pages</b></td><td>Φιλοξενία στατικού ιστότοπου</td><td><span class="pill">ΗΠΑ/διεθνώς</span> τεχνικά logs</td></tr>
-        <tr><td><b>Google Fonts</b></td><td>Γραμματοσειρές ιστοσελίδας (κατά τη φόρτωση διαβιβάζεται η IP σας στην Google)</td><td><span class="pill">ΗΠΑ/διεθνώς</span></td></tr>
-      </table></div>
-      <p>Δεδομένα ενδέχεται να γνωστοποιηθούν σε δημόσιες αρχές μόνο εφόσον αυτό επιβάλλεται από τον νόμο.</p>
-    </section>
-
-    <section class="sec reveal" id="s6" data-n="06">
-      <h2><span class="sn">06</span>Χρόνος διατήρησης</h2>
-      <ul>
-        <li><b>Δεδομένα λογαριασμού &amp; χρήσης:</b> για όσο διατηρείτε ενεργό λογαριασμό. Μετά από αίτημα διαγραφής, διαγράφονται εντός εύλογου χρόνου, με εξαίρεση όσα απαιτείται να τηρηθούν από τη νομοθεσία.</li>
-        <li><b>Στοιχεία τιμολόγησης:</b> για όσο χρόνο επιβάλλει η φορολογική νομοθεσία.</li>
-        <li><b>Αρχεία σχεδίων:</b> δεν αποθηκεύονται μόνιμα από την Εταιρεία (βλ. ενότητα 02).</li>
-      </ul>
-    </section>
-
-    <section class="sec reveal" id="s7" data-n="07">
-      <h2><span class="sn">07</span>Cookies &amp; τοπική αποθήκευση</h2>
-      <p>Ο ιστότοπος <b>δεν χρησιμοποιεί διαφημιστικά cookies ούτε cookies παρακολούθησης τρίτων</b>. Η εφαρμογή χρησιμοποιεί τεχνικά απαραίτητη τοπική αποθήκευση του προγράμματος περιήγησης (localStorage/sessionStorage) για τη διατήρηση της σύνδεσής σας (διακριτικό αυθεντικοποίησης Supabase) και ρυθμίσεων λειτουργίας, καθώς και προσωρινή μνήμη (cache) του Service Worker για τη λειτουργία της ως εφαρμογή ιστού (PWA). Τα στοιχεία αυτά παραμένουν στη συσκευή σας και διαγράφονται με την αποσύνδεση ή τον καθαρισμό των δεδομένων του browser.</p>
-    </section>
-
-    <section class="sec reveal" id="s8" data-n="08">
-      <h2><span class="sn">08</span>Ασφάλεια</h2>
-      <p>Λαμβάνουμε κατάλληλα τεχνικά και οργανωτικά μέτρα, ιδίως: κρυπτογραφημένη μεταφορά δεδομένων (HTTPS/TLS), αυθεντικοποίηση με ασφαλή διακριτικά (JWT), πολιτικές ασφάλειας σε επίπεδο γραμμής βάσης δεδομένων (Row Level Security), εκτέλεση της ανάλυσης αποκλειστικά μέσω ελεγχόμενης διακομιστικής συνάρτησης, και περιορισμένη πρόσβαση στα συστήματα διαχείρισης.</p>
-    </section>
-
-    <section class="sec reveal" id="s9" data-n="09">
-      <h2><span class="sn">09</span>Τα δικαιώματά σας</h2>
-      <p>Σύμφωνα με τα άρθρα 15–22 GDPR έχετε τα δικαιώματα:</p>
-      <div class="rights">
-        <span>Πρόσβασης</span><span>Διόρθωσης</span><span>Διαγραφής</span><span>Περιορισμού</span><span>Φορητότητας</span><span>Εναντίωσης</span>
-      </div>
-      <p>Μπορείτε να τα ασκήσετε με email στο <a href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a>· θα απαντήσουμε εντός μηνός.</p>
-      <p>Εάν θεωρείτε ότι θίγεται η προστασία των δεδομένων σας, έχετε δικαίωμα καταγγελίας στην <b>Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα</b> (Λ. Κηφισίας 1-3, 115 23 Αθήνα, τηλ. 210 6475600, <a href="https://www.dpa.gr" target="_blank" rel="noopener">www.dpa.gr</a>).</p>
-    </section>
-
-    <section class="sec reveal" id="s10" data-n="10">
-      <h2><span class="sn">10</span>Ανήλικοι</h2>
-      <p>Η υπηρεσία απευθύνεται αποκλειστικά σε επαγγελματίες και δεν προορίζεται για πρόσωπα κάτω των 18 ετών. Δεν συλλέγουμε εν γνώσει μας δεδομένα ανηλίκων.</p>
-    </section>
-
-    <section class="sec reveal" id="s11" data-n="11">
-      <h2><span class="sn">11</span>Ενημερώσεις της παρούσας Πολιτικής</h2>
-      <p>Η Εταιρεία δύναται να επικαιροποιεί την παρούσα Πολιτική όταν αυτό απαιτείται (π.χ. λόγω νέων λειτουργιών ή αλλαγής παρόχων). Η εκάστοτε ισχύουσα έκδοση αναρτάται στην παρούσα σελίδα με την ημερομηνία τελευταίας ενημέρωσης. Ουσιώδεις αλλαγές θα γνωστοποιούνται μέσω της εφαρμογής.</p>
-      <p style="font-size:13.5px;color:var(--muted)">Η παρούσα Πολιτική λειτουργεί συμπληρωματικά προς τους <a href="terms.html">Όρους Χρήσης</a> της υπηρεσίας.</p>
-    </section>
-
-  </main>
-</div>
+</main>
 
 <footer>
-  <div class="wrap foot-in">
-    <div>Powered by <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ</b> — Λευκάδα<br><span style="font-family:'JetBrains Mono',monospace;font-size:11px;opacity:.7">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ</span></div>
-    <div class="foot-links">
-      <a href="terms.html">Όροι Χρήσης</a>
-      <a href="privacy.html">Πολιτική Απορρήτου</a>
-      <a href="mailto:brb.develop@gmail.com">Επικοινωνία</a>
-    </div>
+  <div class="wrap">
+    Powered by <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ</b> — Λευκάδα
+    <span class="mono">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ · <a href="terms.html">Όροι Χρήσης</a> · <a href="privacy.html">Πολιτική Απορρήτου</a></span>
   </div>
 </footer>
-
-<button id="toTop" aria-label="Επιστροφή στην κορυφή">↑</button>
-
-<script>
-(function(){
-  var prog=document.getElementById('progress');
-  var toTop=document.getElementById('toTop');
-  function onScroll(){
-    var h=document.documentElement;
-    var max=h.scrollHeight-h.clientHeight;
-    prog.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
-    toTop.classList.toggle('show',h.scrollTop>600);
-  }
-  addEventListener('scroll',onScroll,{passive:true}); onScroll();
-  toTop.addEventListener('click',function(){scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})});
-
-  /* reveal on scroll */
-  var io=new IntersectionObserver(function(es){
-    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-  },{threshold:.08});
-  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
-
-  /* scroll-spy TOC */
-  var links=[].slice.call(document.querySelectorAll('.toc a'));
-  var secs=links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
-  var spy=new IntersectionObserver(function(es){
-    es.forEach(function(e){
-      if(e.isIntersecting){
-        links.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href')==='#'+e.target.id); });
-      }
-    });
-  },{rootMargin:'-30% 0px -60% 0px'});
-  secs.forEach(function(s){ if(s) spy.observe(s); });
-})();
-</script>
 
 </body>
 </html>
