@@ -10,46 +10,129 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --navy:#1E3A5A;
     --navy-deep:#15293f;
+    --navy-ink:#0e1d2e;
     --cream:#F4F1EA;
     --cream-warm:#EDE8DC;
     --gold:#A98B3C;
+    --gold-soft:#c8ad63;
     --olive:#4A6040;
     --ink:#23211C;
     --muted:#6b6657;
     --line:#d9d2c2;
+    --card:#fbfaf6;
+    --radius:14px;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.75;font-size:15.5px}
-  .wrap{max-width:860px;margin:0 auto;padding:0 22px}
-  nav{background:var(--cream);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
-  .nav-in{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
-  .brand{display:flex;align-items:center;gap:12px;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--navy);letter-spacing:.5px;text-decoration:none}
-  .brand img{height:34px}
-  .nav-cta{font-family:'Inter';font-size:14px;font-weight:600;padding:9px 18px;background:var(--navy);color:#fff;border-radius:4px;text-decoration:none;transition:background .2s}
-  .nav-cta:hover{background:var(--navy-deep)}
-  header.page{padding:56px 0 34px;border-bottom:1px solid var(--line)}
-  .eyebrow{font-family:'JetBrains Mono';font-size:12.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
-  h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:44px;line-height:1.1;color:var(--navy)}
-  .lastmod{font-family:'JetBrains Mono';font-size:12px;color:var(--muted);margin-top:14px}
-  main{padding:38px 0 70px}
-  h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:27px;color:var(--navy);margin:38px 0 12px}
-  h2:first-child{margin-top:0}
-  p{margin-bottom:13px}
-  b{color:var(--navy)}
+  html{scroll-behavior:smooth}
+  ::selection{background:var(--gold);color:#fff}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.75;font-size:15.5px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
   a{color:var(--olive)}
-  footer{background:var(--navy-deep);color:rgba(244,241,234,.6);text-align:center;padding:30px 0;font-size:13px}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:3px}
+
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-soft));z-index:60;transition:width .08s linear}
+
+  nav{position:sticky;top:0;z-index:50;background:rgba(244,241,234,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(217,210,194,.7)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;padding:13px 0}
+  .brand{display:flex;align-items:center;gap:11px;font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--navy);letter-spacing:.5px;text-decoration:none}
+  .brand img{height:32px}
+  .nav-cta{font-size:13.5px;font-weight:600;padding:9px 18px;background:var(--navy);color:#fff;border-radius:100px;text-decoration:none;transition:background .2s,transform .2s}
+  .nav-cta:hover{background:var(--navy-deep);transform:translateY(-1px)}
+
+  .hero{position:relative;background:linear-gradient(160deg,var(--navy) 0%,var(--navy-deep) 55%,var(--navy-ink) 100%);color:var(--cream);overflow:hidden}
+  .hero .grid{position:absolute;inset:-60px;background-image:
+      linear-gradient(rgba(244,241,234,.055) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(244,241,234,.055) 1px,transparent 1px);
+    background-size:56px 56px;animation:drift 60s linear infinite}
+  @keyframes drift{to{transform:translate(56px,56px)}}
+  .hero .contour{position:absolute;right:-140px;bottom:-190px;width:640px;height:640px;border-radius:50%;border:1px solid rgba(200,173,99,.22);pointer-events:none}
+  .hero .contour::before,.hero .contour::after{content:"";position:absolute;inset:70px;border-radius:50%;border:1px solid rgba(200,173,99,.16)}
+  .hero .contour::after{inset:150px;border-color:rgba(200,173,99,.10)}
+  .cross{position:absolute;font-family:'JetBrains Mono',monospace;color:rgba(244,241,234,.28);font-size:15px;line-height:1;user-select:none;pointer-events:none}
+  .cross small{display:block;font-size:9.5px;letter-spacing:.6px;margin-top:5px;color:rgba(200,173,99,.55)}
+  .hero-in{position:relative;padding:86px 0 70px}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold-soft);margin-bottom:22px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--gold-soft)}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(40px,6.5vw,66px);line-height:1.05;max-width:640px}
+  h1 em{font-style:italic;color:var(--gold-soft)}
+  .hero-sub{margin-top:20px;max-width:560px;font-size:16px;color:rgba(244,241,234,.75)}
+  .hero-tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:30px}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.6px;padding:7px 14px;border:1px solid rgba(244,241,234,.22);border-radius:100px;color:rgba(244,241,234,.82);background:rgba(244,241,234,.04)}
+  .tag b{color:var(--gold-soft);font-weight:500}
+
+  .glance{margin-top:-38px;position:relative;z-index:5}
+  .glance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .g-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px 18px;box-shadow:0 14px 34px -18px rgba(21,41,63,.35);transition:transform .25s,box-shadow .25s}
+  .g-card:hover{transform:translateY(-4px);box-shadow:0 22px 44px -18px rgba(21,41,63,.45)}
+  .g-card .gi{width:38px;height:38px;border-radius:10px;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;margin-bottom:13px}
+  .g-card .gi svg{width:19px;height:19px}
+  .g-card h3{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:5px;line-height:1.35}
+  .g-card p{font-size:12.5px;color:var(--muted);line-height:1.55}
+
+  .layout{display:grid;grid-template-columns:250px 1fr;gap:56px;padding:60px 0 90px;align-items:start}
+  aside.toc{position:sticky;top:84px}
+  .toc-label{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  .toc a{display:flex;gap:10px;align-items:baseline;padding:7px 12px;margin-left:-12px;font-size:13px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;border-radius:0 8px 8px 0;transition:color .2s,background .2s,border-color .2s}
+  .toc a .n{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gold);opacity:.75;min-width:18px}
+  .toc a:hover{color:var(--navy);background:rgba(169,139,60,.07)}
+  .toc a.active{color:var(--navy);font-weight:600;border-left-color:var(--gold);background:rgba(169,139,60,.09)}
+
+  section.sec{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:34px 36px;margin-bottom:22px;scroll-margin-top:92px;position:relative;overflow:hidden}
+  section.sec::before{content:attr(data-n);position:absolute;top:14px;right:22px;font-family:'Cormorant Garamond',serif;font-size:60px;font-weight:700;color:var(--cream-warm);line-height:1;pointer-events:none}
+  section.sec>*{position:relative}
+  h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+  h2 .sn{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:1px;color:var(--gold);border:1px solid rgba(169,139,60,.4);border-radius:100px;padding:3px 10px;transform:translateY(-2px)}
+  p{margin-bottom:13px}
+  p:last-child{margin-bottom:0}
+  b{color:var(--navy)}
+
+  .callout{background:linear-gradient(135deg,rgba(30,58,90,.05),rgba(169,139,60,.07));border:1px solid rgba(169,139,60,.35);border-radius:12px;padding:18px 20px;margin:0 0 16px}
+  .callout p{margin:0;font-size:14.5px}
+
+  footer{background:var(--navy-ink);color:rgba(244,241,234,.6);padding:40px 0;font-size:13px;position:relative;overflow:hidden}
+  footer::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(244,241,234,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(244,241,234,.035) 1px,transparent 1px);background-size:56px 56px}
+  .foot-in{position:relative;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
   footer b{color:var(--cream)}
-  footer a{color:rgba(244,241,234,.75)}
-  footer .mono{font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:6px;display:block;opacity:.7}
-  @media(max-width:640px){h1{font-size:33px}}
+  footer a{color:rgba(244,241,234,.78);text-decoration:none}
+  footer a:hover{color:var(--gold-soft)}
+  .foot-links{display:flex;gap:20px;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+
+  #toTop{position:fixed;right:22px;bottom:22px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--navy);color:var(--cream);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateY(8px);z-index:40;box-shadow:0 10px 26px -10px rgba(21,41,63,.5)}
+  #toTop.show{opacity:1;pointer-events:auto;transform:none}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .hero .grid{animation:none}
+    .reveal{opacity:1;transform:none;transition:none}
+    .g-card,.nav-cta{transition:none}
+  }
+  @media(max-width:980px){
+    .glance-grid{grid-template-columns:repeat(3,1fr)}
+    .layout{grid-template-columns:1fr;gap:0;padding-top:44px}
+    aside.toc{position:relative;top:0;margin-bottom:26px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .toc-list{display:flex;gap:6px;padding-bottom:6px}
+    .toc a{white-space:nowrap;border-left:none;border:1px solid var(--line);border-radius:100px;margin-left:0;padding:7px 14px;background:#fff}
+    .toc a.active{border-color:var(--gold);background:rgba(169,139,60,.1)}
+    .cross{display:none}
+  }
+  @media(max-width:560px){
+    .glance-grid{grid-template-columns:1fr}
+    section.sec{padding:26px 20px}
+    section.sec::before{font-size:44px;top:10px;right:14px}
+  }
 </style>
 </head>
 <body>
+
+<div id="progress" aria-hidden="true"></div>
 
 <nav>
   <div class="wrap nav-in">
@@ -58,63 +141,167 @@
   </div>
 </nav>
 
-<header class="page">
-  <div class="wrap">
-    <div class="eyebrow">Όροι παροχής υπηρεσίας</div>
-    <h1>Όροι Χρήσης</h1>
-    <div class="lastmod">Τελευταία ενημέρωση: Ιούλιος 2026</div>
+<header class="hero">
+  <div class="grid" aria-hidden="true"></div>
+  <div class="contour" aria-hidden="true"></div>
+  <span class="cross" style="top:60px;left:6%" aria-hidden="true">+<small>Χ: 218 442.61</small></span>
+  <span class="cross" style="top:130px;right:16%" aria-hidden="true">+<small>Υ: 4 292 118.07</small></span>
+  <span class="cross" style="bottom:56px;left:34%" aria-hidden="true">+<small>ΕΓΣΑ '87</small></span>
+  <div class="wrap hero-in">
+    <div class="eyebrow reveal">Όροι παροχής υπηρεσίας</div>
+    <h1 class="reveal">Όροι <em>Χρήσης</em></h1>
+    <p class="hero-sub reveal">Τι είναι το ΝΟΜΙΚΟ ΤΟΠΟ, τι αναλαμβάνουμε εμείς, τι παραμένει δική σας ευθύνη — καθαρά και χωρίς ψιλά γράμματα.</p>
+    <div class="hero-tags reveal">
+      <span class="tag">Τελ. ενημέρωση: <b>Ιούλιος 2026</b></span>
+      <span class="tag">Ελληνικό δίκαιο</span>
+      <span class="tag">Ανάγνωση <b>~4′</b></span>
+    </div>
   </div>
 </header>
 
-<main>
-  <div class="wrap">
-
-    <p>Καλωσήρθατε στο <b>ΝΟΜΙΚΟ ΤΟΠΟ</b> (nomikotopo.gr), εφαρμογή της <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗΣ ΜΟΝΟΠΡΟΣΩΠΗΣ Ι.Κ.Ε.</b> (εφεξής «η Εταιρεία»), με έδρα τη Λευκάδα. Η χρήση της εφαρμογής προϋποθέτει την ανεπιφύλακτη αποδοχή των παρόντων όρων.</p>
-
-    <h2>1. Αντικείμενο της υπηρεσίας</h2>
-    <p>Το ΝΟΜΙΚΟ ΤΟΠΟ είναι εργαλείο υποβοήθησης που, με χρήση τεχνητής νοημοσύνης (AI), διαβάζει τοπογραφικά διαγράμματα, διαγράμματα γεωμετρικών μεταβολών (Δ.Γ.Μ.) και κατόψεις οριζόντιας ιδιοκτησίας, και παράγει σχέδια κειμένου (περιγραφές ιδιοκτησίας, τεχνικές εκθέσεις) σε επεξεργάσιμη μορφή, προς διευκόλυνση του επαγγελματία.</p>
-    <p>Η υπηρεσία αποτελεί <b>βοηθητικό εργαλείο</b> και <b>δεν υποκαθιστά</b> την κρίση, τον έλεγχο και την ευθύνη του μηχανικού, συμβολαιογράφου, δικηγόρου ή άλλου αρμόδιου επαγγελματία.</p>
-
-    <h2>2. Ευθύνη χρήστη &amp; ακρίβεια αποτελεσμάτων</h2>
-    <p>Τα αποτελέσματα παράγονται από σύστημα τεχνητής νοημοσύνης και <b>ενδέχεται να περιέχουν σφάλματα, παραλείψεις ή ανακρίβειες</b> — ιδίως σε σχέδια χαμηλής ποιότητας, σκαναρισμένα ή μη τυπικής μορφής. Ενδεικτικά, σφάλματα μπορεί να αφορούν συντεταγμένες, μήκη πλευρών, εμβαδά, προσανατολισμούς, ονόματα ομόρων, αριθμούς ΚΑΕΚ, στοιχεία πινάκων μεταβολών και περιγραφές χώρων.</p>
-    <p>Ο χρήστης <b>οφείλει να ελέγχει σε κάθε βήμα</b> την ορθότητα των δεδομένων πριν τα χρησιμοποιήσει. <b>Την αποκλειστική ευθύνη</b> της ακρίβειας, πληρότητας και νομικής εγκυρότητας κάθε τελικού εγγράφου που συντάσσεται με βάση τα παραγόμενα αποτελέσματα <b>φέρει ο ίδιος ο χρήστης / επαγγελματίας</b>.</p>
-    <p>Η Εταιρεία δεν φέρει καμία ευθύνη για ζημία, άμεση ή έμμεση, που τυχόν προκύψει από τη χρήση των αποτελεσμάτων, ιδίως σε συμβόλαια, δικαστικές ή κτηματολογικές διαδικασίες.</p>
-
-    <h2>3. Λογαριασμός &amp; δωρεάν δοκιμή</h2>
-    <p>Η εγγραφή είναι δωρεάν. Κάθε νέο μέλος λαμβάνει δωρεάν αναλύσεις δοκιμής (5 αναλύσεις διαγραμμάτων και 5 αναλύσεις κατόψεων). Ο χρήστης ευθύνεται για την ασφάλεια των στοιχείων πρόσβασής του.</p>
-
-    <h2>4. Συνδρομές &amp; χρεώσεις</h2>
-    <p>Οι αναλύσεις χρεώνονται ανά διάγραμμα/κάτοψη σύμφωνα με τα εκάστοτε ισχύοντα πακέτα που εμφανίζονται στην εφαρμογή. Οι αναγραφόμενες τιμές επιβαρύνονται με ΦΠΑ 24%. Η αγορά πραγματοποιείται κατόπιν αιτήματος μέσα από την εφαρμογή. Οι αναλύσεις κάτοψης (οριζόντια ιδιοκτησία) αποτελούν ξεχωριστή δυνατότητα και, μετά την εξάντληση των δωρεάν δειγμάτων, ενεργοποιούνται με αντίστοιχη συνδρομή.</p>
-
-    <h2>5. Πνευματική ιδιοκτησία</h2>
-    <p>Το σύνολο του λογισμικού, του πηγαίου κώδικα, του σχεδιασμού, των κειμένων, των αλγορίθμων, της ονομασίας «ΝΟΜΙΚΟ ΤΟΠΟ» και του λογοτύπου αποτελεί πνευματική ιδιοκτησία της Εταιρείας και προστατεύεται από τον Ν. 2121/1993 και τη διεθνή νομοθεσία. Απαγορεύεται η αντιγραφή, αναπαραγωγή, τροποποίηση, αποσυμπίληση, αντίστροφη μηχανίκευση ή διανομή, χωρίς προηγούμενη γραπτή άδεια.</p>
-    <p>Τα έγγραφα που παράγει ο χρήστης για δική του επαγγελματική χρήση του ανήκουν· η υποκείμενη τεχνολογία παραμένει στην Εταιρεία.</p>
-
-    <h2>6. Δεδομένα &amp; ιδιωτικότητα</h2>
-    <p>Τα σχέδια που ανεβάζει ο χρήστης αποστέλλονται προς επεξεργασία σε υπηρεσία τεχνητής νοημοσύνης αποκλειστικά για την παραγωγή του ζητούμενου αποτελέσματος. Ο χρήστης οφείλει να μην ανεβάζει στοιχεία τρίτων χωρίς νόμιμη βάση. Η Εταιρεία λαμβάνει εύλογα μέτρα προστασίας, σύμφωνα με τον Γενικό Κανονισμό Προστασίας Δεδομένων (GDPR). Αναλυτικά, βλ. την <a href="privacy.html">Πολιτική Απορρήτου</a>.</p>
-
-    <h2>7. Ορθή χρήση</h2>
-    <p>Απαγορεύεται η χρήση της εφαρμογής για παράνομους σκοπούς, η προσπάθεια παράκαμψης των μηχανισμών χρέωσης ή ασφαλείας, και η αυτοματοποιημένη μαζική άντληση δεδομένων.</p>
-
-    <h2>8. Τροποποιήσεις</h2>
-    <p>Η Εταιρεία διατηρεί το δικαίωμα να τροποποιεί τους παρόντες όρους και τα χαρακτηριστικά/τιμές της υπηρεσίας. Η συνέχιση της χρήσης μετά από αλλαγές συνιστά αποδοχή τους.</p>
-
-    <h2>9. Εφαρμοστέο δίκαιο</h2>
-    <p>Οι παρόντες όροι διέπονται από το Ελληνικό Δίκαιο. Αρμόδια ορίζονται τα δικαστήρια της Λευκάδας (ή του τόπου έδρας της Εταιρείας).</p>
-
-    <h2>10. Επικοινωνία</h2>
-    <p><b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. Ι.Κ.Ε.</b> — Λευκάδα<br>
-    Email: <a href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a></p>
-
+<div class="wrap glance">
+  <div class="glance-grid">
+    <div class="g-card reveal">
+      <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+      <h3>Βοηθητικό εργαλείο</h3>
+      <p>Επιταχύνει τη σύνταξη — δεν υποκαθιστά την κρίση του επαγγελματία.</p>
+    </div>
+    <div class="g-card reveal">
+      <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <h3>Ελέγχετε τα αποτελέσματα</h3>
+      <p>Το AI μπορεί να κάνει λάθη· η τελική ευθύνη ανήκει στον συντάκτη.</p>
+    </div>
+    <div class="g-card reveal">
+      <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div>
+      <h3>Δωρεάν δοκιμή</h3>
+      <p>5 αναλύσεις διαγραμμάτων + 5 αναλύσεις κατόψεων με την εγγραφή.</p>
+    </div>
   </div>
-</main>
+</div>
+
+<div class="wrap layout">
+
+  <aside class="toc" aria-label="Περιεχόμενα">
+    <div class="toc-label">Υπόμνημα</div>
+    <div class="toc-list">
+      <a href="#s1"><span class="n">01</span>Αντικείμενο</a>
+      <a href="#s2"><span class="n">02</span>Ευθύνη χρήστη</a>
+      <a href="#s3"><span class="n">03</span>Λογαριασμός</a>
+      <a href="#s4"><span class="n">04</span>Συνδρομές</a>
+      <a href="#s5"><span class="n">05</span>Πνευματική ιδιοκτησία</a>
+      <a href="#s6"><span class="n">06</span>Δεδομένα</a>
+      <a href="#s7"><span class="n">07</span>Ορθή χρήση</a>
+      <a href="#s8"><span class="n">08</span>Τροποποιήσεις</a>
+      <a href="#s9"><span class="n">09</span>Εφαρμοστέο δίκαιο</a>
+      <a href="#s10"><span class="n">10</span>Επικοινωνία</a>
+    </div>
+  </aside>
+
+  <main>
+
+    <p class="reveal" style="margin-bottom:22px">Καλωσήρθατε στο <b>ΝΟΜΙΚΟ ΤΟΠΟ</b> (nomikotopo.gr), εφαρμογή της <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗΣ ΜΟΝΟΠΡΟΣΩΠΗΣ Ι.Κ.Ε.</b> (εφεξής «η Εταιρεία»), με έδρα τη Λευκάδα. Η χρήση της εφαρμογής προϋποθέτει την ανεπιφύλακτη αποδοχή των παρόντων όρων.</p>
+
+    <section class="sec reveal" id="s1" data-n="01">
+      <h2><span class="sn">01</span>Αντικείμενο της υπηρεσίας</h2>
+      <p>Το ΝΟΜΙΚΟ ΤΟΠΟ είναι εργαλείο υποβοήθησης που, με χρήση τεχνητής νοημοσύνης (AI), διαβάζει τοπογραφικά διαγράμματα, διαγράμματα γεωμετρικών μεταβολών (Δ.Γ.Μ.) και κατόψεις οριζόντιας ιδιοκτησίας, και παράγει σχέδια κειμένου (περιγραφές ιδιοκτησίας, τεχνικές εκθέσεις) σε επεξεργάσιμη μορφή, προς διευκόλυνση του επαγγελματία.</p>
+      <div class="callout"><p>Η υπηρεσία αποτελεί <b>βοηθητικό εργαλείο</b> και <b>δεν υποκαθιστά</b> την κρίση, τον έλεγχο και την ευθύνη του μηχανικού, συμβολαιογράφου, δικηγόρου ή άλλου αρμόδιου επαγγελματία.</p></div>
+    </section>
+
+    <section class="sec reveal" id="s2" data-n="02">
+      <h2><span class="sn">02</span>Ευθύνη χρήστη &amp; ακρίβεια αποτελεσμάτων</h2>
+      <p>Τα αποτελέσματα παράγονται από σύστημα τεχνητής νοημοσύνης και <b>ενδέχεται να περιέχουν σφάλματα, παραλείψεις ή ανακρίβειες</b> — ιδίως σε σχέδια χαμηλής ποιότητας, σκαναρισμένα ή μη τυπικής μορφής. Ενδεικτικά, σφάλματα μπορεί να αφορούν συντεταγμένες, μήκη πλευρών, εμβαδά, προσανατολισμούς, ονόματα ομόρων, αριθμούς ΚΑΕΚ, στοιχεία πινάκων μεταβολών και περιγραφές χώρων.</p>
+      <p>Ο χρήστης <b>οφείλει να ελέγχει σε κάθε βήμα</b> την ορθότητα των δεδομένων πριν τα χρησιμοποιήσει. <b>Την αποκλειστική ευθύνη</b> της ακρίβειας, πληρότητας και νομικής εγκυρότητας κάθε τελικού εγγράφου που συντάσσεται με βάση τα παραγόμενα αποτελέσματα <b>φέρει ο ίδιος ο χρήστης / επαγγελματίας</b>.</p>
+      <p>Η Εταιρεία δεν φέρει καμία ευθύνη για ζημία, άμεση ή έμμεση, που τυχόν προκύψει από τη χρήση των αποτελεσμάτων, ιδίως σε συμβόλαια, δικαστικές ή κτηματολογικές διαδικασίες.</p>
+    </section>
+
+    <section class="sec reveal" id="s3" data-n="03">
+      <h2><span class="sn">03</span>Λογαριασμός &amp; δωρεάν δοκιμή</h2>
+      <p>Η εγγραφή είναι δωρεάν. Κάθε νέο μέλος λαμβάνει δωρεάν αναλύσεις δοκιμής (5 αναλύσεις διαγραμμάτων και 5 αναλύσεις κατόψεων). Ο χρήστης ευθύνεται για την ασφάλεια των στοιχείων πρόσβασής του.</p>
+    </section>
+
+    <section class="sec reveal" id="s4" data-n="04">
+      <h2><span class="sn">04</span>Συνδρομές &amp; χρεώσεις</h2>
+      <p>Οι αναλύσεις χρεώνονται ανά διάγραμμα/κάτοψη σύμφωνα με τα εκάστοτε ισχύοντα πακέτα που εμφανίζονται στην εφαρμογή. Οι αναγραφόμενες τιμές επιβαρύνονται με ΦΠΑ 24%. Η αγορά πραγματοποιείται κατόπιν αιτήματος μέσα από την εφαρμογή. Οι αναλύσεις κάτοψης (οριζόντια ιδιοκτησία) αποτελούν ξεχωριστή δυνατότητα και, μετά την εξάντληση των δωρεάν δειγμάτων, ενεργοποιούνται με αντίστοιχη συνδρομή.</p>
+    </section>
+
+    <section class="sec reveal" id="s5" data-n="05">
+      <h2><span class="sn">05</span>Πνευματική ιδιοκτησία</h2>
+      <p>Το σύνολο του λογισμικού, του πηγαίου κώδικα, του σχεδιασμού, των κειμένων, των αλγορίθμων, της ονομασίας «ΝΟΜΙΚΟ ΤΟΠΟ» και του λογοτύπου αποτελεί πνευματική ιδιοκτησία της Εταιρείας και προστατεύεται από τον Ν. 2121/1993 και τη διεθνή νομοθεσία. Απαγορεύεται η αντιγραφή, αναπαραγωγή, τροποποίηση, αποσυμπίληση, αντίστροφη μηχανίκευση ή διανομή, χωρίς προηγούμενη γραπτή άδεια.</p>
+      <p>Τα έγγραφα που παράγει ο χρήστης για δική του επαγγελματική χρήση του ανήκουν· η υποκείμενη τεχνολογία παραμένει στην Εταιρεία.</p>
+    </section>
+
+    <section class="sec reveal" id="s6" data-n="06">
+      <h2><span class="sn">06</span>Δεδομένα &amp; ιδιωτικότητα</h2>
+      <p>Τα σχέδια που ανεβάζει ο χρήστης αποστέλλονται προς επεξεργασία σε υπηρεσία τεχνητής νοημοσύνης αποκλειστικά για την παραγωγή του ζητούμενου αποτελέσματος. Ο χρήστης οφείλει να μην ανεβάζει στοιχεία τρίτων χωρίς νόμιμη βάση. Η Εταιρεία λαμβάνει εύλογα μέτρα προστασίας, σύμφωνα με τον Γενικό Κανονισμό Προστασίας Δεδομένων (GDPR). Αναλυτικά, βλ. την <a href="privacy.html">Πολιτική Απορρήτου</a>.</p>
+    </section>
+
+    <section class="sec reveal" id="s7" data-n="07">
+      <h2><span class="sn">07</span>Ορθή χρήση</h2>
+      <p>Απαγορεύεται η χρήση της εφαρμογής για παράνομους σκοπούς, η προσπάθεια παράκαμψης των μηχανισμών χρέωσης ή ασφαλείας, και η αυτοματοποιημένη μαζική άντληση δεδομένων.</p>
+    </section>
+
+    <section class="sec reveal" id="s8" data-n="08">
+      <h2><span class="sn">08</span>Τροποποιήσεις</h2>
+      <p>Η Εταιρεία διατηρεί το δικαίωμα να τροποποιεί τους παρόντες όρους και τα χαρακτηριστικά/τιμές της υπηρεσίας. Η συνέχιση της χρήσης μετά από αλλαγές συνιστά αποδοχή τους.</p>
+    </section>
+
+    <section class="sec reveal" id="s9" data-n="09">
+      <h2><span class="sn">09</span>Εφαρμοστέο δίκαιο</h2>
+      <p>Οι παρόντες όροι διέπονται από το Ελληνικό Δίκαιο. Αρμόδια ορίζονται τα δικαστήρια της Λευκάδας (ή του τόπου έδρας της Εταιρείας).</p>
+    </section>
+
+    <section class="sec reveal" id="s10" data-n="10">
+      <h2><span class="sn">10</span>Επικοινωνία</h2>
+      <p><b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. Ι.Κ.Ε.</b> — Λευκάδα<br>
+      Email: <a href="mailto:brb.develop@gmail.com">brb.develop@gmail.com</a></p>
+    </section>
+
+  </main>
+</div>
 
 <footer>
-  <div class="wrap">
-    Powered by <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ</b> — Λευκάδα
-    <span class="mono">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ · <a href="terms.html">Όροι Χρήσης</a> · <a href="privacy.html">Πολιτική Απορρήτου</a></span>
+  <div class="wrap foot-in">
+    <div>Powered by <b>BRB DEVELOPMENT ΚΑΤΑΣΚΕΥΑΣΤΙΚΗ ΜΟΝ. ΙΚΕ</b> — Λευκάδα<br><span style="font-family:'JetBrains Mono',monospace;font-size:11px;opacity:.7">© 2026 · ΝΟΜΙΚΟ ΤΟΠΟ</span></div>
+    <div class="foot-links">
+      <a href="terms.html">Όροι Χρήσης</a>
+      <a href="privacy.html">Πολιτική Απορρήτου</a>
+      <a href="mailto:brb.develop@gmail.com">Επικοινωνία</a>
+    </div>
   </div>
 </footer>
+
+<button id="toTop" aria-label="Επιστροφή στην κορυφή">↑</button>
+
+<script>
+(function(){
+  var prog=document.getElementById('progress');
+  var toTop=document.getElementById('toTop');
+  function onScroll(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    prog.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+    toTop.classList.toggle('show',h.scrollTop>600);
+  }
+  addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  toTop.addEventListener('click',function(){scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})});
+
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{threshold:.08});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  var links=[].slice.call(document.querySelectorAll('.toc a'));
+  var secs=links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  var spy=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href')==='#'+e.target.id); });
+      }
+    });
+  },{rootMargin:'-30% 0px -60% 0px'});
+  secs.forEach(function(s){ if(s) spy.observe(s); });
+})();
+</script>
 
 </body>
 </html>
