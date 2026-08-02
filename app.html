@@ -3332,8 +3332,8 @@ async function ntShowMap(){
   window._ntTopoRing=ring;
   try{ await _ntLoadLibs(); }catch(e){ card.classList.add('hidden'); window._ntMapShown=false; return; } // offline: απλώς δεν εμφανίζεται
   if(_ntMap){ _ntMap.remove(); _ntMap=null; } _ntTopoLayer=null; _ntKtLayer=null;
-  const esri=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:19});
-  const lbl=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:19});
+  const esri=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:18});
+  const lbl=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:18});
   const ktwms=L.tileLayer.wms('https://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',{layers:'KTBASEMAP',format:'image/png',transparent:true,maxZoom:21});
   _ntMap=L.map('ntMap',{attributionControl:false,layers:[esri,lbl]});
   L.control.layers(null,{'Ονομασίες':lbl,'Υπόβαθρο Κτηματολογίου (WMS)':ktwms},{collapsed:true}).addTo(_ntMap);
@@ -3363,7 +3363,7 @@ async function ntShowMap(){
     _ntTopoLayer.bindPopup('<b>Σχέδιο</b><br>'+_ntFmt(_ntArea(ring),2)+' τ.μ. · '+ring.length+' κορυφές');
     layers.push(_ntTopoLayer);
   }
-  try{ _ntMap.fitBounds(L.featureGroup(layers).getBounds(),{padding:[40,40],maxZoom:19}); }catch(e){}
+  try{ _ntMap.fitBounds(L.featureGroup(layers).getBounds(),{padding:[40,40],maxZoom:18}); }catch(e){}
   setTimeout(()=>{ try{_ntMap.invalidateSize();}catch(e){} },150);
   const info=document.getElementById('ntMapInfo');
   if(info) info.textContent='Εμβαδόν από συντεταγμένες: '+_ntFmt(_ntArea(ring),2)+' τ.μ.';
@@ -3392,7 +3392,7 @@ async function ntFetchKaekOutline(){
   _ntKtLayer=L.polygon(wgs,{color:'#d83a3a',weight:2.5,opacity:.95,fill:false,dashArray:'7,6'}).addTo(_ntMap);
   _ntKtLayer.bindPopup('<b>Κτηματολόγιο — ΚΑΕΚ '+p.kaek+'</b>'+(p.area_m2?'<br>'+_ntFmt(p.area_m2,1)+' τ.μ.':''));
   if(leg) leg.classList.remove('hidden');
-  try{ _ntMap.fitBounds(L.featureGroup([_ntTopoLayer,_ntKtLayer]).getBounds(),{padding:[40,40],maxZoom:19}); }catch(e){}
+  try{ _ntMap.fitBounds(L.featureGroup([_ntTopoLayer,_ntKtLayer]).getBounds(),{padding:[40,40],maxZoom:18}); }catch(e){}
   const info=document.getElementById('ntMapInfo');
   if(info&&window._ntTopoRing) info.textContent='Εμβαδόν από συντεταγμένες: '+_ntFmt(_ntArea(window._ntTopoRing),2)
     +' τ.μ. · Κτηματολόγιο (ΚΑΕΚ '+p.kaek+'): '+(p.area_m2?_ntFmt(p.area_m2,2):_ntFmt(ktRings.reduce((s,r)=>s+_ntArea(r),0),2))+' τ.μ.';
