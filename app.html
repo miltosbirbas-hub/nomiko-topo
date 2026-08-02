@@ -3379,11 +3379,12 @@ async function ntFetchKaekOutline(){
   if(!_ntMap) return;
   const leg=document.getElementById('ntKtLegend'); if(leg) leg.classList.add('hidden');
   if(_ntKtLayer){ try{_ntMap.removeLayer(_ntKtLayer);}catch(e){} _ntKtLayer=null; }
+  (window._ntNbLayers||[]).forEach(l=>{ try{_ntMap.removeLayer(l);}catch(e){} }); window._ntNbLayers=[];
   let kaek=(val('fKaek')||'').replace(/\D/g,''); if(kaek.length>12) kaek=kaek.slice(0,12);
   if(kaek.length!==12) return;
   let p;
   try{
-    const r=await fetch(KAEK_GEO_API+'?kaek='+encodeURIComponent(kaek));
+    const r=await fetch(KAEK_GEO_API+'?kaek='+encodeURIComponent(kaek)+'&neighbors=1&r=150');
     if(!r.ok) return;
     p=await r.json();
     if(p.error) return;
@@ -3393,7 +3394,21 @@ async function ntFetchKaekOutline(){
   const wgs=(p.geometry_wgs&&_ntRings(p.geometry_wgs).length)
     ? _ntRings(p.geometry_wgs).map(r=>r.map(([lon,lat])=>[lat,lon]))
     : ktRings.map(r=>r.map(([x,y])=>_ntEgsaLL(x,y)));
-  _ntKtLayer=L.polygon(wgs,{color:'#d83a3a',weight:2.5,opacity:.95,fill:false,dashArray:'7,6'}).addTo(_ntMap);
+  // Όμορα γεωτεμάχια (από τη βάση HEXIS) — διακριτικά, να βλέπει ο συμβολαιογράφος τα γύρω ΚΑΕΚ
+  window._ntNbLayers=window._ntNbLayers||[];
+  for(const nb of (p.neighbors||[])){
+    const nbRings=_ntRings(nb.geometry_egsa); if(!nbRings.length) continue;
+    const nbWgs=(nb.geometry_wgs&&_ntRings(nb.geometry_wgs).length)
+      ? _ntRings(nb.geometry_wgs).map(r=>r.map(([lon,lat])=>[lat,lon]))
+      : nbRings.map(r=>r.map(([x,y])=>_ntEgsaLL(x,y)));
+    const nl=L.polygon(nbWgs,{color:'#67e8f9',weight:1.5,opacity:.75,fillColor:'#67e8f9',fillOpacity:.06,dashArray:'4,4'}).addTo(_ntMap);
+    if(nb.kaek){
+      nl.bindTooltip('ΚΑΕΚ '+nb.kaek,{sticky:true,direction:'top',className:'nt-kaek-tip'});
+      nl.bindPopup('<b>Όμορο — ΚΑΕΚ '+nb.kaek+'</b>'+(nb.area_m2?'<br>'+_ntFmt(nb.area_m2,1)+' τ.μ.':''));
+    }
+    window._ntNbLayers.push(nl);
+  }
+    _ntKtLayer=L.polygon(wgs,{color:'#d83a3a',weight:2.5,opacity:.95,fill:false,dashArray:'7,6'}).addTo(_ntMap);
   _ntKtLayer.bindPopup('<b>Κτηματολόγιο — ΚΑΕΚ '+p.kaek+'</b>'+(p.area_m2?'<br>'+_ntFmt(p.area_m2,1)+' τ.μ.':''));
   // Ετικέτα ΚΑΕΚ ΕΞΩ από το πολύγωνο (ΒΑ γωνία) — να μην κρύβει το σχέδιο
   try{
@@ -3411,7 +3426,8 @@ async function ntFetchKaekOutline(){
     const dA=aS-aK;
     info.innerHTML='<b>ΚΑΕΚ '+p.kaek+'</b>'+(p.region?' · '+p.region:'')
       +' · Σχέδιο: '+_ntFmt(aS,2)+' τ.μ. · Κτηματολόγιο: '+_ntFmt(aK,2)+' τ.μ.'
-      +' · Διαφορά: '+(dA>=0?'+':'')+_ntFmt(dA,2)+' τ.μ.';
+      +' · Διαφορά: '+(dA>=0?'+':'')+_ntFmt(dA,2)+' τ.μ.'
+      +(((p.neighbors||[]).length)?' · Όμορα: '+(p.neighbors||[]).length:'');
   }
 }
 function ntRefreshMap(){ try{ ntShowMap(); }catch(e){} }
