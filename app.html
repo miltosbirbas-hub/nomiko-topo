@@ -3335,7 +3335,7 @@ async function ntShowMap(){
   card.classList.remove('hidden'); window._ntMapShown=true;
   window._ntTopoRing=ring;
   try{ await _ntLoadLibs(); }catch(e){ card.classList.add('hidden'); window._ntMapShown=false; return; } // offline: απλώς δεν εμφανίζεται
-  if(_ntMap){ _ntMap.remove(); _ntMap=null; } _ntTopoLayer=null; _ntKtLayer=null;
+  if(_ntMap){ _ntMap.remove(); _ntMap=null; } _ntTopoLayer=null; _ntKtLayer=null; window._ntKtTip=null;
   const esri=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:18});
   const lbl=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:18});
   const ktwms=L.tileLayer.wms('https://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',{layers:'KTBASEMAP',format:'image/png',transparent:true,maxZoom:21});
@@ -3395,7 +3395,13 @@ async function ntFetchKaekOutline(){
     : ktRings.map(r=>r.map(([x,y])=>_ntEgsaLL(x,y)));
   _ntKtLayer=L.polygon(wgs,{color:'#d83a3a',weight:2.5,opacity:.95,fill:false,dashArray:'7,6'}).addTo(_ntMap);
   _ntKtLayer.bindPopup('<b>Κτηματολόγιο — ΚΑΕΚ '+p.kaek+'</b>'+(p.area_m2?'<br>'+_ntFmt(p.area_m2,1)+' τ.μ.':''));
-  try{ _ntKtLayer.bindTooltip('ΚΑΕΚ '+p.kaek,{permanent:true,direction:'center',className:'nt-kaek-tip'}).openTooltip(); }catch(e){}
+  // Ετικέτα ΚΑΕΚ ΕΞΩ από το πολύγωνο (ΒΑ γωνία) — να μην κρύβει το σχέδιο
+  try{
+    const ne=_ntKtLayer.getBounds().getNorthEast();
+    if(window._ntKtTip){ try{_ntMap.removeLayer(window._ntKtTip);}catch(e){} }
+    window._ntKtTip=L.tooltip({permanent:true,direction:'right',offset:[10,-6],className:'nt-kaek-tip'})
+      .setLatLng(ne).setContent('ΚΑΕΚ '+p.kaek).addTo(_ntMap);
+  }catch(e){}
   if(leg) leg.classList.remove('hidden');
   try{ _ntMap.fitBounds(L.featureGroup([_ntTopoLayer,_ntKtLayer]).getBounds(),{padding:[40,40],maxZoom:18}); }catch(e){}
   const info=document.getElementById('ntMapInfo');
