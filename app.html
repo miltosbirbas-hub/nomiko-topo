@@ -3412,10 +3412,12 @@ async function ntFetchKaekOutline(){
   _ntKtLayer.bindPopup('<b>Κτηματολόγιο — ΚΑΕΚ '+p.kaek+'</b>'+(p.area_m2?'<br>'+_ntFmt(p.area_m2,1)+' τ.μ.':''));
   // Ετικέτα ΚΑΕΚ ΕΞΩ από το πολύγωνο (ΒΑ γωνία) — να μην κρύβει το σχέδιο
   try{
-    const ne=_ntKtLayer.getBounds().getNorthEast();
+    // Αγκύρωση στην ανατολικότερη ΚΟΡΥΦΗ του πολυγώνου (όχι στη γωνία των bounds) — κολλητά στο σχήμα
+    let anchor=null;
+    for(const r of wgs) for(const pt of r) if(!anchor||pt[1]>anchor[1]) anchor=pt;
     if(window._ntKtTip){ try{_ntMap.removeLayer(window._ntKtTip);}catch(e){} }
-    window._ntKtTip=L.tooltip({permanent:true,direction:'right',offset:[10,-6],className:'nt-kaek-tip'})
-      .setLatLng(ne).setContent('ΚΑΕΚ '+p.kaek).addTo(_ntMap);
+    window._ntKtTip=L.tooltip({permanent:true,direction:'right',offset:[6,0],className:'nt-kaek-tip'})
+      .setLatLng(anchor).setContent('ΚΑΕΚ '+p.kaek).addTo(_ntMap);
   }catch(e){}
   if(leg) leg.classList.remove('hidden');
   try{ _ntMap.fitBounds(L.featureGroup([_ntTopoLayer,_ntKtLayer]).getBounds(),{padding:[40,40],maxZoom:18}); }catch(e){}
