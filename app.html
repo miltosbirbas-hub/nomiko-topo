@@ -395,6 +395,10 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     <!-- ΧΑΡΤΗΣ: πληροφοριακή προβολή τεμαχίου (δεν επηρεάζει την ανάλυση/περιγραφή) -->
     <div class="card hidden" id="mapCard">
       <h2>Θέση ακινήτου στον χάρτη <span class="muted">(πληροφοριακά — δεν επηρεάζει την περιγραφή)</span></h2>
+      <style>
+        .nt-kaek-tip{background:transparent;border:none;box-shadow:none;color:#fff;font-weight:700;font-size:13px;text-shadow:0 1px 3px #000,0 0 6px #000;pointer-events:none}
+        .nt-kaek-tip::before{display:none}
+      </style>
       <div id="ntMap" style="height:440px;border-radius:10px;overflow:hidden;background:#0b1c33"></div>
       <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:6px" class="muted">
         <span><span style="display:inline-block;width:22px;height:3px;background:#0f2f6d;vertical-align:middle;border-radius:2px"></span> Σχέδιο (συντεταγμένες ΕΓΣΑ '87)</span>
@@ -3391,11 +3395,18 @@ async function ntFetchKaekOutline(){
     : ktRings.map(r=>r.map(([x,y])=>_ntEgsaLL(x,y)));
   _ntKtLayer=L.polygon(wgs,{color:'#d83a3a',weight:2.5,opacity:.95,fill:false,dashArray:'7,6'}).addTo(_ntMap);
   _ntKtLayer.bindPopup('<b>Κτηματολόγιο — ΚΑΕΚ '+p.kaek+'</b>'+(p.area_m2?'<br>'+_ntFmt(p.area_m2,1)+' τ.μ.':''));
+  try{ _ntKtLayer.bindTooltip('ΚΑΕΚ '+p.kaek,{permanent:true,direction:'center',className:'nt-kaek-tip'}).openTooltip(); }catch(e){}
   if(leg) leg.classList.remove('hidden');
   try{ _ntMap.fitBounds(L.featureGroup([_ntTopoLayer,_ntKtLayer]).getBounds(),{padding:[40,40],maxZoom:18}); }catch(e){}
   const info=document.getElementById('ntMapInfo');
-  if(info&&window._ntTopoRing) info.textContent='Εμβαδόν από συντεταγμένες: '+_ntFmt(_ntArea(window._ntTopoRing),2)
-    +' τ.μ. · Κτηματολόγιο (ΚΑΕΚ '+p.kaek+'): '+(p.area_m2?_ntFmt(p.area_m2,2):_ntFmt(ktRings.reduce((s,r)=>s+_ntArea(r),0),2))+' τ.μ.';
+  if(info&&window._ntTopoRing){
+    const aS=_ntArea(window._ntTopoRing);
+    const aK=(p.area_m2&&isFinite(+p.area_m2))?+p.area_m2:ktRings.reduce((s,r)=>s+_ntArea(r),0);
+    const dA=aS-aK;
+    info.innerHTML='<b>ΚΑΕΚ '+p.kaek+'</b>'+(p.region?' · '+p.region:'')
+      +' · Σχέδιο: '+_ntFmt(aS,2)+' τ.μ. · Κτηματολόγιο: '+_ntFmt(aK,2)+' τ.μ.'
+      +' · Διαφορά: '+(dA>=0?'+':'')+_ntFmt(dA,2)+' τ.μ.';
+  }
 }
 function ntRefreshMap(){ try{ ntShowMap(); }catch(e){} }
 /* ═══ ΤΕΛΟΣ ΠΡΟΒΟΛΗΣ ΧΑΡΤΗ ═══ */
