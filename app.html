@@ -402,6 +402,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
         <span style="flex:1"></span>
         <button class="btn-ghost" style="margin:0" onclick="ntRefreshMap()">↻ Ανανέωση</button>
       </div>
+      <div id="ntDiagLegend" class="muted hidden" style="margin-top:4px"></div>
       <div id="ntMapInfo" class="muted" style="margin-top:4px"></div>
     </div>
 
@@ -3336,10 +3337,33 @@ async function ntShowMap(){
   const ktwms=L.tileLayer.wms('https://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',{layers:'KTBASEMAP',format:'image/png',transparent:true,maxZoom:21});
   _ntMap=L.map('ntMap',{attributionControl:false,layers:[esri,lbl]});
   L.control.layers(null,{'Ονομασίες':lbl,'Υπόβαθρο Κτηματολογίου (WMS)':ktwms},{collapsed:true}).addTo(_ntMap);
-  const latlngs=ring.map(([x,y])=>_ntEgsaLL(x,y));
-  _ntTopoLayer=L.polygon(latlngs,{color:'#0f2f6d',weight:3,opacity:1,fillColor:'#0f2f6d',fillOpacity:.12}).addTo(_ntMap);
-  _ntTopoLayer.bindPopup('<b>Σχέδιο</b><br>'+_ntFmt(_ntArea(ring),2)+' τ.μ. · '+ring.length+' κορυφές');
-  _ntMap.fitBounds(_ntTopoLayer.getBounds(),{padding:[40,40],maxZoom:19});
+  const layers=[];
+  const diagTables=(MODE==='diag')?(window._tables||[]).filter(t=>t&&Array.isArray(t.vertices)&&t.vertices.filter(v=>isFinite(+v.x)&&isFinite(+v.y)).length>=3):[];
+  if(diagTables.length){
+    // ΔΓΜ: όλα τα πολύγωνα των πινάκων, με χρώμα ανά ρόλο
+    const CAT={ arxiko:{c:'#e08a00',d:'6,5',f:0,lbl:'Αρχικό'}, teliko:{c:'#0f2f6d',d:null,f:.12,lbl:'Τελικό'},
+      idioktisias:{c:'#0f2f6d',d:null,f:.12,lbl:'Τελικό ιδιοκτησίας'}, diekdikoumeno:{c:'#7b1fa2',d:'4,4',f:.08,lbl:'Διεκδικούμενο'},
+      tmima:{c:'#2e7d32',d:null,f:.10,lbl:'Τμήμα'}, dasiko:{c:'#1b5e20',d:'2,5',f:0,lbl:'Δασικό'} };
+    const seen={};
+    for(const t of diagTables){
+      const r=t.vertices.filter(v=>isFinite(+v.x)&&isFinite(+v.y)).map(v=>[+v.x,+v.y]);
+      const s=CAT[t.category]||{c:'#0f2f6d',d:null,f:.08,lbl:''};
+      const lyr=L.polygon(r.map(([x,y])=>_ntEgsaLL(x,y)),
+        {color:s.c,weight:s.f?3:2.5,opacity:1,dashArray:s.d||null,fill:!!s.f,fillColor:s.c,fillOpacity:s.f||0}).addTo(_ntMap);
+      lyr.bindPopup('<b>'+(t.title||s.lbl||'Πολύγωνο')+'</b>'+(t.kaek?'<br>ΚΑΕΚ '+t.kaek:'')+'<br>'+_ntFmt(t.area&&parseFloat(String(t.area).replace(/\./g,'').replace(',','.'))||_ntArea(r),2)+' τ.μ.');
+      layers.push(lyr); seen[t.category]=s;
+    }
+    _ntTopoLayer=layers[0];
+    const leg=document.getElementById('ntDiagLegend');
+    if(leg){ leg.innerHTML=Object.values(seen).map(s=>'<span style="margin-right:14px"><span style="display:inline-block;width:20px;height:0;border-top:3px '+(s.d?'dashed':'solid')+' '+s.c+';vertical-align:middle"></span> '+s.lbl+'</span>').join(''); leg.classList.remove('hidden'); }
+  } else {
+    const leg=document.getElementById('ntDiagLegend'); if(leg){ leg.classList.add('hidden'); leg.innerHTML=''; }
+    const latlngs=ring.map(([x,y])=>_ntEgsaLL(x,y));
+    _ntTopoLayer=L.polygon(latlngs,{color:'#0f2f6d',weight:3,opacity:1,fillColor:'#0f2f6d',fillOpacity:.12}).addTo(_ntMap);
+    _ntTopoLayer.bindPopup('<b>Σχέδιο</b><br>'+_ntFmt(_ntArea(ring),2)+' τ.μ. · '+ring.length+' κορυφές');
+    layers.push(_ntTopoLayer);
+  }
+  try{ _ntMap.fitBounds(L.featureGroup(layers).getBounds(),{padding:[40,40],maxZoom:19}); }catch(e){}
   setTimeout(()=>{ try{_ntMap.invalidateSize();}catch(e){} },150);
   const info=document.getElementById('ntMapInfo');
   if(info) info.textContent='Εμβαδόν από συντεταγμένες: '+_ntFmt(_ntArea(ring),2)+' τ.μ.';
