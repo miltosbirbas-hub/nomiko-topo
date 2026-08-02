@@ -392,6 +392,19 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
       <button class="btn-ghost addrow" onclick="addBndRow()">+ Προσθήκη πλευράς</button>
     </div>
 
+    <!-- ΧΑΡΤΗΣ: πληροφοριακή προβολή τεμαχίου (δεν επηρεάζει την ανάλυση/περιγραφή) -->
+    <div class="card hidden" id="mapCard">
+      <h2>Θέση ακινήτου στον χάρτη <span class="muted">(πληροφοριακά — δεν επηρεάζει την περιγραφή)</span></h2>
+      <div id="ntMap" style="height:440px;border-radius:10px;overflow:hidden;background:#0b1c33"></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:6px" class="muted">
+        <span><span style="display:inline-block;width:22px;height:3px;background:#0f2f6d;vertical-align:middle;border-radius:2px"></span> Σχέδιο (συντεταγμένες ΕΓΣΑ '87)</span>
+        <span id="ntKtLegend" class="hidden"><span style="display:inline-block;width:22px;height:0;border-top:3px dashed #d83a3a;vertical-align:middle"></span> Κτηματολόγιο (ΚΑΕΚ)</span>
+        <span style="flex:1"></span>
+        <button class="btn-ghost" style="margin:0" onclick="ntRefreshMap()">↻ Ανανέωση</button>
+      </div>
+      <div id="ntMapInfo" class="muted" style="margin-top:4px"></div>
+    </div>
+
     <!-- ΣΥΝΘΕΣΗ ΧΩΡΩΝ (oriz only) -->
     <div class="card hidden" id="spacesCard">
       <h2>🚪 Σύνθεση Χώρων Ιδιοκτησίας <span class="muted">(αυτόματη ανάγνωση — επεξεργάσιμα)</span></h2>
@@ -667,7 +680,7 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // Έκδοση εφαρμογής — ΑΛΛΑΞΕ ΕΔΩ σε κάθε αναβάθμιση (και στο sw.js το CACHE)
-const APP_VERSION = 'v2.8';
+const APP_VERSION = 'v2.9';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
@@ -705,6 +718,7 @@ function switchMode(m){
   const tm=document.getElementById('tabMulti'); if(tm) tm.classList.toggle('active',m==='multi');
   document.getElementById('modePill').textContent= m==='topo'?'Τοπογραφικό':(m==='diag'?'Διάγραμμα Μεταβολών':(m==='multi'?'Κατάτμηση / Συνένωση':'Οριζόντια Ιδιοκτησία'));
   document.getElementById('changesCard').classList.toggle('hidden',m!=='diag');
+  const mpc=document.getElementById('mapCard'); if(mpc) mpc.classList.toggle('hidden', (m!=='topo'&&m!=='diag') || !window._ntMapShown);
   document.getElementById('areaCard').classList.toggle('hidden',m!=='diag');
   const mc=document.getElementById('multiCard'); if(mc) mc.classList.toggle('hidden',m!=='multi');
   const rb=document.getElementById('btnReport'); if(rb) rb.classList.toggle('hidden',m!=='diag');
@@ -2122,6 +2136,7 @@ function applyResult(p){
   if(!DATA.boundaries.length)['ΑΝΑΤΟΛΙΚΑ','ΝΟΤΙΑ','ΔΥΤΙΚΑ','ΒΟΡΕΙΑ'].forEach(d=>DATA.boundaries.push({direction:d,length:'',neighbor:''}));
   document.getElementById('results').classList.remove('hidden');
   renderBnd();renderChg();renderArea();renderBuildings();buildDescription();
+  try{ ntShowMap(); }catch(e){ console.warn('map skip:',e); }
 }
 
 // ---- boundary table ----
@@ -3275,6 +3290,92 @@ switchMode('topo');
 checkSession();
 setupZoomPan();
 // δείξε την έκδοση στο footer
+
+/* ═══ ΠΡΟΒΟΛΗ ΤΕΜΑΧΙΟΥ ΣΤΟΝ ΧΑΡΤΗ — καθαρά πληροφοριακή, δεν αγγίζει DATA/περιγραφή/DOCX ═══ */
+const KAEK_GEO_API='https://oucqqudfdimccgowvpqp.supabase.co/functions/v1/kaek-geo';
+let _ntLibs=null,_ntMap=null,_ntTopoLayer=null,_ntKtLayer=null;
+function _ntLoadLibs(){
+  if(_ntLibs) return _ntLibs;
+  _ntLibs=new Promise((resolve,reject)=>{
+    const css=document.createElement('link');
+    css.rel='stylesheet'; css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+    let left=2; const done=()=>{ if(--left===0){
+      proj4.defs('EPSG:2100','+proj=tmerc +lat_0=0 +lon_0=24 +k=0.9996 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=-199.87,74.79,246.62,0,0,0,0 +units=m +no_defs');
+      resolve();
+    }};
+    const load=src=>{ const s=document.createElement('script'); s.src=src; s.onload=done;
+      s.onerror=()=>reject(new Error('offline')); document.head.appendChild(s); };
+    load('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    load('https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js');
+  });
+  return _ntLibs;
+}
+function _ntEgsaLL(x,y){ const p=proj4('EPSG:2100','EPSG:4326',[x,y]); return [p[1],p[0]]; }
+function _ntRings(geom){
+  if(!geom) return [];
+  if(geom.type==='Polygon') return geom.coordinates.length?[geom.coordinates[0]]:[];
+  if(geom.type==='MultiPolygon') return geom.coordinates.map(p=>p[0]).filter(Boolean);
+  if(Array.isArray(geom)) return [geom];
+  return [];
+}
+function _ntArea(ring){ let a=0; for(let i=0;i<ring.length;i++){ const [x1,y1]=ring[i],[x2,y2]=ring[(i+1)%ring.length]; a+=x1*y2-x2*y1; } return Math.abs(a)/2; }
+function _ntFmt(n,d){ return Number(n).toLocaleString('el-GR',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+async function ntShowMap(){
+  if(MODE!=='topo'&&MODE!=='diag') return;
+  const card=document.getElementById('mapCard'); if(!card) return;
+  const ring=(window._vertices||[]).filter(v=>isFinite(+v.x)&&isFinite(+v.y)).map(v=>[+v.x,+v.y]);
+  if(ring.length<3){ card.classList.add('hidden'); window._ntMapShown=false; return; }
+  card.classList.remove('hidden'); window._ntMapShown=true;
+  window._ntTopoRing=ring;
+  try{ await _ntLoadLibs(); }catch(e){ card.classList.add('hidden'); window._ntMapShown=false; return; } // offline: απλώς δεν εμφανίζεται
+  if(_ntMap){ _ntMap.remove(); _ntMap=null; } _ntTopoLayer=null; _ntKtLayer=null;
+  const esri=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:19});
+  const lbl=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:19});
+  const ktwms=L.tileLayer.wms('https://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',{layers:'KTBASEMAP',format:'image/png',transparent:true,maxZoom:21});
+  _ntMap=L.map('ntMap',{attributionControl:false,layers:[esri,lbl]});
+  L.control.layers(null,{'Ονομασίες':lbl,'Υπόβαθρο Κτηματολογίου (WMS)':ktwms},{collapsed:true}).addTo(_ntMap);
+  const latlngs=ring.map(([x,y])=>_ntEgsaLL(x,y));
+  _ntTopoLayer=L.polygon(latlngs,{color:'#0f2f6d',weight:3,opacity:1,fillColor:'#0f2f6d',fillOpacity:.12}).addTo(_ntMap);
+  _ntTopoLayer.bindPopup('<b>Σχέδιο</b><br>'+_ntFmt(_ntArea(ring),2)+' τ.μ. · '+ring.length+' κορυφές');
+  _ntMap.fitBounds(_ntTopoLayer.getBounds(),{padding:[40,40],maxZoom:19});
+  setTimeout(()=>{ try{_ntMap.invalidateSize();}catch(e){} },150);
+  const info=document.getElementById('ntMapInfo');
+  if(info) info.textContent='Εμβαδόν από συντεταγμένες: '+_ntFmt(_ntArea(ring),2)+' τ.μ.';
+  ntFetchKaekOutline(); // σιωπηλά, στο παρασκήνιο
+}
+
+// Προαιρετικό: επίσημο περίγραμμα ΚΑΕΚ ως δεύτερο layer — αν δεν βρεθεί, δεν εμφανίζεται τίποτα
+async function ntFetchKaekOutline(){
+  if(!_ntMap) return;
+  const leg=document.getElementById('ntKtLegend'); if(leg) leg.classList.add('hidden');
+  if(_ntKtLayer){ try{_ntMap.removeLayer(_ntKtLayer);}catch(e){} _ntKtLayer=null; }
+  let kaek=(val('fKaek')||'').replace(/\D/g,''); if(kaek.length>12) kaek=kaek.slice(0,12);
+  if(kaek.length!==12) return;
+  let p;
+  try{
+    const r=await fetch(KAEK_GEO_API+'?kaek='+encodeURIComponent(kaek));
+    if(!r.ok) return;
+    p=await r.json();
+    if(p.error) return;
+  }catch(e){ return; }
+  const ktRings=_ntRings(p.geometry_egsa);
+  if(!ktRings.length) return;
+  const wgs=(p.geometry_wgs&&_ntRings(p.geometry_wgs).length)
+    ? _ntRings(p.geometry_wgs).map(r=>r.map(([lon,lat])=>[lat,lon]))
+    : ktRings.map(r=>r.map(([x,y])=>_ntEgsaLL(x,y)));
+  _ntKtLayer=L.polygon(wgs,{color:'#d83a3a',weight:2.5,opacity:.95,fill:false,dashArray:'7,6'}).addTo(_ntMap);
+  _ntKtLayer.bindPopup('<b>Κτηματολόγιο — ΚΑΕΚ '+p.kaek+'</b>'+(p.area_m2?'<br>'+_ntFmt(p.area_m2,1)+' τ.μ.':''));
+  if(leg) leg.classList.remove('hidden');
+  try{ _ntMap.fitBounds(L.featureGroup([_ntTopoLayer,_ntKtLayer]).getBounds(),{padding:[40,40],maxZoom:19}); }catch(e){}
+  const info=document.getElementById('ntMapInfo');
+  if(info&&window._ntTopoRing) info.textContent='Εμβαδόν από συντεταγμένες: '+_ntFmt(_ntArea(window._ntTopoRing),2)
+    +' τ.μ. · Κτηματολόγιο (ΚΑΕΚ '+p.kaek+'): '+(p.area_m2?_ntFmt(p.area_m2,2):_ntFmt(ktRings.reduce((s,r)=>s+_ntArea(r),0),2))+' τ.μ.';
+}
+function ntRefreshMap(){ try{ ntShowMap(); }catch(e){} }
+/* ═══ ΤΕΛΟΣ ΠΡΟΒΟΛΗΣ ΧΑΡΤΗ ═══ */
+
 var _v=document.getElementById('appVer'); if(_v) _v.textContent=APP_VERSION;
 
 // PWA: εγγραφή service worker
