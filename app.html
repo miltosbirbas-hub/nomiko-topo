@@ -183,8 +183,25 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
     <div class="row">
       <button class="btn-primary" id="btnLogin" onclick="doLogin()">Σύνδεση</button>
       <button class="btn-ghost" onclick="startSignup()">Δημιουργία λογαριασμού</button>
+      <button class="btn-ghost" id="btnForgot" onclick="doForgot()">Ξέχασα τον κωδικό</button>
     </div>
     <div class="status" id="loginStatus"></div>
+    <div class="status err" id="bootError" style="display:none"></div>
+  </div>
+
+  <!-- ΝΕΟΣ ΚΩΔΙΚΟΣ (από email επαναφοράς ή αλλαγή από συνδεδεμένο χρήστη) -->
+  <div class="card" id="recoveryCard" style="display:none">
+    <h2 id="recoveryTitle">Ορισμός νέου κωδικού</h2>
+    <p class="muted" style="margin-bottom:14px">Τουλάχιστον 8 χαρακτήρες.</p>
+    <div class="grid">
+      <div class="field"><label>Νέος κωδικός</label><input type="password" id="newPass" placeholder="••••••••"></div>
+      <div class="field"><label>Επιβεβαίωση</label><input type="password" id="newPass2" placeholder="••••••••"></div>
+    </div>
+    <div class="row">
+      <button class="btn-primary" id="btnSavePass" onclick="doUpdatePassword()">Αποθήκευση κωδικού</button>
+      <button class="btn-ghost" onclick="cancelRecovery()">Άκυρο</button>
+    </div>
+    <div class="status" id="recoveryStatus"></div>
   </div>
 
   <!-- USER BAR (hidden until logged in) -->
@@ -194,7 +211,8 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
         <div id="greeting" style="font-weight:600;color:var(--navy);font-size:16px"></div>
         <span class="muted" style="font-size:13px">Συνδεδεμένος ως <b id="userEmail"></b></span>
       </div>
-      <button class="btn-ghost" style="margin-left:auto" onclick="doLogout()">Αποσύνδεση</button>
+      <button class="btn-ghost" style="margin-left:auto" onclick="showChangePassword()">Αλλαγή κωδικού</button>
+      <button class="btn-ghost" onclick="doLogout()">Αποσύνδεση</button>
     </div>
   </div>
 
@@ -682,10 +700,27 @@ h4.sec{font-size:13px;color:var(--olive);margin:16px 0 8px;text-transform:upperc
 </div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// ΚΡΙΣΙΜΟ: αν το pdf.js δεν φορτώσει (adblocker / DNS filter / VPN / αργό δίκτυο),
+// ΜΗΝ αφήσεις το σφάλμα να σκοτώσει ολόκληρο το script — αλλιώς δεν ορίζεται
+// καμία συνάρτηση παρακάτω (ούτε το doLogin) και η εφαρμογή μοιάζει "νεκρή".
+try{
+  if(window.pdfjsLib){
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }else{
+    console.warn('pdf.js δεν φορτώθηκε — η προεπισκόπηση PDF θα είναι ανενεργή.');
+  }
+}catch(e){ console.warn('pdf.js init error:', e); }
+
+// Καθολικός εντοπισμός σφαλμάτων φόρτωσης, ώστε να μη μένει ο χρήστης με "νεκρή" σελίδα.
+window.addEventListener('error', function(ev){
+  var b=document.getElementById('bootError');
+  if(!b) return;
+  b.style.display='';
+  b.textContent='Σφάλμα φόρτωσης: '+(ev.message||'άγνωστο')+'. Δοκιμάστε χωρίς adblocker/VPN, ή σε άλλο δίκτυο/φυλλομετρητή.';
+});
 
 // Έκδοση εφαρμογής — ΑΛΛΑΞΕ ΕΔΩ σε κάθε αναβάθμιση (και στο sw.js το CACHE)
-const APP_VERSION = 'v2.9';
+const APP_VERSION = 'v3.0';
 
 let MODE='topo';
 let FILE=null, FILE_KIND=null, FILE_B64=null, FILE_MEDIA=null;
@@ -2539,7 +2574,7 @@ function newDiagram(){
   if(!confirm('Νέο διάγραμμα; Θα διαγραφούν όλες οι τρέχουσες καταχωρήσεις (στοιχεία, όρια, μεταβολές, δηλώσεις).')) return;
   // αρχείο & preview
   FILE=FILE_B64=FILE_MEDIA=FILE_KIND=null;
-  ROT=0; applyRot(); document.getElementById('rotControls')?.classList.add('hidden');
+  ROT=0; applyRot(); var _rc0=document.getElementById('rotControls'); if(_rc0) _rc0.classList.add('hidden');
   const fi=document.getElementById('fileInput'); if(fi) fi.value='';
   document.getElementById('fileList').innerHTML='';
   const pv=document.getElementById('previewImg'); if(pv){pv.classList.add('hidden');pv.src='';}
@@ -3227,7 +3262,7 @@ function startSignup(){
   const nf=document.getElementById('nameField');
   if(nf && nf.style.display==='none'){
     nf.style.display='';
-    document.getElementById('loginName')?.focus();
+    var _ln=document.getElementById('loginName'); if(_ln) _ln.focus();
     lstatus('Συμπληρώστε το όνομά σας (προαιρετικό) και πατήστε ξανά «Δημιουργία λογαριασμού».','ok');
     return;
   }
@@ -3238,7 +3273,8 @@ async function doSignup(){
   if(!SB){lstatus('Δεν έχει ρυθμιστεί η σύνδεση Supabase.','err');return;}
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
-  const name=(document.getElementById('loginName')?.value||'').trim();
+  var _ln2=document.getElementById('loginName');
+  const name=((_ln2 && _ln2.value)||'').trim();
   if(!email||!pass){lstatus('Συμπληρώστε email και κωδικό για δημιουργία λογαριασμού.','err');return;}
   const opts = name ? { data:{ full_name:name } } : {};
   const {data,error}=await SB.auth.signUp({email,password:pass,options:opts});
@@ -3254,6 +3290,87 @@ async function doLogout(){
   document.getElementById('loginCard').style.display='';
   const fb=document.getElementById('floorBadge'); if(fb) fb.classList.add('hidden');
   const tb=document.getElementById('tokenBadge'); if(tb) tb.classList.add('hidden');
+}
+
+// ── Ξέχασα τον κωδικό / Ανανέωση κωδικού ──
+let RECOVERY_MODE = false;
+
+function rstatus(msg, kind){
+  const s = document.getElementById('recoveryStatus');
+  s.className = 'status show ' + (kind || 'info');
+  s.textContent = msg;
+}
+
+// Ο χρήστης επιστρέφει από το email στο ίδιο URL της εφαρμογής.
+function recoveryRedirectUrl(){ return location.origin + location.pathname; }
+
+async function doForgot(){
+  if(!SB){ lstatus('Δεν έχει ρυθμιστεί η σύνδεση Supabase.','err'); return; }
+  const email = document.getElementById('loginEmail').value.trim();
+  if(!email){
+    lstatus('Συμπληρώστε πρώτα το email σας και μετά πατήστε «Ξέχασα τον κωδικό».','err');
+    document.getElementById('loginEmail').focus();
+    return;
+  }
+  const btn = document.getElementById('btnForgot');
+  btn.disabled = true; btn.textContent = 'Αποστολή...';
+  const { error } = await SB.auth.resetPasswordForEmail(email, { redirectTo: recoveryRedirectUrl() });
+  btn.disabled = false; btn.textContent = 'Ξέχασα τον κωδικό';
+  if(error){ lstatus('Σφάλμα: ' + error.message, 'err'); return; }
+  lstatus('Στάλθηκε email στο ' + email + ' με σύνδεσμο επαναφοράς. Ελέγξτε και τα ανεπιθύμητα.', 'ok');
+}
+
+function showRecoveryCard(fromEmail){
+  RECOVERY_MODE = true;
+  document.getElementById('loginCard').style.display = 'none';
+  document.getElementById('appBody').style.display = 'none';
+  if(fromEmail){ document.getElementById('userBar').style.display = 'none'; }
+  document.getElementById('recoveryTitle').textContent = fromEmail ? 'Ορισμός νέου κωδικού' : 'Αλλαγή κωδικού';
+  document.getElementById('newPass').value = '';
+  document.getElementById('newPass2').value = '';
+  const rs = document.getElementById('recoveryStatus');
+  rs.className = 'status'; rs.textContent = '';
+  document.getElementById('recoveryCard').style.display = '';
+  document.getElementById('newPass').focus();
+}
+
+function showChangePassword(){ showRecoveryCard(false); }
+
+async function cancelRecovery(){
+  document.getElementById('recoveryCard').style.display = 'none';
+  RECOVERY_MODE = false;
+  const { data:{ session } } = await SB.auth.getSession();
+  if(session){ showLoggedIn(session.user); }
+  else { document.getElementById('loginCard').style.display = ''; }
+}
+
+async function doUpdatePassword(){
+  if(!SB){ rstatus('Δεν έχει ρυθμιστεί η σύνδεση Supabase.','err'); return; }
+  const p1 = document.getElementById('newPass').value;
+  const p2 = document.getElementById('newPass2').value;
+  if(p1.length < 8){ rstatus('Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες.','err'); return; }
+  if(p1 !== p2){ rstatus('Οι δύο κωδικοί δεν ταιριάζουν.','err'); return; }
+
+  const { data:{ session } } = await SB.auth.getSession();
+  if(!session){
+    rstatus('Ο σύνδεσμος επαναφοράς έληξε. Ζητήστε νέο από το «Ξέχασα τον κωδικό».','err');
+    return;
+  }
+
+  const btn = document.getElementById('btnSavePass');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Αποθήκευση...';
+  const { error } = await SB.auth.updateUser({ password: p1 });
+  btn.disabled = false; btn.innerHTML = 'Αποθήκευση κωδικού';
+  if(error){ rstatus('Σφάλμα: ' + error.message, 'err'); return; }
+
+  rstatus('✓ Ο κωδικός άλλαξε.', 'ok');
+  RECOVERY_MODE = false;
+  if(location.hash) history.replaceState(null, '', location.pathname + location.search);
+  setTimeout(async () => {
+    document.getElementById('recoveryCard').style.display = 'none';
+    const { data:{ session:s2 } } = await SB.auth.getSession();
+    if(s2) showLoggedIn(s2.user);
+  }, 1200);
 }
 
 // Βγάζει φιλικό όνομα: από metadata (full_name) ή από το email
@@ -3275,7 +3392,7 @@ function showLoggedIn(user){
   document.getElementById('appBody').style.display='';
   const name=friendlyName(user);
   const bar=document.getElementById('userEmail');
-  if(bar) bar.textContent=user?.email||'';
+  if(bar) bar.textContent=(user && user.email)||'';
   // χαιρετισμός
   const g=document.getElementById('greeting');
   if(g) g.textContent = name ? ('Καλωσήρθες, '+name+'!') : 'Καλωσήρθες!';
@@ -3285,12 +3402,38 @@ function showLoggedIn(user){
 
 async function checkSession(){
   if(!SB) return;
+  if(RECOVERY_MODE) return;   // ήρθε από email επαναφοράς — μην μπεις στην εφαρμογή
   const {data:{session}}=await SB.auth.getSession();
   if(session) showLoggedIn(session.user);
 }
 
+// Εντοπισμός recovery link ΠΡΙΝ το checkSession (το hash το καταναλώνει το supabase-js)
+function detectRecoveryFromUrl(){
+  const h = location.hash || '';
+  if(h.indexOf('error_code=otp_expired') !== -1 || h.indexOf('error=access_denied') !== -1){
+    history.replaceState(null, '', location.pathname + location.search);
+    lstatus('Ο σύνδεσμος επαναφοράς έληξε ή έχει ήδη χρησιμοποιηθεί. Ζητήστε νέο.', 'err');
+    return false;
+  }
+  if(h.indexOf('type=recovery') !== -1){ RECOVERY_MODE = true; return true; }
+  return false;
+}
+
 // init
 initSupabase();
+if(!SB){
+  const be=document.getElementById('bootError');
+  if(be){ be.style.display=''; be.textContent='Δεν φορτώθηκε η βιβλιοθήκη σύνδεσης (supabase-js). Πιθανόν την μπλοκάρει adblocker, VPN ή φίλτρο DNS. Δοκιμάστε άλλο δίκτυο ή φυλλομετρητή.'; }
+}
+const _isRecovery = detectRecoveryFromUrl();
+
+if(SB){
+  SB.auth.onAuthStateChange((event) => {
+    if(event === 'PASSWORD_RECOVERY'){ showRecoveryCard(true); }
+  });
+}
+if(_isRecovery){ showRecoveryCard(true); }
+
 switchMode('topo');
 checkSession();
 setupZoomPan();

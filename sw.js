@@ -1,6 +1,6 @@
 // ΝΟΜΙΚΟ ΤΟΠΟ — Service Worker
 // Κανόνας: σε ΚΑΘΕ αλλαγή των αρχείων, ανέβασε τον αριθμό CACHE (v22 → v23 → ...)
-const CACHE = 'nomiko-topo-v26';
+const CACHE = 'nomiko-topo-v27';
 
 // Στατικά αρχεία που προ-φορτώνονται (cache-first).
 // ΜΗΝ βάλεις εδώ εξωτερικά CDN (pdf.js, supabase, docx) — φορτώνουν live.
